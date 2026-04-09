@@ -1,0 +1,47 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Meal Logs | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card reveal mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <p class="eyebrow mb-1">Log Registry</p>
+            <h1 class="section-title mb-0">Meal Logs</h1>
+        </div>
+        <a href="{{ url_for('meal.upload_meal') }}" class="btn btn-industrial">Add New Meal</a>
+    </div>
+</section>
+
+{% if logs %}
+<section class="row g-4">
+    {% for meal in logs %}
+    <div class="col-sm-6 col-xl-4 reveal">
+        <article class="meal-card h-100">
+            <div class="meal-media-wrap">
+                <img src="{{ meal.image_url }}" class="meal-thumb" alt="Meal image">
+                <span class="meal-badge">{{ meal.meal_type|capitalize }}</span>
+            </div>
+            <div class="meal-card-body">
+                <h2 class="meal-card-title">{{ meal.title if meal.title else meal.meal_type|capitalize ~ ' Meal' }}</h2>
+                <p class="meal-card-date">{{ meal.meal_date.strftime('%d %b %Y') }}</p>
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <a href="{{ url_for('meal.meal_detail', meal_id=meal.id) }}" class="btn btn-sm btn-outline-industrial">View Details</a>
+                    <a href="{{ url_for('meal.edit_meal', meal_id=meal.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                    <form action="{{ url_for('meal.delete_meal', meal_id=meal.id) }}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm-delete="Delete this meal log?">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </article>
+    </div>
+    {% endfor %}
+</section>
+{% else %}
+<section class="surface-card text-center reveal">
+    <h2 class="section-title mb-2">No meal logs yet</h2>
+    <p class="text-muted mb-4">Start by uploading your first meal image.</p>
+    <a href="{{ url_for('meal.upload_meal') }}" class="btn btn-industrial">Add Your First Meal</a>
+</section>
+{% endif %}
+{% endblock %}

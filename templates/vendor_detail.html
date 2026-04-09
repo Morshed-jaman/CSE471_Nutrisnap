@@ -1,0 +1,77 @@
+﻿{% extends "base.html" %}
+
+{% block title %}{{ vendor.name }} | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card reveal mb-4">
+    <div class="row g-4 align-items-start">
+        <div class="col-lg-4">
+            {% if vendor.image_url %}
+                <img src="{{ vendor.image_url }}" class="img-fluid rounded-3 vendor-detail-image" alt="{{ vendor.name }} image">
+            {% else %}
+                <div class="vendor-detail-image vendor-placeholder d-flex align-items-center justify-content-center fs-1">{{ vendor.name[0] }}</div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-8">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <h1 class="section-title mb-0">{{ vendor.name }}</h1>
+                <span class="badge text-bg-secondary category-badge">{{ vendor.category }}</span>
+            </div>
+
+            <p class="mb-3">{{ vendor.description or 'No description available.' }}</p>
+
+            <div class="row g-2 mb-3">
+                <div class="col-md-6">
+                    <div class="meta-box"><strong>Email:</strong> {{ vendor.contact_email or 'N/A' }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="meta-box"><strong>Phone:</strong> {{ vendor.phone or 'N/A' }}</div>
+                </div>
+                <div class="col-12">
+                    <div class="meta-box"><strong>Address:</strong> {{ vendor.address or 'N/A' }}</div>
+                </div>
+            </div>
+
+            <a href="{{ url_for('vendor.vendors') }}" class="btn btn-outline-industrial">Back to Vendors</a>
+        </div>
+    </div>
+</section>
+
+<section class="surface-card reveal">
+    <h2 class="h4 mb-3">Menu Items</h2>
+
+    {% if menu_items %}
+    <div class="row g-4">
+        {% for item in menu_items %}
+        <div class="col-md-6 col-xl-4 reveal">
+            <article class="menu-item-card h-100">
+                {% if item.image_url %}
+                    <img src="{{ item.image_url }}" class="menu-thumb" alt="{{ item.name }} image">
+                {% else %}
+                    <div class="menu-thumb vendor-placeholder">{{ item.name[0] }}</div>
+                {% endif %}
+
+                <div class="p-3 d-flex flex-column">
+                    <h3 class="h6 mb-1">{{ item.name }}</h3>
+                    <p class="text-muted small mb-2">{{ item.description or 'No description available.' }}</p>
+                    <p class="fw-semibold mb-2">Price: ${{ '%.2f'|format(item.price|float) }}</p>
+
+                    <div class="nutrition-list mb-3">
+                        <span>Calories: {{ item.calories if item.calories is not none else 'N/A' }}</span>
+                        <span>Protein: {{ item.protein if item.protein is not none else 'N/A' }} g</span>
+                        <span>Carbs: {{ item.carbohydrates if item.carbohydrates is not none else 'N/A' }} g</span>
+                        <span>Fats: {{ item.fats if item.fats is not none else 'N/A' }} g</span>
+                    </div>
+
+                    <a href="{{ url_for('vendor.menu_item_detail', item_id=item.id) }}" class="btn btn-outline-industrial btn-sm mt-auto">View Item</a>
+                </div>
+            </article>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p class="text-muted mb-0">No available menu items for this vendor right now.</p>
+    {% endif %}
+</section>
+{% endblock %}

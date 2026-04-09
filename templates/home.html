@@ -1,0 +1,59 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Home | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="hero-panel reveal">
+    <div class="row g-4 align-items-center">
+        <div class="col-lg-7">
+            <p class="eyebrow">Industrial Nutrition Tracking</p>
+            <h1 class="hero-title">Meal Upload, Food Logs, and Vendor Discovery</h1>
+            <p class="hero-copy">Track your meals, review your logs, and discover healthier menu options from nearby vendors in one dashboard.</p>
+            <div class="d-flex flex-wrap gap-3 mt-4">
+                <a href="{{ url_for('meal.upload_meal') }}" class="btn btn-industrial btn-lg">Upload Meal</a>
+                <a href="{{ url_for('meal.meal_logs') }}" class="btn btn-outline-industrial btn-lg">View Meal Logs</a>
+                <a href="{{ url_for('vendor.vendors') }}" class="btn btn-outline-secondary btn-lg">Browse Vendors</a>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="metrics-grid">
+                <div class="metric-tile reveal">
+                    <span class="metric-value">01</span>
+                    <span class="metric-label">Upload</span>
+                </div>
+                <div class="metric-tile reveal">
+                    <span class="metric-value">02</span>
+                    <span class="metric-label">Review</span>
+                </div>
+                <div class="metric-tile reveal">
+                    <span class="metric-value">03</span>
+                    <span class="metric-label">Discover</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="info-strip reveal mt-4">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="info-card">
+                <h2>Cloud Meal Logs</h2>
+                <p>Meal photos are uploaded and stored with your food log history.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="info-card">
+                <h2>Vendor Directory</h2>
+                <p>Browse active vendors and filter by name or category quickly.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="info-card">
+                <h2>Nutrition Insights</h2>
+                <p>Vendor menu cards include calories and macro values where available.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

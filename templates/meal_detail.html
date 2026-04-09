@@ -1,0 +1,40 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Meal Details | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="row g-4 reveal">
+    <div class="col-lg-7">
+        <div class="media-frame">
+            <img src="{{ meal.image_url }}" class="img-fluid rounded-3" alt="Meal image">
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="surface-card h-100 detail-panel">
+            <p class="eyebrow mb-1">Meal Snapshot</p>
+            <h1 class="section-title mb-3">{{ meal.title if meal.title else 'Meal Details' }}</h1>
+
+            <div class="kv-list">
+                <div><span>Meal Type</span><strong>{{ meal.meal_type|capitalize }}</strong></div>
+                <div><span>Meal Date</span><strong>{{ meal.meal_date.strftime('%d %b %Y') }}</strong></div>
+                <div><span>Title</span><strong>{{ meal.title if meal.title else '-' }}</strong></div>
+                <div><span>Note</span><strong>{{ meal.note if meal.note else '-' }}</strong></div>
+            </div>
+
+            <hr>
+
+            <p class="meta-time mb-1">Created: {{ meal.created_at.strftime('%d %b %Y, %I:%M %p') }}</p>
+            <p class="meta-time">Updated: {{ meal.updated_at.strftime('%d %b %Y, %I:%M %p') }}</p>
+
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <a href="{{ url_for('meal.edit_meal', meal_id=meal.id) }}" class="btn btn-outline-industrial">Edit</a>
+                <form action="{{ url_for('meal.delete_meal', meal_id=meal.id) }}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger" data-confirm-delete="Delete this meal log?">Delete</button>
+                </form>
+                <a href="{{ url_for('meal.meal_logs') }}" class="btn btn-industrial">Back to Meal Logs</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

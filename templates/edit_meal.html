@@ -1,0 +1,70 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Edit Meal | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card reveal">
+    <div class="section-head mb-4">
+        <p class="eyebrow mb-1">Update Entry</p>
+        <h1 class="section-title">Edit Meal Log</h1>
+    </div>
+
+    <form action="{{ url_for('meal.edit_meal', meal_id=meal.id) }}" method="post" enctype="multipart/form-data">
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="mb-3">
+                    <p class="form-label mb-2">Current Image</p>
+                    <img src="{{ meal.image_url }}" class="img-fluid rounded industrial-preview" alt="Current meal image">
+                </div>
+
+                <div class="mb-3">
+                    <label for="image" class="form-label">Replace Image (Optional)</label>
+                    <input class="form-control form-control-industrial" type="file" id="image" name="image" accept="image/*">
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="meal_type" class="form-label">Meal Type</label>
+                        <select class="form-select form-control-industrial" id="meal_type" name="meal_type" required>
+                            {% for type in meal_types %}
+                                <option value="{{ type }}" {% if meal.meal_type == type %}selected{% endif %}>{{ type|capitalize }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="meal_date" class="form-label">Meal Date</label>
+                        <input type="date" class="form-control form-control-industrial" id="meal_date" name="meal_date" value="{{ meal.meal_date.isoformat() }}" required>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <label for="title" class="form-label">Title (Optional)</label>
+                    <input type="text" class="form-control form-control-industrial" id="title" name="title" value="{{ meal.title or '' }}" maxlength="150">
+                </div>
+
+                <div class="mt-3">
+                    <label for="note" class="form-label">Note (Optional)</label>
+                    <textarea class="form-control form-control-industrial" id="note" name="note" rows="4">{{ meal.note or '' }}</textarea>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="assist-panel h-100">
+                    <h2>Editing Tips</h2>
+                    <ul class="checklist">
+                        <li>Only replace image when needed.</li>
+                        <li>Keep title short and descriptive.</li>
+                        <li>Use notes for extra context.</li>
+                        <li>Changes are saved immediately after update.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex flex-wrap gap-2">
+            <button type="submit" class="btn btn-industrial">Update Log</button>
+            <a href="{{ url_for('meal.meal_detail', meal_id=meal.id) }}" class="btn btn-outline-industrial">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

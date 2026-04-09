@@ -1,0 +1,35 @@
+﻿{% extends "base.html" %}
+
+{% block title %}{{ item.name }} | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card reveal">
+    <div class="row g-4 align-items-start">
+        <div class="col-lg-5">
+            {% if item.image_url %}
+                <img src="{{ item.image_url }}" class="img-fluid rounded-3 menu-item-detail-image" alt="{{ item.name }} image">
+            {% else %}
+                <div class="menu-item-detail-image vendor-placeholder d-flex align-items-center justify-content-center fs-1">{{ item.name[0] }}</div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-7">
+            <p class="eyebrow mb-1">Menu Item Detail</p>
+            <h1 class="section-title mb-2">{{ item.name }}</h1>
+            <p class="mb-2">Vendor: <a href="{{ url_for('vendor.vendor_detail', vendor_id=item.vendor.id) }}">{{ item.vendor.name }}</a></p>
+            <p>{{ item.description or 'No description available.' }}</p>
+
+            <div class="price-box mb-3">Price: ${{ '%.2f'|format(item.price|float) }}</div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-sm-6"><div class="meta-box"><strong>Calories:</strong> {{ item.calories if item.calories is not none else 'N/A' }}</div></div>
+                <div class="col-sm-6"><div class="meta-box"><strong>Protein:</strong> {{ item.protein if item.protein is not none else 'N/A' }} g</div></div>
+                <div class="col-sm-6"><div class="meta-box"><strong>Carbohydrates:</strong> {{ item.carbohydrates if item.carbohydrates is not none else 'N/A' }} g</div></div>
+                <div class="col-sm-6"><div class="meta-box"><strong>Fats:</strong> {{ item.fats if item.fats is not none else 'N/A' }} g</div></div>
+            </div>
+
+            <a href="{{ url_for('vendor.vendor_detail', vendor_id=item.vendor.id) }}" class="btn btn-outline-industrial">Back to Vendor</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
