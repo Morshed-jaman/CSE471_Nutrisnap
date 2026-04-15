@@ -1,88 +1,151 @@
-﻿{% extends "base.html" %}
-
-{% block title %}Vendors | NutriSnap{% endblock %}
-
-{% block content %}
+﻿{% extends "base.html" %} {% block title %}Vendors | NutriSnap{% endblock %} {%
+block content %}
 <section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
-    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
-        <div>
-            <p class="eyebrow mb-1">Food & Vendor Directory</p>
-            <h1 class="section-title mb-1">Discover Vendors</h1>
-            <p class="page-subtitle mb-0">Search by name or category and explore healthier menu options.</p>
-        </div>
-        <a href="{{ url_for('meal.home') }}" class="btn btn-outline-industrial">Back to Home</a>
+  <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
+    <div>
+      <p class="eyebrow mb-1">Food & Vendor Directory</p>
+      <h1 class="section-title mb-1">Discover Vendors</h1>
+      <p class="page-subtitle mb-0">
+        Search by name or category and explore healthier menu options.
+      </p>
+    </div>
+    <a href="{{ url_for('meal.home') }}" class="btn btn-outline-industrial"
+      >Back to Home</a
+    >
+  </div>
+
+  <form
+    method="get"
+    action="{{ url_for('vendor.vendors') }}"
+    class="row g-3 align-items-end mt-1"
+  >
+    <div class="col-md-5">
+      <label for="search" class="form-label">Vendor Name</label>
+      <input
+        type="text"
+        class="form-control form-control-industrial"
+        id="search"
+        name="search"
+        value="{{ current_search }}"
+        placeholder="e.g. Green Bowl, FitFuel"
+      />
     </div>
 
-    <form method="get" action="{{ url_for('vendor.vendors') }}" class="row g-3 align-items-end mt-1">
-        <div class="col-md-5">
-            <label for="search" class="form-label">Vendor Name</label>
-            <input
-                type="text"
-                class="form-control form-control-industrial"
-                id="search"
-                name="search"
-                value="{{ current_search }}"
-                placeholder="e.g. Green Bowl, FitFuel"
-            >
-        </div>
+    <div class="col-md-4">
+      <label for="category" class="form-label">Category</label>
+      <select
+        id="category"
+        name="category"
+        class="form-select form-control-industrial"
+      >
+        <option value="">All Categories</option>
+        {% for cat in categories %}
+        <option
+          value="{{ cat }}"
+          {%
+          if
+          current_category=""
+          ="cat"
+          %}selected{%
+          endif
+          %}
+        >
+          {{ cat }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
 
-        <div class="col-md-4">
-            <label for="category" class="form-label">Category</label>
-            <select id="category" name="category" class="form-select form-control-industrial">
-                <option value="">All Categories</option>
-                {% for cat in categories %}
-                    <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>{{ cat }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="col-md-3 d-flex gap-2">
-            <button type="submit" class="btn btn-industrial w-100">Search</button>
-            <a href="{{ url_for('vendor.vendors') }}" class="btn btn-outline-industrial w-100">Reset</a>
-        </div>
-    </form>
+    <div class="col-md-3 d-flex gap-2">
+      <button type="submit" class="btn btn-industrial w-100">Search</button>
+      <a
+        href="{{ url_for('vendor.vendors') }}"
+        class="btn btn-outline-industrial w-100"
+        >Reset</a
+      >
+    </div>
+  </form>
 </section>
 
 {% if vendors %}
 <section class="row g-4 mt-1">
-    {% for vendor in vendors %}
-    <div class="col-md-6 col-xl-4 reveal-on-scroll" data-delay="{{ loop.index0 % 4 }}">
-        <article class="vendor-card h-100">
-            {% if vendor.image_url %}
-                <img src="{{ vendor.image_url }}" class="vendor-thumb" alt="{{ vendor.name }} image">
-            {% else %}
-                <div class="vendor-thumb vendor-placeholder">{{ vendor.name[0] }}</div>
-            {% endif %}
+  {% for vendor in vendors %}
+  <div
+    class="col-md-6 col-xl-4 reveal-on-scroll"
+    data-delay="{{ loop.index0 % 4 }}"
+  >
+    <article class="vendor-card h-100">
+      {% if vendor.image_url %}
+      <img
+        src="{{ vendor.image_url }}"
+        class="vendor-thumb"
+        alt="{{ vendor.name }} image"
+      />
+      {% else %}
+      <div class="vendor-thumb vendor-placeholder">{{ vendor.name[0] }}</div>
+      {% endif %}
 
-            <div class="vendor-card-body">
-                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-                    <h2 class="vendor-title mb-0">{{ vendor.name }}</h2>
-                    <span class="badge text-bg-secondary category-badge">{{ vendor.category }}</span>
-                </div>
+      <div class="vendor-card-body">
+        <div
+          class="d-flex justify-content-between align-items-start gap-2 mb-2"
+        >
+          <h2 class="vendor-title mb-0">{{ vendor.name }}</h2>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge text-bg-secondary category-badge"
+              >{{ vendor.category }}</span
+            >
+            <form
+              action="{{ url_for('favorites.toggle_vendor_favorite', vendor_id=vendor.id) }}"
+              method="post"
+              class="d-inline favorite-toggle-form"
+            >
+              <input
+                type="hidden"
+                name="next"
+                value="{{ request.full_path if request.query_string else request.path }}"
+              />
+              <button
+                type="submit"
+                class="btn btn-sm favorite-toggle-btn {% if vendor.id in favorite_vendor_ids %}is-active{% endif %}"
+                aria-label="{% if vendor.id in favorite_vendor_ids %}Remove from favorites{% else %}Save vendor{% endif %}"
+                title="{% if vendor.id in favorite_vendor_ids %}Remove from favorites{% else %}Save vendor{% endif %}"
+              >
+                <i
+                  class="bi {% if vendor.id in favorite_vendor_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"
+                ></i>
+              </button>
+            </form>
+          </div>
+        </div>
 
-                <p class="vendor-description mb-2">
-                    {% if vendor.description and vendor.description|length > 120 %}
-                        {{ vendor.description[:120] }}...
-                    {% else %}
-                        {{ vendor.description or 'No description available yet.' }}
-                    {% endif %}
-                </p>
+        <p class="vendor-description mb-2">
+          {% if vendor.description and vendor.description|length > 120 %} {{
+          vendor.description[:120] }}... {% else %} {{ vendor.description or 'No
+          description available yet.' }} {% endif %}
+        </p>
 
-                {% if vendor.address %}
-                    <p class="vendor-meta mb-3"><strong>Location:</strong> {{ vendor.address }}</p>
-                {% endif %}
+        {% if vendor.address %}
+        <p class="vendor-meta mb-3">
+          <strong>Location:</strong> {{ vendor.address }}
+        </p>
+        {% endif %}
 
-                <a href="{{ url_for('vendor.vendor_detail', vendor_id=vendor.id) }}" class="btn btn-outline-industrial btn-sm">View Details</a>
-            </div>
-        </article>
-    </div>
-    {% endfor %}
+        <a
+          href="{{ url_for('vendor.vendor_detail', vendor_id=vendor.id) }}"
+          class="btn btn-outline-industrial btn-sm"
+          >View Details</a
+        >
+      </div>
+    </article>
+  </div>
+  {% endfor %}
 </section>
 {% else %}
 <section class="surface-card text-center reveal-on-scroll" data-delay="1">
-    <h2 class="section-title mb-2">No vendors found</h2>
-    <p class="text-muted mb-4">Try another keyword or clear filters.</p>
-    <a href="{{ url_for('vendor.vendors') }}" class="btn btn-industrial">Clear Filters</a>
+  <h2 class="section-title mb-2">No vendors found</h2>
+  <p class="text-muted mb-4">Try another keyword or clear filters.</p>
+  <a href="{{ url_for('vendor.vendors') }}" class="btn btn-industrial"
+    >Clear Filters</a
+  >
 </section>
-{% endif %}
-{% endblock %}
+{% endif %} {% endblock %}

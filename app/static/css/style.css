@@ -611,6 +611,37 @@ h6,
     border: 1px solid rgba(95, 120, 146, 0.28);
 }
 
+.indicator-pill {
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    border: 1px solid transparent;
+    padding: 0.36rem 0.65rem;
+}
+
+.indicator-low-calorie {
+    background: rgba(59, 130, 246, 0.14);
+    border-color: rgba(59, 130, 246, 0.32);
+    color: #1f5ea4;
+}
+
+.indicator-high-protein {
+    background: rgba(16, 185, 129, 0.16);
+    border-color: rgba(16, 185, 129, 0.32);
+    color: #0d7a57;
+}
+
+.indicator-balanced-meal {
+    background: rgba(209, 139, 47, 0.18);
+    border-color: rgba(185, 116, 29, 0.36);
+    color: #915a06;
+}
+
+.indicator-general-meal {
+    background: rgba(95, 120, 146, 0.2);
+    border-color: rgba(95, 120, 146, 0.32);
+    color: #1f354a;
+}
+
 .nutrition-analytics-hero {
     background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(238, 246, 255, 0.95));
 }
@@ -2307,6 +2338,7 @@ h6,
     border-radius: 24px;
     background: linear-gradient(115deg, rgba(59, 130, 246, 0.38), rgba(139, 92, 246, 0.34), rgba(45, 212, 191, 0.34));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
@@ -2885,4 +2917,132 @@ h6,
     .meal-logs-page .meal-thumb {
         height: 200px;
     }
+}
+
+.favorite-toggle-btn {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    border: 1px solid rgba(80, 102, 128, 0.26);
+    color: #2a445c;
+    background: #f4f8fd;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 160ms ease, box-shadow 180ms ease, background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+
+.favorite-toggle-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(21, 33, 49, 0.18);
+    color: #1f354a;
+}
+
+.favorite-toggle-btn.is-active {
+    color: #ffffff;
+    border-color: #b9741d;
+    background: linear-gradient(130deg, #d18b2f, #b9741d);
+}
+
+.favorite-header-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.favorite-header-btn.is-active {
+    --bs-btn-color: #ffffff;
+    --bs-btn-border-color: #b9741d;
+    --bs-btn-bg: #b9741d;
+    --bs-btn-hover-color: #ffffff;
+    --bs-btn-hover-bg: #a86b16;
+    --bs-btn-hover-border-color: #a86b16;
+    --bs-btn-active-bg: #a86b16;
+    --bs-btn-active-border-color: #a86b16;
+}
+
+.meal-logs-page .meal-action-favorite {
+    color: #975e0f;
+    background: rgba(209, 139, 47, 0.16);
+    border-color: rgba(185, 116, 29, 0.38);
+}
+
+.meal-logs-page .meal-action-favorite.is-active {
+    color: #ffffff;
+    background: linear-gradient(130deg, #d18b2f, #b9741d);
+    border-color: #b9741d;
+}
+
+.healthy-indicator-page .healthy-filter-wrap {
+    align-items: center;
+}
+
+.healthy-indicator-page .healthy-filter-chip {
+    text-decoration: none;
+    color: #2b4358;
+    border: 1px solid rgba(95, 120, 146, 0.22);
+    border-radius: 999px;
+    padding: 0.35rem 0.68rem;
+    background: #f5f9fd;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+    transition: all 180ms ease;
+}
+
+.healthy-indicator-page .healthy-filter-chip span {
+    border-radius: 999px;
+    padding: 0.1rem 0.45rem;
+    background: rgba(95, 120, 146, 0.16);
+    color: #274057;
+    font-size: 0.75rem;
+}
+
+.healthy-indicator-page .healthy-filter-chip:hover,
+.healthy-indicator-page .healthy-filter-chip.is-active {
+    color: #ffffff;
+    border-color: #2e3f52;
+    background: linear-gradient(130deg, #2e3f52, #1a2430);
+}
+
+.healthy-indicator-page .healthy-filter-chip:hover span,
+.healthy-indicator-page .healthy-filter-chip.is-active span {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+.healthy-indicator-page .meal-action-btn {
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.28rem 0.72rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+
+.healthy-indicator-page .meal-action-btn:hover {
+    transform: scale(1.04) translateY(-1px);
+    box-shadow: 0 10px 20px rgba(21, 33, 49, 0.2);
+}
+
+.healthy-indicator-page .meal-action-view {
+    color: #1e2d3c;
+    background: #f2f6fb;
+    border-color: rgba(80, 102, 128, 0.24);
+}
+
+.healthy-indicator-page .meal-action-favorite {
+    color: #975e0f;
+    background: rgba(209, 139, 47, 0.16);
+    border-color: rgba(185, 116, 29, 0.38);
+}
+
+.healthy-indicator-page .meal-action-favorite.is-active {
+    color: #ffffff;
+    background: linear-gradient(130deg, #d18b2f, #b9741d);
+    border-color: #b9741d;
 }

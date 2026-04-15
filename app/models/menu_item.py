@@ -23,6 +23,12 @@ class MenuItem(db.Model):
     )
 
     vendor = db.relationship("Vendor", back_populates="menu_items")
+    favorite_entry = db.relationship(
+        "FavoriteMenuItem",
+        back_populates="menu_item",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return (

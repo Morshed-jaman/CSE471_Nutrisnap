@@ -23,6 +23,9 @@ class Vendor(db.Model):
     menu_items = db.relationship(
         "MenuItem", back_populates="vendor", lazy="select", cascade="all, delete-orphan"
     )
+    favorite_entry = db.relationship(
+        "FavoriteVendor", back_populates="vendor", uselist=False, cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<Vendor id={self.id} name={self.name} category={self.category}>"

@@ -1,72 +1,154 @@
-﻿{% extends "base.html" %}
-
-{% block title %}Meal Details | NutriSnap{% endblock %}
-
-{% block content %}
+﻿{% extends "base.html" %} {% block title %}Meal Details | NutriSnap{% endblock
+%} {% block content %}
 <section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
-    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
-        <div>
-            <p class="eyebrow mb-1">Meal Detail</p>
-            <h1 class="section-title mb-1">{{ meal.title if meal.title else meal.meal_type|capitalize ~ ' Meal' }}</h1>
-            <p class="page-subtitle mb-0">Review image, metadata, nutrition values, and actions for this meal log.</p>
-        </div>
-        <div class="d-flex flex-wrap gap-2">
-            <a href="{{ url_for('meal.edit_meal', meal_id=meal.id) }}" class="btn btn-outline-industrial">Edit</a>
-            <a href="{{ url_for('meal.meal_logs') }}" class="btn btn-industrial">Back to Meal Logs</a>
-        </div>
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+      <p class="eyebrow mb-1">Meal Detail</p>
+      <h1 class="section-title mb-1">
+        {{ meal.title if meal.title else meal.meal_type|capitalize ~ ' Meal' }}
+      </h1>
+      <p class="page-subtitle mb-0">
+        Review image, metadata, nutrition values, and actions for this meal log.
+      </p>
     </div>
+    <div class="d-flex flex-wrap gap-2">
+      <form
+        action="{{ url_for('favorites.toggle_meal_favorite', meal_id=meal.id) }}"
+        method="post"
+        class="d-inline favorite-toggle-form"
+      >
+        <input type="hidden" name="next" value="{{ request.path }}" />
+        <button
+          type="submit"
+          class="btn btn-outline-industrial favorite-header-btn {% if is_meal_favorited %}is-active{% endif %}"
+        >
+          <i
+            class="bi {% if is_meal_favorited %}bi-heart-fill{% else %}bi-heart{% endif %} me-1"
+          ></i>
+          {% if is_meal_favorited %}Saved{% else %}Save Meal{% endif %}
+        </button>
+      </form>
+      <a
+        href="{{ url_for('meal.edit_meal', meal_id=meal.id) }}"
+        class="btn btn-outline-industrial"
+        >Edit</a
+      >
+      <a href="{{ url_for('meal.meal_logs') }}" class="btn btn-industrial"
+        >Back to Meal Logs</a
+      >
+    </div>
+  </div>
 </section>
 
 <section class="row g-4 mt-1">
-    <div class="col-lg-7 reveal-on-scroll" data-delay="1">
-        <div class="media-frame h-100">
-            <img src="{{ meal.image_url }}" class="img-fluid rounded-3" alt="Meal image">
-        </div>
+  <div class="col-lg-7 reveal-on-scroll" data-delay="1">
+    <div class="media-frame h-100">
+      <img
+        src="{{ meal.image_url }}"
+        class="img-fluid rounded-3"
+        alt="Meal image"
+      />
     </div>
+  </div>
 
-    <div class="col-lg-5 reveal-on-scroll" data-delay="2">
-        <div class="surface-card h-100 detail-panel">
-            <h2 class="h5 mb-3">Meal Metadata</h2>
-            <div class="kv-list">
-                <div><span>Meal Type</span><strong>{{ meal.meal_type|capitalize }}</strong></div>
-                <div><span>Meal Date</span><strong>{{ meal.meal_date.strftime('%d %b %Y') }}</strong></div>
-                <div><span>Title</span><strong>{{ meal.title if meal.title else '-' }}</strong></div>
-                <div><span>Note</span><strong>{{ meal.note if meal.note else '-' }}</strong></div>
-            </div>
-
-            <hr>
-
-            <h2 class="h6 mb-2">Nutrition Data</h2>
-            {% if meal.calories is not none or meal.protein is not none or meal.carbohydrates is not none or meal.fats is not none %}
-                <div class="nutrition-mini-grid mb-2">
-                    <span>Calories: {{ meal.calories if meal.calories is not none else 'N/A' }}</span>
-                    <span>Protein: {{ meal.protein if meal.protein is not none else 'N/A' }} g</span>
-                    <span>Carbs: {{ meal.carbohydrates if meal.carbohydrates is not none else 'N/A' }} g</span>
-                    <span>Fats: {{ meal.fats if meal.fats is not none else 'N/A' }} g</span>
-                </div>
-                <div class="d-flex flex-wrap gap-2 mb-2">
-                    {% for insight in meal_insights %}
-                        <span class="badge rounded-pill text-bg-info insight-pill">{{ insight }}</span>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="small text-muted mb-2">Nutrition has not been analyzed for this meal yet.</p>
-            {% endif %}
-
-            <p class="meta-time mb-1">Created: {{ meal.created_at.strftime('%d %b %Y, %I:%M %p') }}</p>
-            <p class="meta-time">Updated: {{ meal.updated_at.strftime('%d %b %Y, %I:%M %p') }}</p>
-
-            <div class="d-flex flex-wrap gap-2 mt-3">
-                <form action="{{ url_for('nutrition.analyze_meal', id=meal.id) }}" method="post" class="d-inline">
-                    <input type="hidden" name="next" value="{{ url_for('meal.meal_detail', meal_id=meal.id) }}">
-                    <button type="submit" class="btn btn-outline-success">Analyze Nutrition</button>
-                </form>
-                <a href="{{ url_for('nutrition.nutrition_analytics') }}" class="btn btn-outline-secondary">Nutrition Analytics</a>
-                <form action="{{ url_for('meal.delete_meal', meal_id=meal.id) }}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-outline-danger" data-confirm-delete="Delete this meal log?">Delete</button>
-                </form>
-            </div>
+  <div class="col-lg-5 reveal-on-scroll" data-delay="2">
+    <div class="surface-card h-100 detail-panel">
+      <h2 class="h5 mb-3">Meal Metadata</h2>
+      <div class="kv-list">
+        <div>
+          <span>Meal Type</span><strong>{{ meal.meal_type|capitalize }}</strong>
         </div>
+        <div>
+          <span>Meal Date</span
+          ><strong>{{ meal.meal_date.strftime('%d %b %Y') }}</strong>
+        </div>
+        <div>
+          <span>Title</span
+          ><strong>{{ meal.title if meal.title else '-' }}</strong>
+        </div>
+        <div>
+          <span>Note</span
+          ><strong>{{ meal.note if meal.note else '-' }}</strong>
+        </div>
+      </div>
+
+      <hr />
+
+      <h2 class="h6 mb-2">Nutrition Data</h2>
+      {% if meal.calories is not none or meal.protein is not none or
+      meal.carbohydrates is not none or meal.fats is not none %}
+      <div class="nutrition-mini-grid mb-2">
+        <span
+          >Calories: {{ meal.calories if meal.calories is not none else 'N/A'
+          }}</span
+        >
+        <span
+          >Protein: {{ meal.protein if meal.protein is not none else 'N/A' }}
+          g</span
+        >
+        <span
+          >Carbs: {{ meal.carbohydrates if meal.carbohydrates is not none else
+          'N/A' }} g</span
+        >
+        <span>Fats: {{ meal.fats if meal.fats is not none else 'N/A' }} g</span>
+      </div>
+      <h3 class="h6 mb-2">Healthy Food Indicator</h3>
+      <div class="d-flex flex-wrap gap-2 mb-2">
+        {% for insight in meal_insights %}
+        <span
+          class="badge rounded-pill indicator-pill indicator-{{ insight|lower|replace(' ', '-') }}"
+          >{{ insight }}</span
+        >
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="small text-muted mb-2">
+        Nutrition has not been analyzed for this meal yet.
+      </p>
+      {% endif %}
+
+      <p class="meta-time mb-1">
+        Created: {{ meal.created_at.strftime('%d %b %Y, %I:%M %p') }}
+      </p>
+      <p class="meta-time">
+        Updated: {{ meal.updated_at.strftime('%d %b %Y, %I:%M %p') }}
+      </p>
+
+      <div class="d-flex flex-wrap gap-2 mt-3">
+        <form
+          action="{{ url_for('nutrition.analyze_meal', id=meal.id) }}"
+          method="post"
+          class="d-inline"
+        >
+          <input
+            type="hidden"
+            name="next"
+            value="{{ url_for('meal.meal_detail', meal_id=meal.id) }}"
+          />
+          <button type="submit" class="btn btn-outline-success">
+            Analyze Nutrition
+          </button>
+        </form>
+        <a
+          href="{{ url_for('nutrition.nutrition_analytics') }}"
+          class="btn btn-outline-secondary"
+          >Nutrition Analytics</a
+        >
+        <form
+          action="{{ url_for('meal.delete_meal', meal_id=meal.id) }}"
+          method="post"
+          class="d-inline"
+        >
+          <button
+            type="submit"
+            class="btn btn-outline-danger"
+            data-confirm-delete="Delete this meal log?"
+          >
+            Delete
+          </button>
+        </form>
+      </div>
     </div>
+  </div>
 </section>
 {% endblock %}

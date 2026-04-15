@@ -22,6 +22,10 @@ class MealLog(db.Model):
         db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
     )
 
+    favorite_entry = db.relationship(
+        "FavoriteMeal", back_populates="meal_log", uselist=False, cascade="all, delete-orphan"
+    )
+
     def __repr__(self) -> str:
         return (
             f"<MealLog id={self.id} meal_type={self.meal_type} "

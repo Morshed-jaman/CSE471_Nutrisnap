@@ -72,25 +72,29 @@ def get_nutrition_data(food_name: str) -> dict:
     }
 
 
-def get_nutrition_insights(calories, protein, carbohydrates, fats):
-    insights = []
+def _safe_nutrition_value(value):
+    try:
+        return float(value) if value is not None else None
+    except (TypeError, ValueError):
+        return None
 
-    def _safe(value):
-        try:
-            return float(value) if value is not None else None
-        except (TypeError, ValueError):
-            return None
 
-    calories = _safe(calories)
-    protein = _safe(protein)
-    carbohydrates = _safe(carbohydrates)
-    fats = _safe(fats)
+def get_healthy_food_indicators(calories, protein, carbohydrates, fats):
+    indicators = []
+
+    calories = _safe_nutrition_value(calories)
+    protein = _safe_nutrition_value(protein)
+    carbohydrates = _safe_nutrition_value(carbohydrates)
+    fats = _safe_nutrition_value(fats)
+
+    if all(value is None for value in [calories, protein, carbohydrates, fats]):
+        return indicators
 
     if protein is not None and protein >= 25:
-        insights.append("High Protein")
+        indicators.append("High Protein")
 
     if calories is not None and calories <= 400:
-        insights.append("Low Calorie")
+        indicators.append("Low Calorie")
 
     if (
         calories is not None
@@ -101,9 +105,19 @@ def get_nutrition_insights(calories, protein, carbohydrates, fats):
         and 20 <= carbohydrates <= 60
         and 8 <= fats <= 22
     ):
-        insights.append("Balanced Meal")
+        indicators.append("Balanced Meal")
 
-    if not insights:
-        insights.append("General Meal")
+    if not indicators:
+        indicators.append("General Meal")
+
+    return indicators
+
+
+def get_nutrition_insights(calories, protein, carbohydrates, fats):
+    insights = get_healthy_food_indicators(calories, protein, carbohydrates, fats)
+    if insights:
+        return insights
+
+    insights.append("General Meal")
 
     return insights

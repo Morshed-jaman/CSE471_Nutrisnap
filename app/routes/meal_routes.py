@@ -7,9 +7,9 @@ from sqlalchemy import func, or_
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
-from app.models import MealLog, MenuItem, Vendor
+from app.models import FavoriteMeal, FavoriteMenuItem, FavoriteVendor, MealLog, MenuItem, Vendor
 from app.services.cloudinary_service import delete_image, upload_image
-from app.services.nutrition_service import get_nutrition_insights
+from app.services.nutrition_service import get_healthy_food_indicators, get_nutrition_insights
 
 meal_bp = Blueprint("meal", __name__)
 ALLOWED_MEAL_TYPES = {"breakfast", "lunch", "dinner", "snack"}
@@ -106,6 +106,10 @@ def _home_page_context():
         .all()
     )
 
+    saved_vendors_count = db.session.query(func.count(FavoriteVendor.id)).scalar() or 0
+    saved_menu_items_count = db.session.query(func.count(FavoriteMenuItem.id)).scalar() or 0
+    saved_meals_count = db.session.query(func.count(FavoriteMeal.id)).scalar() or 0
+
     return dict(
         total_meal_logs=total_meal_logs,
         meals_with_nutrition=meals_with_nutrition,
@@ -116,6 +120,9 @@ def _home_page_context():
         latest_meals=latest_meals,
         featured_vendors=featured_vendors,
         nutrition_ready_meals=nutrition_ready_meals,
+        saved_vendors_count=saved_vendors_count,
+        saved_menu_items_count=saved_menu_items_count,
+        saved_meals_count=saved_meals_count,
     )
 
 
@@ -191,7 +198,81 @@ def upload_meal():
 @meal_bp.route("/meal-logs")
 def meal_logs():
     logs = MealLog.query.order_by(MealLog.created_at.desc()).all()
-    return render_template("meals/meal_logs.html", logs=logs)
+    favorite_meal_ids = {row[0] for row in db.session.query(FavoriteMeal.meal_log_id).all()}
+    meal_indicators = {
+        meal.id: get_healthy_food_indicators(
+            meal.calories,
+            meal.protein,
+            meal.carbohydrates,
+            meal.fats,
+        )
+        for meal in logs
+    }
+    return render_template(
+        "meals/meal_logs.html",
+        logs=logs,
+        favorite_meal_ids=favorite_meal_ids,
+        meal_indicators=meal_indicators,
+    )
+
+
+@meal_bp.route("/healthy-indicator")
+def healthy_food_indicator():
+    analyzed_meals = (
+        MealLog.query.filter(
+            or_(
+                MealLog.calories.isnot(None),
+                MealLog.protein.isnot(None),
+                MealLog.carbohydrates.isnot(None),
+                MealLog.fats.isnot(None),
+            )
+        )
+        .order_by(MealLog.meal_date.desc(), MealLog.created_at.desc())
+        .all()
+    )
+
+    available_filters = [
+        ("low-calorie", "Low Calorie"),
+        ("high-protein", "High Protein"),
+        ("balanced-meal", "Balanced Meal"),
+        ("general-meal", "General Meal"),
+    ]
+    filter_map = {slug: label for slug, label in available_filters}
+    selected_filter = (request.args.get("tag") or "").strip().lower()
+    selected_tag = filter_map.get(selected_filter)
+
+    tag_counts = {label: 0 for _, label in available_filters}
+    meal_cards = []
+
+    for meal in analyzed_meals:
+        tags = get_healthy_food_indicators(
+            meal.calories,
+            meal.protein,
+            meal.carbohydrates,
+            meal.fats,
+        )
+
+        for tag in set(tags):
+            if tag in tag_counts:
+                tag_counts[tag] += 1
+
+        if selected_tag and selected_tag not in tags:
+            continue
+
+        meal_cards.append({"meal": meal, "tags": tags})
+
+    favorite_meal_ids = {row[0] for row in db.session.query(FavoriteMeal.meal_log_id).all()}
+
+    return render_template(
+        "meals/healthy_indicator.html",
+        meal_cards=meal_cards,
+        available_filters=available_filters,
+        selected_filter=selected_filter,
+        selected_tag=selected_tag,
+        tag_counts=tag_counts,
+        total_analyzed=len(analyzed_meals),
+        favorite_meal_ids=favorite_meal_ids,
+    )
 
 
 @meal_bp.route("/meal-log/<int:meal_id>")
@@ -206,7 +287,14 @@ def meal_detail(meal_id):
             meal.calories, meal.protein, meal.carbohydrates, meal.fats
         )
 
-    return render_template("meals/meal_detail.html", meal=meal, meal_insights=meal_insights)
+    is_meal_favorited = FavoriteMeal.query.filter_by(meal_log_id=meal.id).first() is not None
+
+    return render_template(
+        "meals/meal_detail.html",
+        meal=meal,
+        meal_insights=meal_insights,
+        is_meal_favorited=is_meal_favorited,
+    )
 
 
 @meal_bp.route("/edit-meal/<int:meal_id>", methods=["GET", "POST"])

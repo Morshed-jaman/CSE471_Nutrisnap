@@ -1,41 +1,112 @@
-﻿{% extends "base.html" %}
-
-{% block title %}{{ item.name }} | NutriSnap{% endblock %}
-
-{% block content %}
+﻿{% extends "base.html" %} {% block title %}{{ item.name }} | NutriSnap{%
+endblock %} {% block content %}
 <section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
-    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
-        <div>
-            <p class="eyebrow mb-1">Menu Item Detail</p>
-            <h1 class="section-title mb-1">{{ item.name }}</h1>
-            <p class="page-subtitle mb-0">From <a href="{{ url_for('vendor.vendor_detail', vendor_id=item.vendor.id) }}">{{ item.vendor.name }}</a></p>
-        </div>
-        <a href="{{ url_for('vendor.vendor_detail', vendor_id=item.vendor.id) }}" class="btn btn-outline-industrial">Back to Vendor</a>
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+      <p class="eyebrow mb-1">Menu Item Detail</p>
+      <h1 class="section-title mb-1">{{ item.name }}</h1>
+      <p class="page-subtitle mb-0">
+        From
+        <a
+          href="{{ url_for('vendor.vendor_detail', vendor_id=item.vendor.id) }}"
+          >{{ item.vendor.name }}</a
+        >
+      </p>
     </div>
+    <div class="d-flex flex-wrap gap-2">
+      <form
+        action="{{ url_for('favorites.toggle_menu_item_favorite', item_id=item.id) }}"
+        method="post"
+        class="d-inline favorite-toggle-form"
+      >
+        <input type="hidden" name="next" value="{{ request.path }}" />
+        <button
+          type="submit"
+          class="btn btn-outline-industrial favorite-header-btn {% if is_menu_item_favorited %}is-active{% endif %}"
+        >
+          <i
+            class="bi {% if is_menu_item_favorited %}bi-heart-fill{% else %}bi-heart{% endif %} me-1"
+          ></i>
+          {% if is_menu_item_favorited %}Saved{% else %}Save Item{% endif %}
+        </button>
+      </form>
+      <a
+        href="{{ url_for('vendor.vendor_detail', vendor_id=item.vendor.id) }}"
+        class="btn btn-outline-industrial"
+        >Back to Vendor</a
+      >
+    </div>
+  </div>
 </section>
 
 <section class="surface-card reveal-on-scroll" data-delay="1">
-    <div class="row g-4 align-items-start">
-        <div class="col-lg-5">
-            {% if item.image_url %}
-                <img src="{{ item.image_url }}" class="img-fluid rounded-3 menu-item-detail-image" alt="{{ item.name }} image">
-            {% else %}
-                <div class="menu-item-detail-image vendor-placeholder d-flex align-items-center justify-content-center fs-1">{{ item.name[0] }}</div>
-            {% endif %}
-        </div>
-
-        <div class="col-lg-7">
-            <p class="mb-3">{{ item.description or 'No description available.' }}</p>
-
-            <div class="price-box mb-3">Price: ${{ '%.2f'|format(item.price|float) }}</div>
-
-            <div class="row g-2 mb-3">
-                <div class="col-sm-6"><div class="meta-box"><strong>Calories:</strong> {{ item.calories if item.calories is not none else 'N/A' }}</div></div>
-                <div class="col-sm-6"><div class="meta-box"><strong>Protein:</strong> {{ item.protein if item.protein is not none else 'N/A' }} g</div></div>
-                <div class="col-sm-6"><div class="meta-box"><strong>Carbohydrates:</strong> {{ item.carbohydrates if item.carbohydrates is not none else 'N/A' }} g</div></div>
-                <div class="col-sm-6"><div class="meta-box"><strong>Fats:</strong> {{ item.fats if item.fats is not none else 'N/A' }} g</div></div>
-            </div>
-        </div>
+  <div class="row g-4 align-items-start">
+    <div class="col-lg-5">
+      {% if item.image_url %}
+      <img
+        src="{{ item.image_url }}"
+        class="img-fluid rounded-3 menu-item-detail-image"
+        alt="{{ item.name }} image"
+      />
+      {% else %}
+      <div
+        class="menu-item-detail-image vendor-placeholder d-flex align-items-center justify-content-center fs-1"
+      >
+        {{ item.name[0] }}
+      </div>
+      {% endif %}
     </div>
+
+    <div class="col-lg-7">
+      <p class="mb-3">{{ item.description or 'No description available.' }}</p>
+
+      <div class="price-box mb-3">
+        Price: ${{ '%.2f'|format(item.price|float) }}
+      </div>
+
+      <div class="row g-2 mb-3">
+        <div class="col-sm-6">
+          <div class="meta-box">
+            <strong>Calories:</strong> {{ item.calories if item.calories is not
+            none else 'N/A' }}
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="meta-box">
+            <strong>Protein:</strong> {{ item.protein if item.protein is not
+            none else 'N/A' }} g
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="meta-box">
+            <strong>Carbohydrates:</strong> {{ item.carbohydrates if
+            item.carbohydrates is not none else 'N/A' }} g
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="meta-box">
+            <strong>Fats:</strong> {{ item.fats if item.fats is not none else
+            'N/A' }} g
+          </div>
+        </div>
+      </div>
+
+      <h2 class="h6 mb-2">Healthy Food Indicator</h2>
+      {% if menu_item_indicators %}
+      <div class="d-flex flex-wrap gap-2 mb-1">
+        {% for tag in menu_item_indicators %}
+        <span
+          class="badge rounded-pill indicator-pill indicator-{{ tag|lower|replace(' ', '-') }}"
+          >{{ tag }}</span
+        >
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="small text-muted mb-1">
+        Nutrition data is required before assigning healthy tags.
+      </p>
+      {% endif %}
+    </div>
+  </div>
 </section>
 {% endblock %}
