@@ -1,7 +1,7 @@
 ﻿from decimal import Decimal
 
-from extensions import db
-from models import MenuItem, Vendor
+from app.extensions import db
+from app.models import MenuItem, Vendor
 
 
 DEMO_VENDOR_DATA = [

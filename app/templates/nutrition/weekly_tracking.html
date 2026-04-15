@@ -1,0 +1,252 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Weekly Tracking | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+        <div>
+            <p class="eyebrow mb-1">Module 2 Feature 2</p>
+            <h1 class="section-title mb-1">Weekly Nutrition Tracking</h1>
+            <p class="page-subtitle mb-0">Track weekly totals, daily nutrition trends, and meal history from your saved meal logs.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 weekly-nav-controls">
+            <a href="{{ url_for('nutrition.weekly_tracking', start_date=previous_week_start) }}" class="btn btn-outline-industrial btn-sm">
+                <i class="bi bi-chevron-left me-1"></i> Previous Week
+            </a>
+            <a href="{{ url_for('nutrition.weekly_tracking', start_date=current_week_start) }}" class="btn {% if is_current_week %}btn-industrial{% else %}btn-outline-industrial{% endif %} btn-sm">
+                <i class="bi bi-calendar-week me-1"></i> Current Week
+            </a>
+            <a href="{{ url_for('nutrition.weekly_tracking', start_date=next_week_start) }}" class="btn btn-outline-industrial btn-sm">
+                Next Week <i class="bi bi-chevron-right ms-1"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="weekly-range-band mt-3">
+        <i class="bi bi-calendar3"></i>
+        <span>Selected Week: {{ week_range_label }}</span>
+    </div>
+</section>
+
+{% if total_meals == 0 and latest_data_week_start %}
+<section class="surface-card reveal-on-scroll mb-4 weekly-hint-card" data-delay="8">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div>
+            <h2 class="h6 mb-1">No data in this week</h2>
+            <p class="small text-muted mb-0">Your latest tracked week is {{ latest_data_week_label }}.</p>
+        </div>
+        <a href="{{ url_for('nutrition.weekly_tracking', start_date=latest_data_week_start) }}" class="btn btn-outline-industrial btn-sm">
+            <i class="bi bi-arrow-up-right-circle me-1"></i> Go to Latest Tracked Week
+        </a>
+    </div>
+</section>
+{% endif %}
+
+<section class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-4 reveal-on-scroll" data-delay="1">
+        <article class="weekly-stat-card weekly-stat-calories h-100">
+            <div class="weekly-stat-icon"><i class="bi bi-fire"></i></div>
+            <p>Total Calories</p>
+            <h2>{{ total_calories }}</h2>
+        </article>
+    </div>
+    <div class="col-sm-6 col-xl-4 reveal-on-scroll" data-delay="2">
+        <article class="weekly-stat-card weekly-stat-protein h-100">
+            <div class="weekly-stat-icon"><i class="bi bi-lightning-charge"></i></div>
+            <p>Total Protein</p>
+            <h2>{{ total_protein }} g</h2>
+        </article>
+    </div>
+    <div class="col-sm-6 col-xl-4 reveal-on-scroll" data-delay="3">
+        <article class="weekly-stat-card weekly-stat-carbs h-100">
+            <div class="weekly-stat-icon"><i class="bi bi-bar-chart"></i></div>
+            <p>Total Carbs</p>
+            <h2>{{ total_carbohydrates }} g</h2>
+        </article>
+    </div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="4">
+        <article class="weekly-stat-card weekly-stat-fats h-100">
+            <div class="weekly-stat-icon"><i class="bi bi-droplet-half"></i></div>
+            <p>Total Fats</p>
+            <h2>{{ total_fats }} g</h2>
+        </article>
+    </div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="5">
+        <article class="weekly-stat-card h-100">
+            <div class="weekly-stat-icon"><i class="bi bi-graph-up"></i></div>
+            <p>Avg Calories / Day</p>
+            <h2>{{ avg_calories_per_day }}</h2>
+        </article>
+    </div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="6">
+        <article class="weekly-stat-card h-100">
+            <div class="weekly-stat-icon"><i class="bi bi-journal-check"></i></div>
+            <p>Meals This Week</p>
+            <h2>{{ total_meals }}</h2>
+        </article>
+    </div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="7">
+        <article class="weekly-stat-card h-100">
+            <div class="weekly-stat-icon"><i class="bi bi-patch-check"></i></div>
+            <p>Analyzed Meals</p>
+            <h2>{{ analyzed_meals }}</h2>
+        </article>
+    </div>
+</section>
+
+<section class="surface-card reveal-on-scroll mb-4" data-delay="8">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <h2 class="h5 mb-0">Weekly Insights</h2>
+        <span class="small text-muted">Average meals/day: {{ avg_meals_per_day }}</span>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        {% for insight in weekly_insights %}
+            <span class="badge rounded-pill weekly-insight-pill">{{ insight }}</span>
+        {% endfor %}
+    </div>
+</section>
+
+{% if total_meals == 0 %}
+<section class="surface-card empty-week-state text-center reveal-on-scroll mb-4" data-delay="9">
+    <div class="empty-week-icon"><i class="bi bi-calendar2-x"></i></div>
+    <h2 class="h4 mb-2">No meals tracked this week</h2>
+    <p class="text-muted mb-4">Start logging meals to unlock weekly nutrition trends and insights.</p>
+    <div class="d-flex flex-wrap justify-content-center gap-2">
+        <a href="{{ url_for('meal.upload_meal') }}" class="btn btn-industrial">Upload Meal</a>
+        <a href="{{ url_for('meal.meal_logs') }}" class="btn btn-outline-industrial">View Meal Logs</a>
+        <a href="{{ url_for('nutrition.nutrition_search') }}" class="btn btn-outline-secondary">Nutrition Search</a>
+    </div>
+</section>
+{% endif %}
+
+<section class="row g-4 mb-4" id="weekly-tracking-charts">
+    <div class="col-lg-6 reveal-on-scroll" data-delay="10">
+        <div class="surface-card chart-surface">
+            <h3 class="h6 mb-3">Calories by Day</h3>
+            <div class="weekly-chart-wrap weekly-chart-wrap-lg">
+                <canvas id="weeklyCaloriesChart"></canvas>
+                <div id="weeklyCaloriesChartEmpty" class="chart-empty-state d-none">
+                    <i class="bi bi-bar-chart-line"></i>
+                    <p>No calorie data in this week.</p>
+                </div>
+            </div>
+            <p class="small text-muted mt-2 mb-0" id="weeklyCaloriesChartMessage"></p>
+        </div>
+    </div>
+    <div class="col-lg-6 reveal-on-scroll" data-delay="11">
+        <div class="surface-card chart-surface">
+            <h3 class="h6 mb-3">Macronutrient Distribution</h3>
+            <div class="weekly-chart-wrap weekly-chart-wrap-lg">
+                <canvas id="weeklyMacroChart"></canvas>
+                <div id="weeklyMacroChartEmpty" class="chart-empty-state d-none">
+                    <i class="bi bi-pie-chart"></i>
+                    <p>No macronutrient data in this week.</p>
+                </div>
+            </div>
+            <p class="small text-muted mt-2 mb-0" id="weeklyMacroChartMessage"></p>
+        </div>
+    </div>
+    <div class="col-12 reveal-on-scroll" data-delay="12">
+        <div class="surface-card chart-surface">
+            <h3 class="h6 mb-3">Meals Logged by Day</h3>
+            <div class="weekly-chart-wrap weekly-chart-wrap-sm">
+                <canvas id="weeklyMealsChart"></canvas>
+                <div id="weeklyMealsChartEmpty" class="chart-empty-state d-none">
+                    <i class="bi bi-calendar2-minus"></i>
+                    <p>No meals logged in this week.</p>
+                </div>
+            </div>
+            <p class="small text-muted mt-2 mb-0" id="weeklyMealsChartMessage"></p>
+        </div>
+    </div>
+</section>
+
+<section class="surface-card reveal-on-scroll mb-4" data-delay="13">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h5 mb-0">Daily Breakdown</h2>
+        <span class="small text-muted">Monday to Sunday</span>
+    </div>
+
+    <div class="row g-3">
+        {% for day in daily_breakdown %}
+            <div class="col-sm-6 col-lg-4 col-xxl daily-col-7">
+                <article class="daily-breakdown-card h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h3 class="h6 mb-0">{{ day.label }}</h3>
+                        <span class="daily-date-chip">{{ day.display_date }}</span>
+                    </div>
+                    <div class="daily-kpis">
+                        <span>Kcal: <strong>{{ day.calories }}</strong></span>
+                        <span>Protein: <strong>{{ day.protein }}g</strong></span>
+                        <span>Carbs: <strong>{{ day.carbohydrates }}g</strong></span>
+                        <span>Fats: <strong>{{ day.fats }}g</strong></span>
+                    </div>
+                    <p class="small text-muted mt-2 mb-0">Meals: {{ day.meal_count }} &middot; Analyzed: {{ day.analyzed_count }}</p>
+                </article>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="surface-card reveal-on-scroll" data-delay="14">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h5 mb-0">Weekly Meal History</h2>
+        <a href="{{ url_for('meal.meal_logs') }}" class="btn btn-outline-industrial btn-sm">Open Meal Logs</a>
+    </div>
+
+    {% if weekly_meals %}
+        <div class="table-responsive">
+            <table class="table align-middle app-table weekly-history-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Meal</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Nutrition</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for meal in weekly_meals %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="{{ meal.image_url }}" alt="Meal image" class="table-thumb">
+                                    <div>
+                                        <strong>{{ meal.title or meal.meal_type|capitalize ~ ' Meal' }}</strong>
+                                        <div class="small text-muted">{{ meal.meal_type|capitalize }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ meal.meal_date.strftime('%d %b %Y') }}</td>
+                            <td>
+                                <div class="nutrition-mini-grid">
+                                    <span>Kcal: {{ meal.calories if meal.calories is not none else 'N/A' }}</span>
+                                    <span>P: {{ meal.protein if meal.protein is not none else 'N/A' }}g</span>
+                                    <span>C: {{ meal.carbohydrates if meal.carbohydrates is not none else 'N/A' }}g</span>
+                                    <span>F: {{ meal.fats if meal.fats is not none else 'N/A' }}g</span>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('meal.meal_detail', meal_id=meal.id) }}" class="btn btn-sm btn-outline-industrial">Meal Details</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-panel">
+            <p class="mb-2">No meal history available for this selected week.</p>
+            <a href="{{ url_for('meal.upload_meal') }}" class="btn btn-outline-industrial btn-sm">Upload Meal</a>
+        </div>
+    {% endif %}
+</section>
+
+<script id="weeklyTrackingChartData" type="application/json">{{ chart_payload|tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/weekly_tracking.js') }}"></script>
+{% endblock %}

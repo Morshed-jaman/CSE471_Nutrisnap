@@ -1,0 +1,100 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Upload Meal | NutriSnap{% endblock %}
+{% block body_class %}upload-meal-page{% endblock %}
+
+{% block content %}
+<section class="surface-card page-header-card upload-hero-card reveal-on-scroll" data-delay="0">
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
+        <div>
+            <p class="eyebrow mb-1">Meal Upload</p>
+            <h1 class="section-title mb-1 upload-hero-title">Capture Your Meal Story</h1>
+            <p class="page-subtitle mb-0">Upload one image, tag the meal, and save a polished log in seconds.</p>
+            <span class="upload-hero-accent"></span>
+        </div>
+        <a href="{{ url_for('meal.home') }}" class="btn btn-outline-industrial upload-nav-btn">Back to Home</a>
+    </div>
+</section>
+
+<section class="surface-card upload-form-shell reveal-on-scroll" data-delay="1">
+    <form action="{{ url_for('meal.upload_meal') }}" method="post" enctype="multipart/form-data" novalidate>
+        <div class="row g-4 align-items-start">
+            <div class="col-lg-7">
+                <div class="mb-3">
+                    <label for="image" class="form-label">Meal Image</label>
+                    <label for="image" class="upload-drop-zone" id="uploadDropZone">
+                        <input class="upload-file-input" type="file" id="image" name="image" accept="image/*" required>
+                        <div class="upload-drop-content">
+                            <div class="upload-drop-icon"><i class="bi bi-cloud-arrow-up"></i></div>
+                            <h3>Upload your meal image</h3>
+                            <p id="uploadFileHint">Click to browse or drag and drop</p>
+                            <small>PNG, JPG, JPEG, WEBP, GIF</small>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="upload-preview-frame mb-3 d-none" id="imagePreviewWrap">
+                    <img id="imagePreview" class="img-fluid rounded industrial-preview" alt="Preview">
+                    <span class="upload-preview-badge"><i class="bi bi-image me-1"></i>Live Preview</span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="meal_type" class="form-label">Meal Type</label>
+                        <select class="form-select form-control-industrial input-modern" id="meal_type" name="meal_type" required>
+                            <option value="">Select type</option>
+                            {% for type in meal_types %}
+                                <option value="{{ type }}" {% if request.form.get('meal_type') == type %}selected{% endif %}>{{ type|capitalize }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="meal_date" class="form-label">Meal Date</label>
+                        <input type="date" class="form-control form-control-industrial input-modern" id="meal_date" name="meal_date" value="{{ request.form.get('meal_date', '') }}" required>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <label for="title" class="form-label">Title (Optional)</label>
+                    <input type="text" class="form-control form-control-industrial input-modern" id="title" name="title" value="{{ request.form.get('title', '') }}" maxlength="150" placeholder="Example: Lunch bowl with grilled chicken">
+                </div>
+
+                <div class="mt-3">
+                    <label for="note" class="form-label">Note (Optional)</label>
+                    <textarea class="form-control form-control-industrial input-modern" id="note" name="note" rows="4" placeholder="Any context about this meal...">{{ request.form.get('note', '') }}</textarea>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <aside class="upload-info-panel h-100 reveal-on-scroll" data-delay="2">
+                    <div class="upload-info-head">
+                        <div class="upload-info-icon"><i class="bi bi-stars"></i></div>
+                        <div>
+                            <h2>Before You Save</h2>
+                            <p>Quick checklist for clean, useful logs.</p>
+                        </div>
+                    </div>
+
+                    <ul class="upload-info-list list-unstyled mb-0">
+                        <li><i class="bi bi-check2-circle"></i><span>Use a clear photo where food is visible.</span></li>
+                        <li><i class="bi bi-check2-circle"></i><span>Choose the correct meal type and date.</span></li>
+                        <li><i class="bi bi-check2-circle"></i><span>Add a short title for easier searching later.</span></li>
+                        <li><i class="bi bi-check2-circle"></i><span>Click Save Log to publish to your meal history.</span></li>
+                    </ul>
+                </aside>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex flex-wrap gap-2 upload-actions">
+            <button type="submit" class="btn btn-industrial gradient-btn hover-lift">
+                <i class="bi bi-save2 me-1"></i> Save Log
+            </button>
+            <a href="{{ url_for('meal.home') }}" class="btn btn-outline-industrial upload-cancel-btn">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+{% endblock %}

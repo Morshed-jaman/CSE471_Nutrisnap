@@ -1,7 +1,7 @@
 ﻿from flask import Blueprint, abort, render_template, request
 
-from extensions import db
-from models import MenuItem, Vendor
+from app.extensions import db
+from app.models import MenuItem, Vendor
 
 vendor_bp = Blueprint("vendor", __name__)
 
@@ -31,7 +31,7 @@ def vendors():
     categories = [row[0] for row in categories_query if row[0]]
 
     return render_template(
-        "vendors.html",
+        "vendors/vendors.html",
         vendors=vendors_list,
         categories=categories,
         current_search=search,
@@ -51,7 +51,7 @@ def vendor_detail(vendor_id: int):
         .all()
     )
 
-    return render_template("vendor_detail.html", vendor=vendor, menu_items=menu_items)
+    return render_template("vendors/vendor_detail.html", vendor=vendor, menu_items=menu_items)
 
 
 @vendor_bp.route("/menu-item/<int:item_id>")
@@ -60,4 +60,4 @@ def menu_item_detail(item_id: int):
     if not item or not item.is_available or not item.vendor or not item.vendor.is_active:
         abort(404)
 
-    return render_template("menu_item_detail.html", item=item)
+    return render_template("vendors/menu_item_detail.html", item=item)

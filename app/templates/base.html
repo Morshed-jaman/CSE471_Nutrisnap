@@ -63,6 +63,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {% if endpoint == 'nutrition.weekly_tracking' %}active{% endif %}" href="{{ url_for('nutrition.weekly_tracking') }}">
+                                <i class="bi bi-calendar2-week"></i><span>Weekly Tracking</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {% if endpoint == 'nutrition.nutrition_analytics' %}active{% endif %}" href="{{ url_for('nutrition.nutrition_analytics') }}">
                                 <i class="bi bi-graph-up-arrow"></i><span>Nutrition Analytics</span>
                             </a>

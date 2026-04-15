@@ -20,6 +20,7 @@
             <a href="{{ url_for('meal.meal_logs') }}"><i class="bi bi-journal-text"></i><span>Meal Logs</span></a>
             <a href="{{ url_for('vendor.vendors') }}"><i class="bi bi-shop"></i><span>Vendors</span></a>
             <a href="{{ url_for('nutrition.nutrition_search') }}"><i class="bi bi-search-heart"></i><span>Nutrition Search</span></a>
+            <a href="{{ url_for('nutrition.weekly_tracking') }}"><i class="bi bi-calendar2-week"></i><span>Weekly Tracking</span></a>
             <a href="{{ url_for('nutrition.nutrition_analytics') }}"><i class="bi bi-graph-up-arrow"></i><span>Nutrition Analytics</span></a>
         </nav>
 
@@ -41,6 +42,7 @@
                 <a href="{{ url_for('meal.meal_logs') }}" class="btn btn-outline-industrial btn-sm">View Logs</a>
                 <a href="{{ url_for('vendor.vendors') }}" class="btn btn-outline-industrial btn-sm">Browse Vendors</a>
                 <a href="{{ url_for('nutrition.nutrition_search') }}" class="btn btn-outline-secondary btn-sm">Nutrition Search</a>
+                <a href="{{ url_for('nutrition.weekly_tracking') }}" class="btn btn-outline-industrial btn-sm">Weekly Tracking</a>
             </div>
         </section>
 
@@ -106,6 +108,13 @@
                         <i class="bi bi-graph-up"></i>
                         <h3>Nutrition Analytics</h3>
                         <p>View totals, trends, and nutrition insights.</p>
+                    </a>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <a href="{{ url_for('nutrition.weekly_tracking') }}" class="shortcut-card">
+                        <i class="bi bi-calendar2-week"></i>
+                        <h3>Weekly Tracking</h3>
+                        <p>Track weekly totals, daily breakdowns, and trends.</p>
                     </a>
                 </div>
             </div>
