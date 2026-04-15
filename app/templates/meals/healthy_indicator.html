@@ -4,11 +4,10 @@ content %}
 <section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
   <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
     <div>
-      <p class="eyebrow mb-1">Meal Health Labels</p>
+      <p class="eyebrow mb-1">Meal Health Dashboard</p>
       <h1 class="section-title mb-1">Healthy Food Indicator</h1>
       <p class="page-subtitle mb-0">
-        Meal-focused tags such as Low Calorie, High Protein, and Balanced Meal
-        help you identify healthier options quickly.
+        Every analyzed meal is shown here with nutrient meters and healthy tags.
       </p>
     </div>
     <div class="d-flex flex-wrap gap-2">
@@ -27,32 +26,28 @@ content %}
 
   <div class="d-flex flex-wrap gap-2 mt-3">
     <span class="chip">Analyzed meals: {{ total_analyzed }}</span>
-    <span class="chip">Showing: {{ meal_cards|length }}</span>
-    {% if selected_tag %}
-    <span class="chip">Filter: {{ selected_tag }}</span>
-    {% endif %}
+    <span class="chip"
+      >Low Calorie: {{ tag_counts.get('Low Calorie', 0) }}</span
+    >
+    <span class="chip"
+      >High Protein: {{ tag_counts.get('High Protein', 0) }}</span
+    >
+    <span class="chip"
+      >Balanced Meal: {{ tag_counts.get('Balanced Meal', 0) }}</span
+    >
   </div>
 </section>
 
-<section class="surface-card mt-4 reveal-on-scroll" data-delay="1">
-  <div class="d-flex flex-wrap gap-2 healthy-filter-wrap">
-    <a
-      href="{{ url_for('meal.healthy_food_indicator') }}"
-      class="healthy-filter-chip {% if not selected_filter %}is-active{% endif %}"
-    >
-      All
-      <span>{{ total_analyzed }}</span>
-    </a>
-    {% for slug, label in available_filters %}
-    <a
-      href="{{ url_for('meal.healthy_food_indicator', tag=slug) }}"
-      class="healthy-filter-chip {% if selected_filter == slug %}is-active{% endif %}"
-    >
-      {{ label }}
-      <span>{{ tag_counts.get(label, 0) }}</span>
-    </a>
-    {% endfor %}
-  </div>
+<section
+  class="surface-card mt-4 reveal-on-scroll healthy-indicator-note"
+  data-delay="1"
+>
+  <p class="mb-0">
+    <strong>Meter notes:</strong>
+    Calories, protein, carbohydrates, and fats are shown from your saved meal
+    nutrition data. Sugar and sodium are displayed as unavailable because they
+    are not stored in the current meal model.
+  </p>
 </section>
 
 {% if meal_cards %}
@@ -89,22 +84,28 @@ content %}
           {% endfor %}
         </div>
 
-        <div class="nutrition-mini-grid mb-3">
-          <span
-            >Calories: {{ meal.calories if meal.calories is not none else 'N/A'
-            }}</span
-          >
-          <span
-            >Protein: {{ meal.protein if meal.protein is not none else 'N/A' }}
-            g</span
-          >
-          <span
-            >Carbs: {{ meal.carbohydrates if meal.carbohydrates is not none else
-            'N/A' }} g</span
-          >
-          <span
-            >Fats: {{ meal.fats if meal.fats is not none else 'N/A' }} g</span
-          >
+        <div class="meter-stack mb-3">
+          {% for meter in card.meters %}
+          <div class="meter-row">
+            <div class="meter-head">
+              <span>{{ meter.label }}</span>
+              <strong>
+                {% if meter.value is not none %} {{ meter.value }} {{ meter.unit
+                }} {% else %} N/A {% endif %}
+              </strong>
+            </div>
+
+            <div
+              class="meter-track {% if meter.percent is none %}is-muted{% endif %}"
+            >
+              <span
+                class="meter-fill meter-tone-{{ meter.tone }}"
+                style="width: {% if meter.percent is none %}24{% else %}{{ meter.percent }}{% endif %}%"
+              ></span>
+            </div>
+            <small class="meter-hint">{{ meter.hint }}</small>
+          </div>
+          {% endfor %}
         </div>
 
         <div class="d-flex flex-wrap gap-2 mt-auto">
@@ -113,11 +114,7 @@ content %}
             method="post"
             class="d-inline"
           >
-            <input
-              type="hidden"
-              name="next"
-              value="{{ request.full_path if request.query_string else request.path }}"
-            />
+            <input type="hidden" name="next" value="{{ request.path }}" />
             <button
               type="submit"
               class="btn btn-sm meal-action-btn meal-action-favorite {% if meal.id in favorite_meal_ids %}is-active{% endif %}"
@@ -145,24 +142,13 @@ content %}
 </section>
 {% else %}
 <section class="surface-card mt-4 text-center reveal-on-scroll" data-delay="2">
-  {% if total_analyzed == 0 %}
   <h2 class="section-title mb-2">No analyzed meals yet</h2>
   <p class="text-muted mb-4">
-    Analyze meal nutrition first to generate healthy food indicator labels.
+    Analyze meal nutrition first to populate this Healthy Food Indicator
+    dashboard.
   </p>
   <a href="{{ url_for('meal.meal_logs') }}" class="btn btn-industrial"
     >Go to Meal Logs</a
   >
-  {% else %}
-  <h2 class="section-title mb-2">No meals match this tag</h2>
-  <p class="text-muted mb-4">
-    Try another filter to view more healthy meal options.
-  </p>
-  <a
-    href="{{ url_for('meal.healthy_food_indicator') }}"
-    class="btn btn-outline-industrial"
-    >Clear Filter</a
-  >
-  {% endif %}
 </section>
 {% endif %} {% endblock %}

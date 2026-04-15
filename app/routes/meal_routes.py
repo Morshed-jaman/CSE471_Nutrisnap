@@ -231,17 +231,80 @@ def healthy_food_indicator():
         .all()
     )
 
-    available_filters = [
-        ("low-calorie", "Low Calorie"),
-        ("high-protein", "High Protein"),
-        ("balanced-meal", "Balanced Meal"),
-        ("general-meal", "General Meal"),
-    ]
-    filter_map = {slug: label for slug, label in available_filters}
-    selected_filter = (request.args.get("tag") or "").strip().lower()
-    selected_tag = filter_map.get(selected_filter)
+    def _safe_float(value):
+        try:
+            return float(value) if value is not None else None
+        except (TypeError, ValueError):
+            return None
 
-    tag_counts = {label: 0 for _, label in available_filters}
+    def _meter(label, value, unit, max_scale, tone, hint):
+        safe_value = _safe_float(value)
+        if safe_value is None:
+            return {
+                "label": label,
+                "value": None,
+                "unit": unit,
+                "percent": None,
+                "tone": "na",
+                "hint": hint,
+            }
+
+        percent = min(100, max(2, (safe_value / max_scale) * 100)) if max_scale else 0
+        return {
+            "label": label,
+            "value": round(safe_value, 2),
+            "unit": unit,
+            "percent": round(percent, 2),
+            "tone": tone,
+            "hint": hint,
+        }
+
+    def _calorie_tone(calories):
+        value = _safe_float(calories)
+        if value is None:
+            return "na", "No calories data"
+        if value <= 400:
+            return "good", "Low calorie range"
+        if value <= 650:
+            return "moderate", "Moderate calorie range"
+        return "high", "High calorie range"
+
+    def _protein_tone(protein):
+        value = _safe_float(protein)
+        if value is None:
+            return "na", "No protein data"
+        if value >= 25:
+            return "good", "High protein"
+        if value >= 15:
+            return "moderate", "Moderate protein"
+        return "high", "Low protein"
+
+    def _carb_tone(carbs):
+        value = _safe_float(carbs)
+        if value is None:
+            return "na", "No carbs data"
+        if 20 <= value <= 60:
+            return "good", "Balanced carb range"
+        if value <= 80:
+            return "moderate", "Acceptable carb range"
+        return "high", "High carb load"
+
+    def _fat_tone(fats):
+        value = _safe_float(fats)
+        if value is None:
+            return "na", "No fats data"
+        if 8 <= value <= 22:
+            return "good", "Balanced fat range"
+        if value <= 30:
+            return "moderate", "Acceptable fat range"
+        return "high", "High fat load"
+
+    tag_counts = {
+        "Low Calorie": 0,
+        "High Protein": 0,
+        "Balanced Meal": 0,
+        "General Meal": 0,
+    }
     meal_cards = []
 
     for meal in analyzed_meals:
@@ -256,19 +319,31 @@ def healthy_food_indicator():
             if tag in tag_counts:
                 tag_counts[tag] += 1
 
-        if selected_tag and selected_tag not in tags:
-            continue
+        calorie_tone, calorie_hint = _calorie_tone(meal.calories)
+        protein_tone, protein_hint = _protein_tone(meal.protein)
+        carbs_tone, carbs_hint = _carb_tone(meal.carbohydrates)
+        fats_tone, fats_hint = _fat_tone(meal.fats)
 
-        meal_cards.append({"meal": meal, "tags": tags})
+        meal_cards.append(
+            {
+                "meal": meal,
+                "tags": tags,
+                "meters": [
+                    _meter("Calories", meal.calories, "kcal", 800, calorie_tone, calorie_hint),
+                    _meter("Protein", meal.protein, "g", 40, protein_tone, protein_hint),
+                    _meter("Carbohydrates", meal.carbohydrates, "g", 120, carbs_tone, carbs_hint),
+                    _meter("Fats", meal.fats, "g", 45, fats_tone, fats_hint),
+                    _meter("Sugar", None, "g", 60, "na", "Sugar is not tracked in saved meal data"),
+                    _meter("Sodium", None, "mg", 2300, "na", "Sodium is not tracked in saved meal data"),
+                ],
+            }
+        )
 
     favorite_meal_ids = {row[0] for row in db.session.query(FavoriteMeal.meal_log_id).all()}
 
     return render_template(
         "meals/healthy_indicator.html",
         meal_cards=meal_cards,
-        available_filters=available_filters,
-        selected_filter=selected_filter,
-        selected_tag=selected_tag,
         tag_counts=tag_counts,
         total_analyzed=len(analyzed_meals),
         favorite_meal_ids=favorite_meal_ids,

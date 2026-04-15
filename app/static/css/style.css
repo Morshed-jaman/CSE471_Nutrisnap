@@ -2973,44 +2973,81 @@ h6,
     border-color: #b9741d;
 }
 
-.healthy-indicator-page .healthy-filter-wrap {
-    align-items: center;
+.healthy-indicator-page .healthy-indicator-note {
+    border-radius: 14px;
+    border: 1px solid rgba(46, 63, 82, 0.16);
+    background: linear-gradient(160deg, #f8fbff, #f0f7ff);
 }
 
-.healthy-indicator-page .healthy-filter-chip {
-    text-decoration: none;
-    color: #2b4358;
-    border: 1px solid rgba(95, 120, 146, 0.22);
-    border-radius: 999px;
-    padding: 0.35rem 0.68rem;
-    background: #f5f9fd;
-    display: inline-flex;
+.healthy-indicator-page .meter-stack {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.healthy-indicator-page .meter-row {
+    border: 1px solid rgba(95, 120, 146, 0.16);
+    border-radius: 10px;
+    background: #f9fbfe;
+    padding: 0.48rem 0.55rem;
+}
+
+.healthy-indicator-page .meter-head {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 0.4rem;
-    font-size: 0.84rem;
+    gap: 0.6rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.83rem;
+}
+
+.healthy-indicator-page .meter-head span {
+    color: #506881;
     font-weight: 600;
-    transition: all 180ms ease;
 }
 
-.healthy-indicator-page .healthy-filter-chip span {
+.healthy-indicator-page .meter-head strong {
+    color: #22384c;
+    font-size: 0.82rem;
+}
+
+.healthy-indicator-page .meter-track {
+    height: 8px;
     border-radius: 999px;
-    padding: 0.1rem 0.45rem;
-    background: rgba(95, 120, 146, 0.16);
-    color: #274057;
-    font-size: 0.75rem;
+    background: rgba(95, 120, 146, 0.2);
+    overflow: hidden;
 }
 
-.healthy-indicator-page .healthy-filter-chip:hover,
-.healthy-indicator-page .healthy-filter-chip.is-active {
-    color: #ffffff;
-    border-color: #2e3f52;
-    background: linear-gradient(130deg, #2e3f52, #1a2430);
+.healthy-indicator-page .meter-track.is-muted {
+    opacity: 0.6;
 }
 
-.healthy-indicator-page .healthy-filter-chip:hover span,
-.healthy-indicator-page .healthy-filter-chip.is-active span {
-    background: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
+.healthy-indicator-page .meter-fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+}
+
+.healthy-indicator-page .meter-tone-good {
+    background: linear-gradient(120deg, #10b981, #0b8561);
+}
+
+.healthy-indicator-page .meter-tone-moderate {
+    background: linear-gradient(120deg, #f59e0b, #b9741d);
+}
+
+.healthy-indicator-page .meter-tone-high {
+    background: linear-gradient(120deg, #ef4444, #b93b35);
+}
+
+.healthy-indicator-page .meter-tone-na {
+    background: linear-gradient(120deg, #7b8ea3, #5f7892);
+}
+
+.healthy-indicator-page .meter-hint {
+    display: block;
+    margin-top: 0.3rem;
+    color: #637b91;
+    font-size: 0.73rem;
 }
 
 .healthy-indicator-page .meal-action-btn {

@@ -1,0 +1,102 @@
+flask --app run shell
+
+
+
+
+from datetime import date
+from app.extensions import db
+from app.models import MealLog
+
+m1 = MealLog(
+image_url="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=80",
+meal_type="lunch",
+meal_date=date.today(),
+title="Chicken Salad Bowl",
+note="manual test",
+calories=380,
+protein=30,
+carbohydrates=28,
+fats=14
+)
+
+m2 = MealLog(
+image_url="https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1200&q=80",
+meal_type="dinner",
+meal_date=date.today(),
+title="Pasta Plate",
+note="manual test",
+calories=720,
+protein=18,
+carbohydrates=95,
+fats=24
+)
+
+db.session.add_all([m1, m2])
+db.session.commit()
+
+from datetime import date
+from app.extensions import db
+from app.models import MealLog
+
+m3 = MealLog(
+image_url="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1200&q=80",
+meal_type="breakfast",
+meal_date=date.today(),
+title="Egg White Veggie Scramble",
+note="manual test",
+calories=360,
+protein=29,
+carbohydrates=26,
+fats=12
+)
+
+m4 = MealLog(
+image_url="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80",
+meal_type="lunch",
+meal_date=date.today(),
+title="Grilled Chicken Lettuce Wraps",
+note="manual test",
+calories=420,
+protein=32,
+carbohydrates=18,
+fats=14
+)
+
+m5 = MealLog(
+image_url="https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1200&q=80",
+meal_type="dinner",
+meal_date=date.today(),
+title="Quinoa Salmon Plate",
+note="manual test",
+calories=510,
+protein=21,
+carbohydrates=54,
+fats=20
+)
+
+m6 = MealLog(
+image_url="https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=1200&q=80",
+meal_type="snack",
+meal_date=date.today(),
+title="Fruit Oat Yogurt Bowl",
+note="manual test",
+calories=330,
+protein=12,
+carbohydrates=70,
+fats=9
+)
+
+m7 = MealLog(
+image_url="https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80",
+meal_type="dinner",
+meal_date=date.today(),
+title="Cheeseburger Combo",
+note="manual test",
+calories=760,
+protein=16,
+carbohydrates=95,
+fats=34
+)
+
+db.session.add_all([m3, m4, m5, m6, m7])
+db.session.commit()
