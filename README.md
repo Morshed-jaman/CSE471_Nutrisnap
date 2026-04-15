@@ -6,8 +6,10 @@ NutriSnap is a Flask web application for meal logging, vendor discovery, and nut
 
 - Module 1 Feature 1: Meal Upload & Food Log Management
 - Module 1 Feature 2: Food & Vendor Directory with Search
+- Module 2 Feature 3: Favorites / Saved Items  
 - Module 2 Feature 1: Nutrition Data Retrieval + Nutrition Analytics
 - Module 2 Feature 2: Weekly Nutrition Tracking
+- Module 2 Feature 3: Healthy Food Indicator  
 
 ## Tech Stack
 
@@ -20,7 +22,7 @@ NutriSnap is a Flask web application for meal logging, vendor discovery, and nut
 - Cloudinary
 - Spoonacular API
 
-## Refactored Project Structure (Viva-Friendly)
+## Refactored Project Structure 
 
 ```text
 nutrisnap/
