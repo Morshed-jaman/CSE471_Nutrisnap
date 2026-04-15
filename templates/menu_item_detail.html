@@ -3,7 +3,18 @@
 {% block title %}{{ item.name }} | NutriSnap{% endblock %}
 
 {% block content %}
-<section class="surface-card reveal">
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+        <div>
+            <p class="eyebrow mb-1">Menu Item Detail</p>
+            <h1 class="section-title mb-1">{{ item.name }}</h1>
+            <p class="page-subtitle mb-0">From <a href="{{ url_for('vendor.vendor_detail', vendor_id=item.vendor.id) }}">{{ item.vendor.name }}</a></p>
+        </div>
+        <a href="{{ url_for('vendor.vendor_detail', vendor_id=item.vendor.id) }}" class="btn btn-outline-industrial">Back to Vendor</a>
+    </div>
+</section>
+
+<section class="surface-card reveal-on-scroll" data-delay="1">
     <div class="row g-4 align-items-start">
         <div class="col-lg-5">
             {% if item.image_url %}
@@ -14,10 +25,7 @@
         </div>
 
         <div class="col-lg-7">
-            <p class="eyebrow mb-1">Menu Item Detail</p>
-            <h1 class="section-title mb-2">{{ item.name }}</h1>
-            <p class="mb-2">Vendor: <a href="{{ url_for('vendor.vendor_detail', vendor_id=item.vendor.id) }}">{{ item.vendor.name }}</a></p>
-            <p>{{ item.description or 'No description available.' }}</p>
+            <p class="mb-3">{{ item.description or 'No description available.' }}</p>
 
             <div class="price-box mb-3">Price: ${{ '%.2f'|format(item.price|float) }}</div>
 
@@ -27,8 +35,6 @@
                 <div class="col-sm-6"><div class="meta-box"><strong>Carbohydrates:</strong> {{ item.carbohydrates if item.carbohydrates is not none else 'N/A' }} g</div></div>
                 <div class="col-sm-6"><div class="meta-box"><strong>Fats:</strong> {{ item.fats if item.fats is not none else 'N/A' }} g</div></div>
             </div>
-
-            <a href="{{ url_for('vendor.vendor_detail', vendor_id=item.vendor.id) }}" class="btn btn-outline-industrial">Back to Vendor</a>
         </div>
     </div>
 </section>

@@ -1,13 +1,15 @@
 ﻿import os
 import tempfile
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
+from sqlalchemy import func, or_
 from werkzeug.utils import secure_filename
 
 from extensions import db
-from models import MealLog
+from models import MealLog, MenuItem, Vendor
 from services.cloudinary_service import delete_image, upload_image
+from services.nutrition_service import get_nutrition_insights
 
 meal_bp = Blueprint("meal", __name__)
 ALLOWED_MEAL_TYPES = {"breakfast", "lunch", "dinner", "snack"}
@@ -42,8 +44,84 @@ def _save_temp_file(file_storage):
 
 
 @meal_bp.route("/")
+def landing():
+    return render_template("landing.html")
+
+
+def _home_page_context():
+    total_meal_logs = db.session.query(func.count(MealLog.id)).scalar() or 0
+    meals_with_nutrition = (
+        db.session.query(func.count(MealLog.id))
+        .filter(
+            or_(
+                MealLog.calories.isnot(None),
+                MealLog.protein.isnot(None),
+                MealLog.carbohydrates.isnot(None),
+                MealLog.fats.isnot(None),
+            )
+        )
+        .scalar()
+        or 0
+    )
+    active_vendors = (
+        db.session.query(func.count(Vendor.id))
+        .filter(Vendor.is_active.is_(True))
+        .scalar()
+        or 0
+    )
+    total_menu_items = db.session.query(func.count(MenuItem.id)).scalar() or 0
+    recent_uploads = (
+        db.session.query(func.count(MealLog.id))
+        .filter(MealLog.created_at >= datetime.utcnow() - timedelta(days=7))
+        .scalar()
+        or 0
+    )
+    available_categories = (
+        db.session.query(func.count(func.distinct(Vendor.category)))
+        .filter(Vendor.is_active.is_(True))
+        .scalar()
+        or 0
+    )
+
+    latest_meals = (
+        MealLog.query.order_by(MealLog.meal_date.desc(), MealLog.created_at.desc()).limit(6).all()
+    )
+    featured_vendors = (
+        Vendor.query.filter(Vendor.is_active.is_(True))
+        .order_by(Vendor.created_at.desc())
+        .limit(6)
+        .all()
+    )
+    nutrition_ready_meals = (
+        MealLog.query.filter(
+            or_(
+                MealLog.calories.isnot(None),
+                MealLog.protein.isnot(None),
+                MealLog.carbohydrates.isnot(None),
+                MealLog.fats.isnot(None),
+            )
+        )
+        .order_by(MealLog.updated_at.desc())
+        .limit(6)
+        .all()
+    )
+
+    return dict(
+        total_meal_logs=total_meal_logs,
+        meals_with_nutrition=meals_with_nutrition,
+        active_vendors=active_vendors,
+        total_menu_items=total_menu_items,
+        recent_uploads=recent_uploads,
+        available_categories=available_categories,
+        latest_meals=latest_meals,
+        featured_vendors=featured_vendors,
+        nutrition_ready_meals=nutrition_ready_meals,
+    )
+
+
+@meal_bp.route("/home")
 def home():
-    return render_template("home.html")
+    return render_template("home.html", **_home_page_context())
 
 
 @meal_bp.route("/upload-meal", methods=["GET", "POST"])
@@ -121,7 +199,14 @@ def meal_detail(meal_id):
     meal = db.session.get(MealLog, meal_id)
     if not meal:
         abort(404)
-    return render_template("meal_detail.html", meal=meal)
+
+    meal_insights = []
+    if any(value is not None for value in [meal.calories, meal.protein, meal.carbohydrates, meal.fats]):
+        meal_insights = get_nutrition_insights(
+            meal.calories, meal.protein, meal.carbohydrates, meal.fats
+        )
+
+    return render_template("meal_detail.html", meal=meal, meal_insights=meal_insights)
 
 
 @meal_bp.route("/edit-meal/<int:meal_id>", methods=["GET", "POST"])

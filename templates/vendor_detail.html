@@ -3,7 +3,18 @@
 {% block title %}{{ vendor.name }} | NutriSnap{% endblock %}
 
 {% block content %}
-<section class="surface-card reveal mb-4">
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+        <div>
+            <p class="eyebrow mb-1">Vendor Profile</p>
+            <h1 class="section-title mb-1">{{ vendor.name }}</h1>
+            <p class="page-subtitle mb-0">Category: {{ vendor.category }}{% if vendor.address %} &middot; {{ vendor.address }}{% endif %}</p>
+        </div>
+        <a href="{{ url_for('vendor.vendors') }}" class="btn btn-outline-industrial">Back to Vendors</a>
+    </div>
+</section>
+
+<section class="surface-card reveal-on-scroll" data-delay="1">
     <div class="row g-4 align-items-start">
         <div class="col-lg-4">
             {% if vendor.image_url %}
@@ -15,7 +26,7 @@
 
         <div class="col-lg-8">
             <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                <h1 class="section-title mb-0">{{ vendor.name }}</h1>
+                <h2 class="h4 mb-0">Vendor Information</h2>
                 <span class="badge text-bg-secondary category-badge">{{ vendor.category }}</span>
             </div>
 
@@ -32,19 +43,20 @@
                     <div class="meta-box"><strong>Address:</strong> {{ vendor.address or 'N/A' }}</div>
                 </div>
             </div>
-
-            <a href="{{ url_for('vendor.vendors') }}" class="btn btn-outline-industrial">Back to Vendors</a>
         </div>
     </div>
 </section>
 
-<section class="surface-card reveal">
-    <h2 class="h4 mb-3">Menu Items</h2>
+<section class="surface-card reveal-on-scroll mt-4" data-delay="2">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h4 mb-0">Menu Items</h2>
+        <span class="chip">Available items: {{ menu_items|length }}</span>
+    </div>
 
     {% if menu_items %}
     <div class="row g-4">
         {% for item in menu_items %}
-        <div class="col-md-6 col-xl-4 reveal">
+        <div class="col-md-6 col-xl-4 reveal-on-scroll" data-delay="{{ loop.index0 % 4 }}">
             <article class="menu-item-card h-100">
                 {% if item.image_url %}
                     <img src="{{ item.image_url }}" class="menu-thumb" alt="{{ item.name }} image">
@@ -71,7 +83,9 @@
         {% endfor %}
     </div>
     {% else %}
-        <p class="text-muted mb-0">No available menu items for this vendor right now.</p>
+        <div class="empty-panel">
+            <p class="mb-0">No available menu items for this vendor right now.</p>
+        </div>
     {% endif %}
 </section>
 {% endblock %}

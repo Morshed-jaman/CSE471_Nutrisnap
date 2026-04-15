@@ -3,12 +3,18 @@
 {% block title %}Edit Meal | NutriSnap{% endblock %}
 
 {% block content %}
-<section class="surface-card reveal">
-    <div class="section-head mb-4">
-        <p class="eyebrow mb-1">Update Entry</p>
-        <h1 class="section-title">Edit Meal Log</h1>
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+    <div class="d-flex flex-wrap align-items-end justify-content-between gap-3">
+        <div>
+            <p class="eyebrow mb-1">Meal Update</p>
+            <h1 class="section-title mb-1">Edit Meal Log</h1>
+            <p class="page-subtitle mb-0">Refine meal metadata or replace the image while keeping your history organized.</p>
+        </div>
+        <a href="{{ url_for('meal.meal_detail', meal_id=meal.id) }}" class="btn btn-outline-industrial">Back to Details</a>
     </div>
+</section>
 
+<section class="surface-card reveal-on-scroll" data-delay="1">
     <form action="{{ url_for('meal.edit_meal', meal_id=meal.id) }}" method="post" enctype="multipart/form-data">
         <div class="row g-4">
             <div class="col-lg-7">
@@ -20,6 +26,10 @@
                 <div class="mb-3">
                     <label for="image" class="form-label">Replace Image (Optional)</label>
                     <input class="form-control form-control-industrial" type="file" id="image" name="image" accept="image/*">
+                </div>
+
+                <div class="mb-3">
+                    <img id="newImagePreview" class="img-fluid rounded industrial-preview d-none" alt="New preview">
                 </div>
 
                 <div class="row g-3">
@@ -52,10 +62,10 @@
                 <div class="assist-panel h-100">
                     <h2>Editing Tips</h2>
                     <ul class="checklist">
-                        <li>Only replace image when needed.</li>
-                        <li>Keep title short and descriptive.</li>
-                        <li>Use notes for extra context.</li>
-                        <li>Changes are saved immediately after update.</li>
+                        <li>Keep meal type and date accurate for analytics.</li>
+                        <li>Replace image only when necessary.</li>
+                        <li>Use title and notes for easy recall later.</li>
+                        <li>Update saves immediately after submit.</li>
                     </ul>
                 </div>
             </div>
@@ -67,4 +77,27 @@
         </div>
     </form>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const imageInput = document.getElementById('image');
+    const preview = document.getElementById('newImagePreview');
+
+    imageInput?.addEventListener('change', (event) => {
+        const file = event.target.files?.[0];
+        if (!file) {
+            preview.classList.add('d-none');
+            preview.src = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.src = e.target.result;
+            preview.classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
+    });
+</script>
 {% endblock %}

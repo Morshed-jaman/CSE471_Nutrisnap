@@ -3,57 +3,196 @@
 {% block title %}Home | NutriSnap{% endblock %}
 
 {% block content %}
-<section class="hero-panel reveal">
-    <div class="row g-4 align-items-center">
-        <div class="col-lg-7">
-            <p class="eyebrow">Industrial Nutrition Tracking</p>
-            <h1 class="hero-title">Meal Upload, Food Logs, and Vendor Discovery</h1>
-            <p class="hero-copy">Track your meals, review your logs, and discover healthier menu options from nearby vendors in one dashboard.</p>
-            <div class="d-flex flex-wrap gap-3 mt-4">
-                <a href="{{ url_for('meal.upload_meal') }}" class="btn btn-industrial btn-lg">Upload Meal</a>
-                <a href="{{ url_for('meal.meal_logs') }}" class="btn btn-outline-industrial btn-lg">View Meal Logs</a>
-                <a href="{{ url_for('vendor.vendors') }}" class="btn btn-outline-secondary btn-lg">Browse Vendors</a>
+<section class="home-dashboard-layout">
+    <aside class="home-sidebar reveal-on-scroll" data-delay="0">
+        <div class="home-brand">
+            <div class="home-brand-mark"><i class="bi bi-hexagon-fill"></i></div>
+            <div>
+                <h2>NutriSnap</h2>
+                <p>Project Workspace</p>
             </div>
         </div>
-        <div class="col-lg-5">
-            <div class="metrics-grid">
-                <div class="metric-tile reveal">
-                    <span class="metric-value">01</span>
-                    <span class="metric-label">Upload</span>
-                </div>
-                <div class="metric-tile reveal">
-                    <span class="metric-value">02</span>
-                    <span class="metric-label">Review</span>
-                </div>
-                <div class="metric-tile reveal">
-                    <span class="metric-value">03</span>
-                    <span class="metric-label">Discover</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
-<section class="info-strip reveal mt-4">
-    <div class="row g-3">
-        <div class="col-md-4">
-            <div class="info-card">
-                <h2>Cloud Meal Logs</h2>
-                <p>Meal photos are uploaded and stored with your food log history.</p>
-            </div>
+        <p class="home-side-label">Workspace Navigation</p>
+        <nav class="home-side-nav">
+            <a class="active" href="{{ url_for('meal.home') }}"><i class="bi bi-house-door"></i><span>Home</span></a>
+            <a href="{{ url_for('meal.upload_meal') }}"><i class="bi bi-cloud-arrow-up"></i><span>Upload Meal</span></a>
+            <a href="{{ url_for('meal.meal_logs') }}"><i class="bi bi-journal-text"></i><span>Meal Logs</span></a>
+            <a href="{{ url_for('vendor.vendors') }}"><i class="bi bi-shop"></i><span>Vendors</span></a>
+            <a href="{{ url_for('nutrition.nutrition_search') }}"><i class="bi bi-search-heart"></i><span>Nutrition Search</span></a>
+            <a href="{{ url_for('nutrition.nutrition_analytics') }}"><i class="bi bi-graph-up-arrow"></i><span>Nutrition Analytics</span></a>
+        </nav>
+
+        <div class="home-side-foot">
+            <span class="chip">Uploads (7 days): {{ recent_uploads }}</span>
+            <span class="chip">Vendor categories: {{ available_categories }}</span>
         </div>
-        <div class="col-md-4">
-            <div class="info-card">
-                <h2>Vendor Directory</h2>
-                <p>Browse active vendors and filter by name or category quickly.</p>
+    </aside>
+
+    <div class="home-main">
+        <section class="home-top-card reveal-on-scroll" data-delay="1">
+            <div>
+                <p class="eyebrow mb-2">Main Project Home</p>
+                <h1>NutriSnap control center</h1>
+                <p>Track meals, discover vendors, and analyze nutrition in one clean workflow.</p>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="info-card">
-                <h2>Nutrition Insights</h2>
-                <p>Vendor menu cards include calories and macro values where available.</p>
+            <div class="home-top-actions">
+                <a href="{{ url_for('meal.upload_meal') }}" class="btn btn-industrial btn-sm">Upload Meal</a>
+                <a href="{{ url_for('meal.meal_logs') }}" class="btn btn-outline-industrial btn-sm">View Logs</a>
+                <a href="{{ url_for('vendor.vendors') }}" class="btn btn-outline-industrial btn-sm">Browse Vendors</a>
+                <a href="{{ url_for('nutrition.nutrition_search') }}" class="btn btn-outline-secondary btn-sm">Nutrition Search</a>
             </div>
-        </div>
+        </section>
+
+        <section class="row g-3 mt-1">
+            <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="2">
+                <article class="home-metric metric-a h-100">
+                    <div class="icon"><i class="bi bi-journal-check"></i></div>
+                    <p>Total Meals</p>
+                    <h3>{{ total_meal_logs }}</h3>
+                </article>
+            </div>
+            <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="3">
+                <article class="home-metric metric-b h-100">
+                    <div class="icon"><i class="bi bi-activity"></i></div>
+                    <p>Nutrition Ready</p>
+                    <h3>{{ meals_with_nutrition }}</h3>
+                </article>
+            </div>
+            <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="4">
+                <article class="home-metric metric-c h-100">
+                    <div class="icon"><i class="bi bi-buildings"></i></div>
+                    <p>Active Vendors</p>
+                    <h3>{{ active_vendors }}</h3>
+                </article>
+            </div>
+            <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="5">
+                <article class="home-metric metric-d h-100">
+                    <div class="icon"><i class="bi bi-grid-3x3-gap"></i></div>
+                    <p>Menu Items</p>
+                    <h3>{{ total_menu_items }}</h3>
+                </article>
+            </div>
+        </section>
+
+        <section class="surface-card mt-4 reveal-on-scroll" data-delay="6">
+            <div class="home-section-head">
+                <h2>Feature Shortcuts</h2>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6 col-xl-3">
+                    <a href="{{ url_for('meal.meal_logs') }}" class="shortcut-card">
+                        <i class="bi bi-camera2"></i>
+                        <h3>Meal Logging</h3>
+                        <p>Upload, edit, and manage your meal history.</p>
+                    </a>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <a href="{{ url_for('vendor.vendors') }}" class="shortcut-card">
+                        <i class="bi bi-compass"></i>
+                        <h3>Vendor Discovery</h3>
+                        <p>Search vendors and compare menu options.</p>
+                    </a>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <a href="{{ url_for('nutrition.nutrition_search') }}" class="shortcut-card">
+                        <i class="bi bi-search"></i>
+                        <h3>Nutrition Search</h3>
+                        <p>Pull calories and macros from API instantly.</p>
+                    </a>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <a href="{{ url_for('nutrition.nutrition_analytics') }}" class="shortcut-card">
+                        <i class="bi bi-graph-up"></i>
+                        <h3>Nutrition Analytics</h3>
+                        <p>View totals, trends, and nutrition insights.</p>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="row g-3 mt-1">
+            <div class="col-xl-6 reveal-on-scroll" data-delay="7">
+                <article class="preview-card h-100">
+                    <div class="home-section-head">
+                        <h2>Recent Meals</h2>
+                        <a href="{{ url_for('meal.meal_logs') }}">All Logs</a>
+                    </div>
+                    {% if latest_meals %}
+                        {% for meal in latest_meals %}
+                            <div class="preview-row">
+                                <img src="{{ meal.image_url }}" alt="Meal image">
+                                <div>
+                                    <strong>{{ meal.title or meal.meal_type|capitalize ~ ' Meal' }}</strong>
+                                    <p>{{ meal.meal_type|capitalize }} &middot; {{ meal.meal_date.strftime('%d %b %Y') }}</p>
+                                </div>
+                                <a class="link-btn" href="{{ url_for('meal.meal_detail', meal_id=meal.id) }}">Open</a>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-panel mt-2">
+                            <p class="mb-2">No meals yet.</p>
+                            <a href="{{ url_for('meal.upload_meal') }}" class="btn btn-sm btn-outline-industrial">Upload your first meal</a>
+                        </div>
+                    {% endif %}
+                </article>
+            </div>
+
+            <div class="col-xl-6 reveal-on-scroll" data-delay="8">
+                <article class="preview-card h-100">
+                    <div class="home-section-head">
+                        <h2>Vendors & Nutrition Ready</h2>
+                        <a href="{{ url_for('nutrition.nutrition_analytics') }}">Analytics</a>
+                    </div>
+
+                    {% if featured_vendors %}
+                        <div class="mini-block">
+                            <h3>Featured Vendors</h3>
+                            {% for vendor in featured_vendors[:3] %}
+                                <div class="mini-row">
+                                    <span class="mini-avatar">{{ vendor.name[0] }}</span>
+                                    <div>
+                                        <strong>{{ vendor.name }}</strong>
+                                        <p>{{ vendor.category }}</p>
+                                    </div>
+                                    <a class="link-btn" href="{{ url_for('vendor.vendor_detail', vendor_id=vendor.id) }}">View</a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-panel mt-2 mb-3">
+                            <p class="mb-2">No vendors available.</p>
+                            <a href="{{ url_for('vendor.vendors') }}" class="btn btn-sm btn-outline-industrial">Browse vendors</a>
+                        </div>
+                    {% endif %}
+
+                    {% if nutrition_ready_meals %}
+                        <div class="mini-block">
+                            <h3>Nutrition-Ready Meals</h3>
+                            {% for meal in nutrition_ready_meals[:3] %}
+                                <div class="mini-row">
+                                    <span class="mini-avatar"><i class="bi bi-fire"></i></span>
+                                    <div>
+                                        <strong>{{ meal.title or meal.meal_type|capitalize ~ ' Meal' }}</strong>
+                                        <p>{{ meal.meal_date.strftime('%d %b %Y') }}</p>
+                                    </div>
+                                    <span class="calorie-chip">{{ meal.calories if meal.calories is not none else 'N/A' }} kcal</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-panel mt-2">
+                            <p class="mb-2">No nutrition-analyzed meals yet.</p>
+                            <a href="{{ url_for('nutrition.nutrition_search') }}" class="btn btn-sm btn-outline-industrial">Search nutrition</a>
+                        </div>
+                    {% endif %}
+                </article>
+            </div>
+        </section>
     </div>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/home.js') }}"></script>
 {% endblock %}

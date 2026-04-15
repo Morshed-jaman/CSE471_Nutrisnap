@@ -13,6 +13,10 @@ class MealLog(db.Model):
     meal_date = db.Column(db.Date, nullable=False)
     title = db.Column(db.String(150), nullable=True)
     note = db.Column(db.Text, nullable=True)
+    calories = db.Column(db.Float, nullable=True)
+    protein = db.Column(db.Float, nullable=True)
+    carbohydrates = db.Column(db.Float, nullable=True)
+    fats = db.Column(db.Float, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
