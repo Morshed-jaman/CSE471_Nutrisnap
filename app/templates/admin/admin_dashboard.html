@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2">
+        <div>
+            <p class="eyebrow mb-1">Admin Control</p>
+            <h1 class="section-title mb-1">Admin Dashboard</h1>
+            <p class="page-subtitle mb-0">Review vendor requests and monitor system overview.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('admin.pending_vendors') }}" class="btn btn-industrial">Review Pending Vendors</a>
+            <a href="{{ url_for('admin.pending_nutrition_experts') }}" class="btn btn-outline-industrial">Review Nutrition Experts</a>
+            <a href="{{ url_for('admin.admin_meal_logs') }}" class="btn btn-outline-industrial">Admin Meal Logs</a>
+            <a href="{{ url_for('admin.admin_menu_items') }}" class="btn btn-outline-industrial">Menu Monitoring</a>
+            <a href="{{ url_for('admin.admin_reviews') }}" class="btn btn-outline-industrial">Review Moderation</a>
+        </div>
+    </div>
+</section>
+
+<section class="row g-3 mt-1">
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="1"><article class="admin-stat-card"><p>Total Users</p><h3>{{ total_users }}</h3></article></div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="2"><article class="admin-stat-card"><p>Total Vendors</p><h3>{{ total_vendors }}</h3></article></div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="3"><article class="admin-stat-card"><p>Pending Vendors</p><h3>{{ pending_vendors }}</h3></article></div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="4"><article class="admin-stat-card"><p>Approved Vendors</p><h3>{{ approved_vendors }}</h3></article></div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="5"><article class="admin-stat-card"><p>Rejected Vendors</p><h3>{{ rejected_vendors }}</h3></article></div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="6"><article class="admin-stat-card"><p>Pending Experts</p><h3>{{ pending_experts }}</h3></article></div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="7"><article class="admin-stat-card"><p>Approved Experts</p><h3>{{ approved_experts }}</h3></article></div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="8"><article class="admin-stat-card"><p>Rejected Experts</p><h3>{{ rejected_experts }}</h3></article></div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="9"><article class="admin-stat-card"><p>Meal Logs</p><h3>{{ total_meal_logs }}</h3></article></div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="10"><article class="admin-stat-card"><p>Nutrition Ready Meals</p><h3>{{ nutrition_ready_meals }}</h3></article></div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="11"><article class="admin-stat-card"><p>Menu Items</p><h3>{{ total_menu_items }}</h3></article></div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="12"><article class="admin-stat-card"><p>Total Reviews</p><h3>{{ total_reviews }}</h3></article></div>
+</section>
+
+<section class="surface-card mt-4 reveal-on-scroll" data-delay="13">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h5 mb-0">Recent Pending Vendor Requests</h2>
+        <a href="{{ url_for('admin.pending_vendors') }}" class="btn btn-outline-industrial btn-sm">See All</a>
+    </div>
+
+    {% if recent_pending_vendors %}
+        <div class="table-responsive">
+            <table class="table align-middle app-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Business</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vendor in recent_pending_vendors %}
+                        <tr>
+                            <td>{{ vendor.name }}</td>
+                            <td>{{ vendor.email }}</td>
+                            <td>{{ vendor.vendor_profile.business_name if vendor.vendor_profile else 'N/A' }}</td>
+                            <td><span class="badge text-bg-warning">Pending</span></td>
+                            <td><a href="{{ url_for('admin.vendor_review', user_id=vendor.id) }}" class="btn btn-outline-industrial btn-sm">Review</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-panel">No pending vendor requests right now.</div>
+    {% endif %}
+</section>
+{% endblock %}

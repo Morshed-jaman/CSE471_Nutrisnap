@@ -1,4 +1,4 @@
-﻿import os
+import os
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -6,6 +6,12 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(dotenv_path=BASE_DIR / ".env")
+
+
+def _as_bool(value: str | None, default: bool = False) -> bool:
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _normalize_database_url(database_url: str | None) -> str | None:
@@ -35,3 +41,15 @@ class Config:
 
     MAX_CONTENT_LENGTH = 8 * 1024 * 1024  # 8 MB
     ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif"}
+
+    DEFAULT_ADMIN_EMAIL = os.getenv("DEFAULT_ADMIN_EMAIL", "admin@nutrisnap.local")
+    DEFAULT_ADMIN_PASSWORD = os.getenv("DEFAULT_ADMIN_PASSWORD", "admin12345")
+    DEFAULT_ADMIN_NAME = os.getenv("DEFAULT_ADMIN_NAME", "NutriSnap Admin")
+    DEFAULT_ADMIN_PHONE = os.getenv("DEFAULT_ADMIN_PHONE", "01000000000")
+
+    MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+    MAIL_PORT = int(os.getenv("MAIL_PORT", "587"))
+    MAIL_USERNAME = os.getenv("MAIL_USERNAME")
+    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
+    MAIL_USE_TLS = _as_bool(os.getenv("MAIL_USE_TLS"), default=True)
+    MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER") or os.getenv("MAIL_USERNAME")

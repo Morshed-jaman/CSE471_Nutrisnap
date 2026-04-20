@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Nutritionist Advice | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+        <div>
+            <p class="eyebrow mb-1">Subscriber Feature</p>
+            <h1 class="section-title mb-1">Nutritionist Advice</h1>
+            <p class="page-subtitle mb-0">Ask nutrition-related questions and receive advice from admin-verified nutrition experts.</p>
+        </div>
+        <a href="{{ url_for('meal.home') }}" class="btn btn-outline-industrial">Back to Home</a>
+    </div>
+</section>
+
+<section class="surface-card mt-4 reveal-on-scroll" data-delay="1">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h5 mb-0">Ask a Question</h2>
+        <span class="chip">Pending: {{ pending_count }}</span>
+    </div>
+
+    <form method="post" action="{{ url_for('advice.user_advice') }}" class="row g-3">
+        <div class="col-12">
+            <label for="question_text" class="form-label">Your Nutrition Question</label>
+            <textarea
+                id="question_text"
+                name="question_text"
+                class="form-control form-control-industrial"
+                rows="4"
+                maxlength="1200"
+                placeholder="Example: How can I balance protein and carbohydrates for dinner?"
+                required
+            ></textarea>
+        </div>
+        <div class="col-12 d-grid d-md-flex justify-content-md-end">
+            <button type="submit" class="btn btn-industrial">Submit Question</button>
+        </div>
+    </form>
+</section>
+
+<section class="surface-card mt-4 reveal-on-scroll" data-delay="2">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h5 mb-0">My Advice History</h2>
+        <span class="chip">{{ questions|length }} total questions</span>
+    </div>
+
+    {% if questions %}
+        <div class="d-flex flex-column gap-3">
+            {% for question in questions %}
+                <article class="review-card">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                        <small class="text-muted">{{ question.created_at.strftime('%d %b %Y, %I:%M %p') }}</small>
+                        <span class="badge text-bg-{% if question.status == 'answered' %}success{% else %}warning{% endif %}">
+                            {{ question.status|capitalize }}
+                        </span>
+                    </div>
+                    <h3 class="h6 mb-2">Question</h3>
+                    <p class="mb-3">{{ question.question_text }}</p>
+
+                    {% if question.status == 'answered' and question.response_text %}
+                        <h3 class="h6 mb-2">Nutrition Expert Advice</h3>
+                        <p class="mb-2">{{ question.response_text }}</p>
+                        <small class="text-muted">
+                            Answered
+                            {% if question.expert %}
+                                by {{ question.expert.name }}
+                            {% endif %}
+                            {% if question.answered_at %}
+                                on {{ question.answered_at.strftime('%d %b %Y, %I:%M %p') }}
+                            {% endif %}
+                        </small>
+                    {% else %}
+                        <div class="empty-panel py-2">
+                            <p class="mb-0">Waiting for expert response.</p>
+                        </div>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-panel">
+            <p class="mb-2">No advice questions submitted yet.</p>
+            <small class="text-muted">Submit your first question using the form above.</small>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

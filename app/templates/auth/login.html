@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Login | NutriSnap{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+
+{% block content %}
+<section class="auth-shell reveal-on-scroll" data-delay="0">
+    <article class="surface-card auth-card">
+        <p class="eyebrow mb-1">Account Access</p>
+        <h1 class="section-title mb-1">Login</h1>
+        <p class="page-subtitle mb-4">Sign in with your email and password.</p>
+
+        <form method="post" action="{{ url_for('auth.login', next=next_url) }}" class="row g-3">
+            {% if next_url %}
+                <input type="hidden" name="next" value="{{ next_url }}">
+            {% endif %}
+
+            <div class="col-12">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control form-control-industrial" id="email" name="email" value="{{ email or '' }}" required>
+            </div>
+
+            <div class="col-12">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control form-control-industrial" id="password" name="password" required>
+            </div>
+
+            <div class="col-12 d-grid">
+                <button type="submit" class="btn btn-industrial">Login</button>
+            </div>
+        </form>
+
+        <div class="auth-links mt-4">
+            <a href="{{ url_for('auth.register') }}">Register as User</a>
+            <a href="{{ url_for('auth.vendor_register') }}">Register as Vendor</a>
+            <a href="{{ url_for('auth.nutrition_expert_register') }}">Register as Nutrition Expert</a>
+            <a href="{{ url_for('admin.admin_login') }}">Admin Login</a>
+        </div>
+    </article>
+</section>
+{% endblock %}

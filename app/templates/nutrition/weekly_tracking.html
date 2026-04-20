@@ -7,8 +7,14 @@
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
         <div>
             <p class="eyebrow mb-1">Module 2 Feature 2</p>
-            <h1 class="section-title mb-1">Weekly Nutrition Tracking</h1>
-            <p class="page-subtitle mb-0">Track weekly totals, daily nutrition trends, and meal history from your saved meal logs.</p>
+            <h1 class="section-title mb-1">{% if is_system_view %}System Weekly Nutrition Tracking{% else %}My Weekly Nutrition Tracking{% endif %}</h1>
+            <p class="page-subtitle mb-0">
+                {% if is_system_view %}
+                    Track weekly totals, daily nutrition trends, and meal history across all users.
+                {% else %}
+                    Track weekly totals, daily nutrition trends, and meal history from your own meal logs.
+                {% endif %}
+            </p>
         </div>
         <div class="d-flex flex-wrap gap-2 weekly-nav-controls">
             <a href="{{ url_for('nutrition.weekly_tracking', start_date=previous_week_start) }}" class="btn btn-outline-industrial btn-sm">
@@ -111,13 +117,19 @@
 <section class="surface-card empty-week-state text-center reveal-on-scroll mb-4" data-delay="9">
     <div class="empty-week-icon"><i class="bi bi-calendar2-x"></i></div>
     <h2 class="h4 mb-2">No meals tracked this week</h2>
-    <p class="text-muted mb-4">Start logging meals to unlock weekly nutrition trends and insights.</p>
-    <div class="d-flex flex-wrap justify-content-center gap-2">
-        <a href="{{ url_for('meal.upload_meal') }}" class="btn btn-industrial">Upload Meal</a>
-        <a href="{{ url_for('meal.meal_logs') }}" class="btn btn-outline-industrial">View Meal Logs</a>
-        <a href="{{ url_for('nutrition.nutrition_search') }}" class="btn btn-outline-secondary">Nutrition Search</a>
-    </div>
-</section>
+        <p class="text-muted mb-4">Start logging meals to unlock weekly nutrition trends and insights.</p>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            {% if not is_system_view %}
+                <a href="{{ url_for('meal.upload_meal') }}" class="btn btn-industrial">Upload Meal</a>
+            {% endif %}
+            {% if is_system_view %}
+                <a href="{{ url_for('admin.admin_meal_logs') }}" class="btn btn-outline-industrial">View Admin Meal Logs</a>
+            {% else %}
+                <a href="{{ url_for('meal.my_meal_logs') }}" class="btn btn-outline-industrial">View My Meal Logs</a>
+            {% endif %}
+            <a href="{{ url_for('nutrition.nutrition_search') }}" class="btn btn-outline-secondary">Nutrition Search</a>
+        </div>
+    </section>
 {% endif %}
 
 <section class="row g-4 mb-4" id="weekly-tracking-charts">
@@ -192,7 +204,11 @@
 <section class="surface-card reveal-on-scroll" data-delay="14">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <h2 class="h5 mb-0">Weekly Meal History</h2>
-        <a href="{{ url_for('meal.meal_logs') }}" class="btn btn-outline-industrial btn-sm">Open Meal Logs</a>
+        {% if is_system_view %}
+            <a href="{{ url_for('admin.admin_meal_logs') }}" class="btn btn-outline-industrial btn-sm">Open Admin Meal Logs</a>
+        {% else %}
+            <a href="{{ url_for('meal.my_meal_logs') }}" class="btn btn-outline-industrial btn-sm">Open My Meal Logs</a>
+        {% endif %}
     </div>
 
     {% if weekly_meals %}
@@ -238,7 +254,11 @@
     {% else %}
         <div class="empty-panel">
             <p class="mb-2">No meal history available for this selected week.</p>
-            <a href="{{ url_for('meal.upload_meal') }}" class="btn btn-outline-industrial btn-sm">Upload Meal</a>
+            {% if is_system_view %}
+                <a href="{{ url_for('admin.admin_meal_logs') }}" class="btn btn-outline-industrial btn-sm">View Admin Meal Logs</a>
+            {% else %}
+                <a href="{{ url_for('meal.upload_meal') }}" class="btn btn-outline-industrial btn-sm">Upload Meal</a>
+            {% endif %}
         </div>
     {% endif %}
 </section>
