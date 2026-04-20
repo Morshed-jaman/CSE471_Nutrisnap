@@ -1,4 +1,4 @@
-﻿from datetime import datetime
+from datetime import datetime
 
 from app.extensions import db
 
@@ -12,6 +12,7 @@ class MenuItem(db.Model):
     description = db.Column(db.Text, nullable=True)
     price = db.Column(db.Numeric(10, 2), nullable=False)
     image_url = db.Column(db.String(500), nullable=True)
+    cloudinary_public_id = db.Column(db.String(255), nullable=True)
     calories = db.Column(db.Numeric(8, 2), nullable=True)
     protein = db.Column(db.Numeric(8, 2), nullable=True)
     carbohydrates = db.Column(db.Numeric(8, 2), nullable=True)

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Vendor Registration | NutriSnap{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+
+{% block content %}
+<section class="auth-shell reveal-on-scroll" data-delay="0">
+    <article class="surface-card auth-card auth-card-wide">
+        <p class="eyebrow mb-1">Vendor Registration</p>
+        <h1 class="section-title mb-1">Register Vendor Account</h1>
+        <p class="page-subtitle mb-4">Create your vendor account and publish your menu listings.</p>
+
+        <form method="post" action="{{ url_for('auth.vendor_register') }}" class="row g-3" enctype="multipart/form-data">
+            <div class="col-md-6">
+                <label for="name" class="form-label">Contact Name</label>
+                <input type="text" class="form-control form-control-industrial" id="name" name="name" value="{{ form.get('name', '') if form else '' }}" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="phone" class="form-label">Phone</label>
+                <input type="text" class="form-control form-control-industrial" id="phone" name="phone" value="{{ form.get('phone', '') if form else '' }}" required>
+            </div>
+
+            <div class="col-12">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control form-control-industrial" id="email" name="email" value="{{ form.get('email', '') if form else '' }}" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control form-control-industrial" id="password" name="password" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="confirm_password" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control form-control-industrial" id="confirm_password" name="confirm_password" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="business_name" class="form-label">Business Name</label>
+                <input type="text" class="form-control form-control-industrial" id="business_name" name="business_name" value="{{ form.get('business_name', '') if form else '' }}" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="business_category" class="form-label">Business Category</label>
+                <input type="text" class="form-control form-control-industrial" id="business_category" name="business_category" value="{{ form.get('business_category', '') if form else '' }}" required>
+            </div>
+
+            <div class="col-12">
+                <label for="business_address" class="form-label">Business Address</label>
+                <input type="text" class="form-control form-control-industrial" id="business_address" name="business_address" value="{{ form.get('business_address', '') if form else '' }}" required>
+            </div>
+
+            <div class="col-12">
+                <label for="business_description" class="form-label">Business Description (Optional)</label>
+                <textarea class="form-control form-control-industrial" id="business_description" name="business_description" rows="3">{{ form.get('business_description', '') if form else '' }}</textarea>
+            </div>
+
+            <div class="col-12">
+                <label for="cover_image_file" class="form-label">Vendor Cover Photo (Optional)</label>
+                <input type="file" class="form-control form-control-industrial" id="cover_image_file" name="cover_image_file" accept="image/*">
+            </div>
+
+            <div class="col-12">
+                <label for="cover_image_url" class="form-label">Or Cover Image URL (Optional)</label>
+                <input type="url" class="form-control form-control-industrial" id="cover_image_url" name="cover_image_url" value="{{ form.get('cover_image_url', '') if form else '' }}" placeholder="https://...">
+            </div>
+
+            <div class="col-12 d-grid">
+                <button type="submit" class="btn btn-industrial">Create Vendor Account</button>
+            </div>
+        </form>
+
+        <div class="auth-links mt-4">
+            <a href="{{ url_for('auth.login') }}">Already registered? Login</a>
+            <a href="{{ url_for('auth.register') }}">Register as User</a>
+        </div>
+    </article>
+</section>
+{% endblock %}
