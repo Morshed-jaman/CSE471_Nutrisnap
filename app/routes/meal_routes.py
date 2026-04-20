@@ -9,7 +9,7 @@ from sqlalchemy import func, or_
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
-from app.models import MealLog, MenuItem, Vendor
+from app.models import FavoriteMeal, MealLog, MenuItem, Vendor
 from app.services.auth_service import redirect_for_role, role_required
 from app.services.cloudinary_service import delete_image, upload_image
 from app.services.nutrition_service import get_nutrition_insights
@@ -299,7 +299,12 @@ def my_meal_logs():
         .order_by(MealLog.created_at.desc())
         .all()
     )
-    return render_template("meals/my_meal_logs.html", logs=logs)
+    favorite_meal_ids = {favorite.meal_log_id for favorite in FavoriteMeal.query.all()}
+    return render_template(
+        "meals/my_meal_logs.html",
+        logs=logs,
+        favorite_meal_ids=favorite_meal_ids,
+    )
 
 
 @meal_bp.route("/meal-logs")
@@ -307,7 +312,16 @@ def my_meal_logs():
 @role_required("user", "vendor", "admin")
 def meal_logs():
     logs = MealLog.query.order_by(MealLog.created_at.desc()).all()
-    return render_template("meals/meal_logs.html", logs=logs)
+    favorite_meal_ids = (
+        {favorite.meal_log_id for favorite in FavoriteMeal.query.all()}
+        if current_user.role == "user"
+        else set()
+    )
+    return render_template(
+        "meals/meal_logs.html",
+        logs=logs,
+        favorite_meal_ids=favorite_meal_ids,
+    )
 
 
 @meal_bp.route("/meal-log/<int:meal_id>")
@@ -327,6 +341,10 @@ def meal_detail(meal_id):
     can_modify = _can_modify_meal(meal)
     can_save_copy = current_user.role == "user" and meal.user_id != current_user.id
     can_analyze = current_user.role == "admin" or _is_owner(meal)
+    is_meal_favorited = (
+        current_user.role == "user"
+        and FavoriteMeal.query.filter_by(meal_log_id=meal.id).first() is not None
+    )
 
     return render_template(
         "meals/meal_detail.html",
@@ -336,6 +354,7 @@ def meal_detail(meal_id):
         can_analyze=can_analyze,
         can_save_copy=can_save_copy,
         owner_label=_owner_label(meal),
+        is_meal_favorited=is_meal_favorited,
     )
 
 

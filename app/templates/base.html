@@ -171,8 +171,18 @@
                                         </a>
                                     </li>
                                     <li class="nav-item">
+                                        <a class="nav-link {% if endpoint == 'nutrition.healthy_indicator' %}active{% endif %}" href="{{ url_for('nutrition.healthy_indicator') }}">
+                                            <i class="bi bi-heart-pulse"></i><span>Healthy Indicator</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
                                         <a class="nav-link {% if endpoint == 'nutrition.water_tracker' %}active{% endif %}" href="{{ url_for('nutrition.water_tracker') }}">
                                             <i class="bi bi-droplet"></i><span>Water Tracker</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link {% if endpoint.startswith('favorites.') %}active{% endif %}" href="{{ url_for('favorites.favorites_list') }}">
+                                            <i class="bi bi-bookmark-heart"></i><span>Favorites</span>
                                         </a>
                                     </li>
                                     <li class="nav-item">

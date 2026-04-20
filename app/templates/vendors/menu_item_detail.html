@@ -19,7 +19,18 @@
                 <span class="text-muted">({{ item_review_count }} reviews)</span>
             </div>
         </div>
-        <a href="{{ url_for('vendor.vendor_detail', vendor_id=item.vendor.id) }}" class="btn btn-outline-industrial">Back to Vendor</a>
+        <div class="d-flex flex-wrap gap-2">
+            {% if current_user.role == 'user' %}
+                <form method="post" action="{{ url_for('favorites.toggle_menu_item_favorite', item_id=item.id) }}" class="d-inline">
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit" class="btn {% if is_item_favorited %}btn-outline-danger{% else %}btn-outline-industrial{% endif %}">
+                        <i class="bi {% if is_item_favorited %}bi-heart-fill{% else %}bi-heart{% endif %} me-1"></i>
+                        {% if is_item_favorited %}Saved{% else %}Save Item{% endif %}
+                    </button>
+                </form>
+            {% endif %}
+            <a href="{{ url_for('vendor.vendor_detail', vendor_id=item.vendor.id) }}" class="btn btn-outline-industrial">Back to Vendor</a>
+        </div>
     </div>
 </section>
 

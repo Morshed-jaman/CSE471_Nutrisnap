@@ -1,6 +1,7 @@
 from urllib.parse import urlsplit
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
+from flask_login import login_required
 
 from app.extensions import db
 from app.models import (
@@ -11,7 +12,8 @@ from app.models import (
     MenuItem,
     Vendor,
 )
-from app.services.nutrition_service import get_healthy_food_indicators
+from app.services.auth_service import role_required
+from app.services.nutrition_service import get_nutrition_insights
 
 favorites_bp = Blueprint("favorites", __name__)
 
@@ -33,6 +35,8 @@ def _safe_next_url(default_endpoint: str, **default_values) -> str:
 
 
 @favorites_bp.route("/favorites")
+@login_required
+@role_required("user")
 def favorites_list():
     favorite_vendors = (
         FavoriteVendor.query.join(Vendor)
@@ -52,7 +56,7 @@ def favorites_list():
     favorite_meals = FavoriteMeal.query.join(MealLog).order_by(FavoriteMeal.created_at.desc()).all()
 
     menu_item_indicator_map = {
-        favorite.menu_item.id: get_healthy_food_indicators(
+        favorite.menu_item.id: get_nutrition_insights(
             favorite.menu_item.calories,
             favorite.menu_item.protein,
             favorite.menu_item.carbohydrates,
@@ -62,7 +66,7 @@ def favorites_list():
     }
 
     meal_indicator_map = {
-        favorite.meal_log.id: get_healthy_food_indicators(
+        favorite.meal_log.id: get_nutrition_insights(
             favorite.meal_log.calories,
             favorite.meal_log.protein,
             favorite.meal_log.carbohydrates,
@@ -82,6 +86,8 @@ def favorites_list():
 
 
 @favorites_bp.route("/favorites/vendors/<int:vendor_id>/toggle", methods=["POST"])
+@login_required
+@role_required("user")
 def toggle_vendor_favorite(vendor_id: int):
     vendor = Vendor.query.filter_by(id=vendor_id, is_active=True).first()
     if not vendor:
@@ -107,6 +113,8 @@ def toggle_vendor_favorite(vendor_id: int):
 
 
 @favorites_bp.route("/favorites/menu-items/<int:item_id>/toggle", methods=["POST"])
+@login_required
+@role_required("user")
 def toggle_menu_item_favorite(item_id: int):
     menu_item = db.session.get(MenuItem, item_id)
     if not menu_item or not menu_item.is_available or not menu_item.vendor or not menu_item.vendor.is_active:
@@ -132,6 +140,8 @@ def toggle_menu_item_favorite(item_id: int):
 
 
 @favorites_bp.route("/favorites/meals/<int:meal_id>/toggle", methods=["POST"])
+@login_required
+@role_required("user")
 def toggle_meal_favorite(meal_id: int):
     meal = db.session.get(MealLog, meal_id)
     if not meal:

@@ -66,6 +66,16 @@
                         <i class="bi bi-eye"></i><span>View Details</span>
                     </a>
 
+                    {% if current_user.role == 'user' %}
+                        <form action="{{ url_for('favorites.toggle_meal_favorite', meal_id=meal.id) }}" method="post" class="d-inline">
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button type="submit" class="btn btn-sm meal-action-btn {% if meal.id in favorite_meal_ids %}meal-action-delete{% else %}meal-action-view{% endif %}">
+                                <i class="bi {% if meal.id in favorite_meal_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                                <span>{% if meal.id in favorite_meal_ids %}Saved{% else %}Save{% endif %}</span>
+                            </button>
+                        </form>
+                    {% endif %}
+
                     {% if current_user.role == 'user' and meal.user_id != current_user.id %}
                         <form action="{{ url_for('meal.save_to_my_meals', meal_id=meal.id) }}" method="post" class="d-inline">
                             <button type="submit" class="btn btn-sm meal-action-btn meal-action-analyze">

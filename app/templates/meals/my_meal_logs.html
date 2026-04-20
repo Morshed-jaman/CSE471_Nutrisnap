@@ -61,6 +61,13 @@
                             <i class="bi bi-stars"></i><span>Analyze</span>
                         </button>
                     </form>
+                    <form action="{{ url_for('favorites.toggle_meal_favorite', meal_id=meal.id) }}" method="post" class="d-inline">
+                        <input type="hidden" name="next" value="{{ request.path }}">
+                        <button type="submit" class="btn btn-sm meal-action-btn {% if meal.id in favorite_meal_ids %}meal-action-delete{% else %}meal-action-view{% endif %}">
+                            <i class="bi {% if meal.id in favorite_meal_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                            <span>{% if meal.id in favorite_meal_ids %}Saved{% else %}Save{% endif %}</span>
+                        </button>
+                    </form>
                     <form action="{{ url_for('meal.delete_meal', meal_id=meal.id) }}" method="post" class="d-inline">
                         <button type="submit" class="btn btn-sm meal-action-btn meal-action-delete" data-confirm-delete="Delete this meal log?">
                             <i class="bi bi-trash3"></i><span>Delete</span>

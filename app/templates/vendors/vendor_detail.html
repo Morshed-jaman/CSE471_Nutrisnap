@@ -32,6 +32,13 @@
                         <button type="submit" class="btn btn-industrial">Subscribe</button>
                     </form>
                 {% endif %}
+                <form method="post" action="{{ url_for('favorites.toggle_vendor_favorite', vendor_id=vendor.id) }}" class="d-inline">
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit" class="btn {% if is_vendor_favorited %}btn-outline-danger{% else %}btn-outline-industrial{% endif %}">
+                        <i class="bi {% if is_vendor_favorited %}bi-heart-fill{% else %}bi-heart{% endif %} me-1"></i>
+                        {% if is_vendor_favorited %}Saved{% else %}Save{% endif %}
+                    </button>
+                </form>
             {% endif %}
             <a href="{{ url_for('vendor.vendors') }}" class="btn btn-outline-industrial">Back to Vendors</a>
         </div>
@@ -218,6 +225,14 @@
                                     <button type="submit" class="btn btn-industrial btn-sm w-100">Add to My Meals</button>
                                 </div>
                             </div>
+                        </form>
+
+                        <form method="post" action="{{ url_for('favorites.toggle_menu_item_favorite', item_id=item.id) }}" class="d-inline mb-2">
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button type="submit" class="btn btn-sm {% if item.id in favorite_menu_item_ids %}btn-outline-danger{% else %}btn-outline-industrial{% endif %}">
+                                <i class="bi {% if item.id in favorite_menu_item_ids %}bi-heart-fill{% else %}bi-heart{% endif %} me-1"></i>
+                                {% if item.id in favorite_menu_item_ids %}Saved{% else %}Save Item{% endif %}
+                            </button>
                         </form>
                     {% endif %}
 

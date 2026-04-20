@@ -24,6 +24,13 @@ class MealLog(db.Model):
     )
 
     user = db.relationship("User", back_populates="meal_logs")
+    favorite_entry = db.relationship(
+        "FavoriteMeal",
+        back_populates="meal_log",
+        uselist=False,
+        lazy="select",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return (

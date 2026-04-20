@@ -23,7 +23,9 @@
             <a href="{{ url_for('nutrition.nutrition_search') }}"><i class="bi bi-search-heart"></i><span>Nutrition Search</span></a>
             <a href="{{ url_for('nutrition.weekly_tracking') }}"><i class="bi bi-calendar2-week"></i><span>Weekly Tracking</span></a>
             <a href="{{ url_for('nutrition.nutrition_analytics') }}"><i class="bi bi-graph-up-arrow"></i><span>Nutrition Analytics</span></a>
+            <a href="{{ url_for('nutrition.healthy_indicator') }}"><i class="bi bi-heart-pulse"></i><span>Healthy Indicator</span></a>
             <a href="{{ url_for('nutrition.water_tracker') }}"><i class="bi bi-droplet"></i><span>Water Tracker</span></a>
+            <a href="{{ url_for('favorites.favorites_list') }}"><i class="bi bi-bookmark-heart"></i><span>Favorites</span></a>
             <a href="{{ url_for('advice.user_advice') }}"><i class="bi bi-chat-heart"></i><span>Nutritionist Advice</span></a>
         </nav>
 
@@ -47,7 +49,9 @@
                 <a href="{{ url_for('vendor.vendors') }}" class="btn btn-outline-industrial btn-sm">Browse Vendors</a>
                 <a href="{{ url_for('nutrition.nutrition_search') }}" class="btn btn-outline-secondary btn-sm">Nutrition Search</a>
                 <a href="{{ url_for('nutrition.weekly_tracking') }}" class="btn btn-outline-industrial btn-sm">Weekly Tracking</a>
+                <a href="{{ url_for('nutrition.healthy_indicator') }}" class="btn btn-outline-industrial btn-sm">Healthy Indicator</a>
                 <a href="{{ url_for('nutrition.water_tracker') }}" class="btn btn-outline-industrial btn-sm">Water Tracker</a>
+                <a href="{{ url_for('favorites.favorites_list') }}" class="btn btn-outline-industrial btn-sm">Favorites</a>
                 <a href="{{ url_for('advice.user_advice') }}" class="btn btn-outline-industrial btn-sm">Nutritionist Advice</a>
             </div>
         </section>
@@ -135,6 +139,20 @@
                         <i class="bi bi-droplet"></i>
                         <h3>Water Tracker</h3>
                         <p>Log daily water intake and check hydration progress.</p>
+                    </a>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <a href="{{ url_for('nutrition.healthy_indicator') }}" class="shortcut-card">
+                        <i class="bi bi-heart-pulse"></i>
+                        <h3>Healthy Indicator</h3>
+                        <p>See nutrient meters and healthy tags for analyzed meals.</p>
+                    </a>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <a href="{{ url_for('favorites.favorites_list') }}" class="shortcut-card">
+                        <i class="bi bi-bookmark-heart"></i>
+                        <h3>Favorites</h3>
+                        <p>Save and revisit preferred vendors, items, and meals.</p>
                     </a>
                 </div>
                 <div class="col-md-6 col-xl-3">

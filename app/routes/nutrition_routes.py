@@ -6,7 +6,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import or_
 
 from app.extensions import db
-from app.models import MealLog, WaterIntake
+from app.models import FavoriteMeal, MealLog, WaterIntake
 from app.services.analytics_service import (
     build_weekly_tracking_context,
     has_nutrition_values,
@@ -60,6 +60,65 @@ def _meal_visibility_filter(query):
     if current_user.role == "admin":
         return query
     return query.filter(MealLog.user_id == current_user.id)
+
+
+def _optional_float(value):
+    try:
+        return float(value) if value is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _meter_payload(
+    label: str,
+    value,
+    unit: str,
+    target: float,
+    lower_is_better: bool = False,
+):
+    numeric = _optional_float(value)
+    if numeric is None:
+        return {
+            "label": label,
+            "value": None,
+            "unit": unit,
+            "percent": None,
+            "tone": "muted",
+            "hint": "No data",
+        }
+
+    ratio = (numeric / target) * 100 if target > 0 else 0
+    percent = max(6, min(int(round(ratio)), 100))
+
+    if lower_is_better:
+        if numeric <= target * 0.75:
+            tone = "good"
+            hint = "Great range"
+        elif numeric <= target:
+            tone = "ok"
+            hint = "Within range"
+        else:
+            tone = "warn"
+            hint = "Consider lowering"
+    else:
+        if numeric >= target:
+            tone = "good"
+            hint = "Target met"
+        elif numeric >= target * 0.6:
+            tone = "ok"
+            hint = "Close to target"
+        else:
+            tone = "warn"
+            hint = "Can improve"
+
+    return {
+        "label": label,
+        "value": round(numeric, 2),
+        "unit": unit,
+        "percent": percent,
+        "tone": tone,
+        "hint": hint,
+    }
 
 
 def _water_tracker_context(user_id: int) -> dict:
@@ -341,6 +400,78 @@ def weekly_tracking():
         latest_data_week_start=latest_data_week_start,
         latest_data_week_label=latest_data_week_label,
         is_system_view=current_user.role == "admin",
+    )
+
+
+@nutrition_bp.route("/healthy-indicator")
+@login_required
+@role_required("user", "admin")
+def healthy_indicator():
+    analyzed_query = MealLog.query.filter(
+        or_(
+            MealLog.calories.isnot(None),
+            MealLog.protein.isnot(None),
+            MealLog.carbohydrates.isnot(None),
+            MealLog.fats.isnot(None),
+        )
+    )
+    analyzed_query = _meal_visibility_filter(analyzed_query)
+    analyzed_meals = analyzed_query.order_by(MealLog.meal_date.desc(), MealLog.created_at.desc()).all()
+
+    can_manage_favorites = current_user.role == "user"
+    favorite_meal_ids = set()
+    if can_manage_favorites:
+        favorite_meal_ids = {favorite.meal_log_id for favorite in FavoriteMeal.query.all()}
+
+    tag_counts = defaultdict(int)
+    meal_cards = []
+    for meal in analyzed_meals:
+        tags = get_nutrition_insights(meal.calories, meal.protein, meal.carbohydrates, meal.fats)
+        for tag in tags:
+            tag_counts[tag] += 1
+
+        meal_cards.append(
+            {
+                "meal": meal,
+                "tags": tags,
+                "meters": [
+                    _meter_payload("Calories", meal.calories, "kcal", target=500, lower_is_better=True),
+                    _meter_payload("Protein", meal.protein, "g", target=30),
+                    _meter_payload(
+                        "Carbohydrates",
+                        meal.carbohydrates,
+                        "g",
+                        target=60,
+                        lower_is_better=True,
+                    ),
+                    _meter_payload("Fats", meal.fats, "g", target=22, lower_is_better=True),
+                    {
+                        "label": "Sugar",
+                        "value": None,
+                        "unit": "g",
+                        "percent": None,
+                        "tone": "muted",
+                        "hint": "Not stored in meal model",
+                    },
+                    {
+                        "label": "Sodium",
+                        "value": None,
+                        "unit": "mg",
+                        "percent": None,
+                        "tone": "muted",
+                        "hint": "Not stored in meal model",
+                    },
+                ],
+            }
+        )
+
+    return render_template(
+        "meals/healthy_indicator.html",
+        meal_cards=meal_cards,
+        total_analyzed=len(analyzed_meals),
+        tag_counts=dict(tag_counts),
+        favorite_meal_ids=favorite_meal_ids,
+        can_manage_favorites=can_manage_favorites,
     )
 
 

@@ -11,7 +11,7 @@ from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
-from app.models import MenuItem, Review, Vendor, VendorSubscription
+from app.models import FavoriteMenuItem, FavoriteVendor, MenuItem, Review, Vendor, VendorSubscription
 from app.services.auth_service import approved_vendor_required, role_required
 from app.services.cloudinary_service import delete_image, upload_image
 from app.services.email_service import send_vendor_subscription_email
@@ -187,6 +187,7 @@ def vendor_detail(vendor_id: int):
         menu_query = menu_query.filter(MenuItem.is_available.is_(True))
 
     menu_items = menu_query.order_by(MenuItem.name.asc()).all()
+    menu_item_ids = [item.id for item in menu_items]
 
     vendor_avg_rating, vendor_review_count = (
         db.session.query(
@@ -209,6 +210,8 @@ def vendor_detail(vendor_id: int):
     my_vendor_review = None
     can_submit_review = current_user.role == "user"
     is_vendor_subscribed = False
+    is_vendor_favorited = False
+    favorite_menu_item_ids = set()
     if can_submit_review:
         my_vendor_review = Review.query.filter_by(
             user_id=current_user.id, vendor_id=vendor.id, menu_item_id=None
@@ -217,9 +220,16 @@ def vendor_detail(vendor_id: int):
             VendorSubscription.query.filter_by(user_id=current_user.id, vendor_id=vendor.id).first()
             is not None
         )
+        is_vendor_favorited = FavoriteVendor.query.filter_by(vendor_id=vendor.id).first() is not None
+        if menu_item_ids:
+            favorite_menu_item_ids = {
+                favorite.menu_item_id
+                for favorite in FavoriteMenuItem.query.filter(
+                    FavoriteMenuItem.menu_item_id.in_(menu_item_ids)
+                ).all()
+            }
 
     item_rating_map: dict[int, dict[str, float | int]] = {}
-    menu_item_ids = [item.id for item in menu_items]
     if menu_item_ids:
         item_rows = (
             db.session.query(
@@ -250,6 +260,8 @@ def vendor_detail(vendor_id: int):
         my_vendor_review=my_vendor_review,
         can_submit_review=can_submit_review,
         is_vendor_subscribed=is_vendor_subscribed,
+        is_vendor_favorited=is_vendor_favorited,
+        favorite_menu_item_ids=favorite_menu_item_ids,
         item_rating_map=item_rating_map,
         meal_types=USER_MEAL_TYPES,
         default_meal_date=date.today().isoformat(),
@@ -359,10 +371,12 @@ def menu_item_detail(item_id: int):
 
     my_item_review = None
     can_submit_review = current_user.role == "user"
+    is_item_favorited = False
     if can_submit_review:
         my_item_review = Review.query.filter_by(
             user_id=current_user.id, menu_item_id=item.id, vendor_id=None
         ).first()
+        is_item_favorited = FavoriteMenuItem.query.filter_by(menu_item_id=item.id).first() is not None
 
     return render_template(
         "vendors/menu_item_detail.html",
@@ -372,6 +386,7 @@ def menu_item_detail(item_id: int):
         item_reviews=item_reviews,
         my_item_review=my_item_review,
         can_submit_review=can_submit_review,
+        is_item_favorited=is_item_favorited,
         meal_types=USER_MEAL_TYPES,
         default_meal_date=date.today().isoformat(),
     )

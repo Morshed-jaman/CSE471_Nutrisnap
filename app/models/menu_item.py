@@ -27,6 +27,13 @@ class MenuItem(db.Model):
     reviews = db.relationship(
         "Review", back_populates="menu_item", lazy="select", cascade="all, delete-orphan"
     )
+    favorite_entry = db.relationship(
+        "FavoriteMenuItem",
+        back_populates="menu_item",
+        uselist=False,
+        lazy="select",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return (
