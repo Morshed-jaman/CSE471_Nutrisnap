@@ -498,6 +498,102 @@ h6,
     letter-spacing: 0.02em;
 }
 
+.rating-summary-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.38rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid rgba(46, 63, 82, 0.15);
+    background: linear-gradient(145deg, #f9fcff, #eef5ff);
+}
+
+.rating-stars-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    color: #f59e0b;
+}
+
+.rating-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.rating-inline-score {
+    font-weight: 700;
+    color: #2b4359;
+}
+
+.rating-inline-count {
+    color: #5d758a;
+    font-size: 0.84rem;
+}
+
+.review-form-card {
+    border: 1px solid rgba(46, 63, 82, 0.14);
+    border-radius: 14px;
+    background: linear-gradient(150deg, rgba(255, 255, 255, 0.98), rgba(244, 249, 255, 0.92));
+    padding: 1rem;
+    box-shadow: var(--shadow-soft);
+}
+
+.review-card {
+    border: 1px solid rgba(46, 63, 82, 0.13);
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: var(--shadow-soft);
+    padding: 0.9rem 1rem;
+}
+
+.review-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.14rem;
+    color: #f59e0b;
+}
+
+.review-stars-score {
+    margin-left: 0.4rem;
+    color: #2f485f;
+    font-size: 0.84rem;
+    font-weight: 600;
+}
+
+.star-input {
+    direction: rtl;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.35rem 0.45rem;
+    border: 1px solid rgba(46, 63, 82, 0.15);
+    border-radius: 10px;
+    background: #fff;
+}
+
+.star-input input {
+    display: none;
+}
+
+.star-input label {
+    color: #c8d4e0;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: transform 160ms ease, color 160ms ease;
+}
+
+.star-input label:hover,
+.star-input label:hover ~ label,
+.star-input input:checked ~ label {
+    color: #f59e0b;
+}
+
+.star-input label:active {
+    transform: scale(1.05);
+}
+
 .vendor-placeholder {
     background: linear-gradient(135deg, #d8e3ef, #c6d4e3);
     color: #2f4358;
@@ -919,6 +1015,14 @@ h6,
     height: 44px;
     border-radius: 8px;
     object-fit: cover;
+    border: 1px solid rgba(46, 63, 82, 0.15);
+}
+
+.vendor-cover-preview {
+    width: 100%;
+    max-height: 320px;
+    object-fit: cover;
+    border-radius: 12px;
     border: 1px solid rgba(46, 63, 82, 0.15);
 }
 
@@ -2884,5 +2988,115 @@ h6,
 
     .meal-logs-page .meal-thumb {
         height: 200px;
+    }
+}
+
+/* Auth + Admin Workflows */
+.auth-page .page-shell {
+    max-width: 980px;
+}
+
+.auth-shell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-card {
+    width: min(100%, 560px);
+}
+
+.auth-card-wide {
+    width: min(100%, 760px);
+}
+
+.auth-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+}
+
+.auth-links a {
+    font-size: 0.88rem;
+    text-decoration: none;
+}
+
+.status-card {
+    max-width: 780px;
+    margin-inline: auto;
+}
+
+.admin-stat-card {
+    border: 1px solid rgba(46, 63, 82, 0.13);
+    border-radius: 14px;
+    background: linear-gradient(145deg, #ffffff, #f5f9ff);
+    box-shadow: var(--shadow-soft);
+    padding: 1rem;
+}
+
+.admin-stat-card p {
+    margin-bottom: 0.25rem;
+    color: #5a6f84;
+    font-size: 0.85rem;
+}
+
+.admin-stat-card h3 {
+    margin: 0;
+    font-size: 1.45rem;
+}
+
+.nav-role-chip-wrap {
+    margin-left: 0.25rem;
+}
+
+.nav-role-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    padding: 0.32rem 0.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.78rem;
+}
+
+.nav-logout-btn {
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+@media (min-width: 1200px) {
+    .nav-pills-wrap {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        row-gap: 0.55rem;
+    }
+
+    .nav-role-chip-wrap {
+        margin-left: auto;
+    }
+}
+
+@media (max-width: 1199.98px) {
+    .nav-role-chip-wrap {
+        margin-left: 0;
+        margin-top: 0.35rem;
+    }
+
+    .nav-role-chip,
+    .nav-logout-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .nav-logout-btn {
+        display: inline-flex;
+        align-items: center;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .auth-links {
+        flex-direction: column;
     }
 }

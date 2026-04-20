@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Nutrition Expert Registration | NutriSnap{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+
+{% block content %}
+<section class="auth-shell reveal-on-scroll" data-delay="0">
+    <article class="surface-card auth-card auth-card-wide">
+        <p class="eyebrow mb-1">Expert Registration</p>
+        <h1 class="section-title mb-1">Register as Nutrition Expert</h1>
+        <p class="page-subtitle mb-4">Submit your credentials for admin verification before giving advice.</p>
+
+        <form method="post" action="{{ url_for('auth.nutrition_expert_register') }}" class="row g-3">
+            <div class="col-md-6">
+                <label for="name" class="form-label">Full Name</label>
+                <input type="text" class="form-control form-control-industrial" id="name" name="name" value="{{ form.get('name', '') if form else '' }}" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="phone" class="form-label">Phone</label>
+                <input type="text" class="form-control form-control-industrial" id="phone" name="phone" value="{{ form.get('phone', '') if form else '' }}" required>
+            </div>
+
+            <div class="col-12">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control form-control-industrial" id="email" name="email" value="{{ form.get('email', '') if form else '' }}" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control form-control-industrial" id="password" name="password" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="confirm_password" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control form-control-industrial" id="confirm_password" name="confirm_password" required>
+            </div>
+
+            <div class="col-12">
+                <label for="expert_credentials" class="form-label">Credentials / Experience Summary</label>
+                <textarea
+                    class="form-control form-control-industrial"
+                    id="expert_credentials"
+                    name="expert_credentials"
+                    rows="4"
+                    maxlength="2000"
+                    placeholder="Share your qualification, certification, and nutrition counseling experience."
+                    required
+                >{{ form.get('expert_credentials', '') if form else '' }}</textarea>
+            </div>
+
+            <div class="col-12 d-grid">
+                <button type="submit" class="btn btn-industrial">Submit Expert Registration</button>
+            </div>
+        </form>
+
+        <div class="auth-links mt-4">
+            <a href="{{ url_for('auth.login') }}">Already registered? Login</a>
+            <a href="{{ url_for('auth.register') }}">Register as User</a>
+            <a href="{{ url_for('auth.vendor_register') }}">Register as Vendor</a>
+        </div>
+    </article>
+</section>
+{% endblock %}

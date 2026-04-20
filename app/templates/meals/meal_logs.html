@@ -1,24 +1,33 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
-{% block title %}Meal Logs | NutriSnap{% endblock %}
+{% block title %}Central Meal Logs | NutriSnap{% endblock %}
 {% block body_class %}meal-logs-page{% endblock %}
 
 {% block content %}
 <section class="surface-card page-header-card meal-logs-hero reveal-on-scroll" data-delay="0">
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
         <div>
-            <p class="eyebrow mb-1">Meal Gallery</p>
-            <h1 class="section-title mb-1 meal-logs-title">Meal Logs</h1>
-            <p class="page-subtitle mb-0">Your visual food timeline with nutrition insights and quick meal actions.</p>
+            <p class="eyebrow mb-1">Shared Meal Feed</p>
+            <h1 class="section-title mb-1 meal-logs-title">Central Meal Logs</h1>
+            <p class="page-subtitle mb-0">Browse meals shared across users. Copy any meal into your own logs when you need it.</p>
             <span class="meal-logs-accent"></span>
         </div>
         <div class="d-flex flex-wrap gap-2 meal-logs-hero-actions">
-            <a href="{{ url_for('nutrition.nutrition_analytics') }}" class="btn meal-logs-analytics-btn">
-                <i class="bi bi-graph-up-arrow me-1"></i> Nutrition Analytics
-            </a>
-            <a href="{{ url_for('meal.upload_meal') }}" class="btn meal-logs-add-btn">
-                <i class="bi bi-plus-circle me-1"></i> Add New Meal
-            </a>
+            {% if current_user.role == 'user' %}
+                <a href="{{ url_for('meal.my_meal_logs') }}" class="btn meal-logs-analytics-btn">
+                    <i class="bi bi-journal-check me-1"></i> My Meal Logs
+                </a>
+            {% endif %}
+            {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('admin.admin_meal_logs') }}" class="btn meal-logs-analytics-btn">
+                    <i class="bi bi-shield-check me-1"></i> Admin Meal Logs
+                </a>
+            {% endif %}
+            {% if current_user.role == 'user' %}
+                <a href="{{ url_for('meal.upload_meal') }}" class="btn meal-logs-add-btn">
+                    <i class="bi bi-plus-circle me-1"></i> Upload New Meal
+                </a>
+            {% endif %}
         </div>
     </div>
 </section>
@@ -36,6 +45,10 @@
             <div class="meal-card-body meal-card-body-premium">
                 <h2 class="meal-card-title">{{ meal.title if meal.title else meal.meal_type|capitalize ~ ' Meal' }}</h2>
                 <p class="meal-card-date"><i class="bi bi-calendar3 me-1"></i>{{ meal.meal_date.strftime('%d %b %Y') }}</p>
+                <p class="small text-muted mb-2">
+                    <i class="bi bi-person-circle me-1"></i>
+                    Uploaded by: {{ meal.user.name if meal.user else 'Legacy / Unknown' }}
+                </p>
 
                 {% if meal.calories is not none or meal.protein is not none or meal.carbohydrates is not none or meal.fats is not none %}
                     <div class="nutrition-chip-grid my-3">
@@ -50,22 +63,29 @@
 
                 <div class="d-flex flex-wrap gap-2 meal-action-row mt-2">
                     <a href="{{ url_for('meal.meal_detail', meal_id=meal.id) }}" class="btn btn-sm meal-action-btn meal-action-view">
-                        <i class="bi bi-eye"></i><span>View</span>
+                        <i class="bi bi-eye"></i><span>View Details</span>
                     </a>
-                    <a href="{{ url_for('meal.edit_meal', meal_id=meal.id) }}" class="btn btn-sm meal-action-btn meal-action-edit">
-                        <i class="bi bi-pencil-square"></i><span>Edit</span>
-                    </a>
-                    <form action="{{ url_for('nutrition.analyze_meal', id=meal.id) }}" method="post" class="d-inline">
-                        <input type="hidden" name="next" value="{{ url_for('meal.meal_logs') }}">
-                        <button type="submit" class="btn btn-sm meal-action-btn meal-action-analyze">
-                            <i class="bi bi-stars"></i><span>Analyze</span>
-                        </button>
-                    </form>
-                    <form action="{{ url_for('meal.delete_meal', meal_id=meal.id) }}" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-sm meal-action-btn meal-action-delete" data-confirm-delete="Delete this meal log?">
-                            <i class="bi bi-trash3"></i><span>Delete</span>
-                        </button>
-                    </form>
+
+                    {% if current_user.role == 'user' and meal.user_id != current_user.id %}
+                        <form action="{{ url_for('meal.save_to_my_meals', meal_id=meal.id) }}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm meal-action-btn meal-action-analyze">
+                                <i class="bi bi-copy"></i><span>Save to My Meals</span>
+                            </button>
+                        </form>
+                    {% elif current_user.role == 'user' and meal.user_id == current_user.id %}
+                        <span class="nutrition-chip nutrition-chip-protein"><i class="bi bi-check2-circle"></i>In My Meals</span>
+                    {% endif %}
+
+                    {% if current_user.role == 'admin' or (current_user.role == 'user' and meal.user_id == current_user.id) %}
+                        <a href="{{ url_for('meal.edit_meal', meal_id=meal.id) }}" class="btn btn-sm meal-action-btn meal-action-edit">
+                            <i class="bi bi-pencil-square"></i><span>Edit</span>
+                        </a>
+                        <form action="{{ url_for('meal.delete_meal', meal_id=meal.id) }}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm meal-action-btn meal-action-delete" data-confirm-delete="Delete this meal log?">
+                                <i class="bi bi-trash3"></i><span>Delete</span>
+                            </button>
+                        </form>
+                    {% endif %}
                 </div>
             </div>
         </article>
@@ -75,11 +95,13 @@
 {% else %}
 <section class="surface-card text-center reveal-on-scroll meal-logs-empty" data-delay="1">
     <div class="meal-logs-empty-icon"><i class="bi bi-image-alt"></i></div>
-    <h2 class="section-title mb-2">No meals logged yet</h2>
-    <p class="text-muted mb-4">Start your gallery by uploading your first meal image.</p>
-    <a href="{{ url_for('meal.upload_meal') }}" class="btn meal-logs-add-btn">
-        <i class="bi bi-cloud-arrow-up me-1"></i> Upload Your First Meal
-    </a>
+    <h2 class="section-title mb-2">No meals in the central feed yet</h2>
+    <p class="text-muted mb-4">Once users upload meals, this shared feed will populate automatically.</p>
+    {% if current_user.role == 'user' %}
+        <a href="{{ url_for('meal.upload_meal') }}" class="btn meal-logs-add-btn">
+            <i class="bi bi-cloud-arrow-up me-1"></i> Upload a Meal
+        </a>
+    {% endif %}
 </section>
 {% endif %}
 {% endblock %}

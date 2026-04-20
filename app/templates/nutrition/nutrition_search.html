@@ -8,7 +8,13 @@
         <div>
             <p class="eyebrow mb-1">External Nutrition API</p>
             <h1 class="section-title mb-1">Nutrition Search</h1>
-            <p class="page-subtitle mb-0">Search any food and get instant calories, protein, carbohydrates, and fats.</p>
+            <p class="page-subtitle mb-0">
+                {% if is_system_view %}
+                    Search any food and apply nutrition analysis as a system admin.
+                {% else %}
+                    Search any food and get instant calories, protein, carbohydrates, and fats.
+                {% endif %}
+            </p>
         </div>
         <a href="{{ url_for('nutrition.nutrition_analytics') }}" class="btn btn-outline-industrial">Open Nutrition Analytics</a>
     </div>
@@ -80,6 +86,7 @@
             {% if recent_meals %}
                 <div class="list-group list-group-flush nutrition-log-list">
                     {% for meal in recent_meals %}
+                        {% set has_meal_nutrition = meal.calories is not none or meal.protein is not none or meal.carbohydrates is not none or meal.fats is not none %}
                         <div class="list-group-item px-0 py-3 bg-transparent border-bottom-0 border-top nutrition-log-row">
                             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                                 <div>
@@ -87,12 +94,14 @@
                                     <div class="small text-muted">{{ meal.meal_date.strftime('%d %b %Y') }}</div>
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
-                                    {% if meal.calories is not none %}
+                                    {% if has_meal_nutrition %}
                                         <span class="badge text-bg-success">Analyzed</span>
                                     {% endif %}
                                     <form method="post" action="{{ url_for('nutrition.analyze_meal', id=meal.id) }}">
                                         <input type="hidden" name="next" value="{{ url_for('nutrition.nutrition_search') }}">
-                                        <button type="submit" class="btn btn-sm btn-outline-industrial">Analyze Nutrition</button>
+                                        <button type="submit" class="btn btn-sm btn-outline-industrial">
+                                            {{ 'Re-Analyze' if has_meal_nutrition else 'Analyze Nutrition' }}
+                                        </button>
                                     </form>
                                 </div>
                             </div>
@@ -102,7 +111,11 @@
             {% else %}
                 <div class="empty-panel">
                     <p class="mb-2">No meal logs found yet.</p>
-                    <a href="{{ url_for('meal.upload_meal') }}" class="btn btn-outline-industrial btn-sm">Upload meal first</a>
+                    {% if is_system_view %}
+                        <a href="{{ url_for('admin.admin_meal_logs') }}" class="btn btn-outline-industrial btn-sm">View admin meal logs</a>
+                    {% else %}
+                        <a href="{{ url_for('meal.upload_meal') }}" class="btn btn-outline-industrial btn-sm">Upload meal first</a>
+                    {% endif %}
                 </div>
             {% endif %}
         </div>

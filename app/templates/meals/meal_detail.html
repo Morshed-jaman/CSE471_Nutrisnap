@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block title %}Meal Details | NutriSnap{% endblock %}
 
@@ -8,11 +8,16 @@
         <div>
             <p class="eyebrow mb-1">Meal Detail</p>
             <h1 class="section-title mb-1">{{ meal.title if meal.title else meal.meal_type|capitalize ~ ' Meal' }}</h1>
-            <p class="page-subtitle mb-0">Review image, metadata, nutrition values, and actions for this meal log.</p>
+            <p class="page-subtitle mb-0">View full meal information from the central feed with ownership-aware actions.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a href="{{ url_for('meal.edit_meal', meal_id=meal.id) }}" class="btn btn-outline-industrial">Edit</a>
-            <a href="{{ url_for('meal.meal_logs') }}" class="btn btn-industrial">Back to Meal Logs</a>
+            {% if can_modify %}
+                <a href="{{ url_for('meal.edit_meal', meal_id=meal.id) }}" class="btn btn-outline-industrial">Edit</a>
+            {% endif %}
+            {% if current_user.role == 'user' %}
+                <a href="{{ url_for('meal.my_meal_logs') }}" class="btn btn-outline-industrial">My Meal Logs</a>
+            {% endif %}
+            <a href="{{ url_for('meal.meal_logs') }}" class="btn btn-industrial">Central Meal Logs</a>
         </div>
     </div>
 </section>
@@ -30,6 +35,7 @@
             <div class="kv-list">
                 <div><span>Meal Type</span><strong>{{ meal.meal_type|capitalize }}</strong></div>
                 <div><span>Meal Date</span><strong>{{ meal.meal_date.strftime('%d %b %Y') }}</strong></div>
+                <div><span>Uploader</span><strong>{{ owner_label }}</strong></div>
                 <div><span>Title</span><strong>{{ meal.title if meal.title else '-' }}</strong></div>
                 <div><span>Note</span><strong>{{ meal.note if meal.note else '-' }}</strong></div>
             </div>
@@ -57,14 +63,30 @@
             <p class="meta-time">Updated: {{ meal.updated_at.strftime('%d %b %Y, %I:%M %p') }}</p>
 
             <div class="d-flex flex-wrap gap-2 mt-3">
-                <form action="{{ url_for('nutrition.analyze_meal', id=meal.id) }}" method="post" class="d-inline">
-                    <input type="hidden" name="next" value="{{ url_for('meal.meal_detail', meal_id=meal.id) }}">
-                    <button type="submit" class="btn btn-outline-success">Analyze Nutrition</button>
-                </form>
-                <a href="{{ url_for('nutrition.nutrition_analytics') }}" class="btn btn-outline-secondary">Nutrition Analytics</a>
-                <form action="{{ url_for('meal.delete_meal', meal_id=meal.id) }}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-outline-danger" data-confirm-delete="Delete this meal log?">Delete</button>
-                </form>
+                {% if can_save_copy %}
+                    <form action="{{ url_for('meal.save_to_my_meals', meal_id=meal.id) }}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-copy me-1"></i>Save to My Meals
+                        </button>
+                    </form>
+                {% endif %}
+
+                {% if can_analyze %}
+                    <form action="{{ url_for('nutrition.analyze_meal', id=meal.id) }}" method="post" class="d-inline">
+                        <input type="hidden" name="next" value="{{ url_for('meal.meal_detail', meal_id=meal.id) }}">
+                        <button type="submit" class="btn btn-outline-success">Analyze Nutrition</button>
+                    </form>
+                {% endif %}
+
+                {% if current_user.role == 'user' %}
+                    <a href="{{ url_for('nutrition.nutrition_analytics') }}" class="btn btn-outline-secondary">My Nutrition Analytics</a>
+                {% endif %}
+
+                {% if can_modify %}
+                    <form action="{{ url_for('meal.delete_meal', meal_id=meal.id) }}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-danger" data-confirm-delete="Delete this meal log?">Delete</button>
+                    </form>
+                {% endif %}
             </div>
         </div>
     </div>

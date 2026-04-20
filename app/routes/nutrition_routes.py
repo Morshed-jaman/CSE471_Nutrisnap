@@ -1,11 +1,12 @@
-﻿from collections import defaultdict
+from collections import defaultdict
 from datetime import date, timedelta
 
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
 from sqlalchemy import or_
 
 from app.extensions import db
-from app.models import MealLog
+from app.models import MealLog, WaterIntake
 from app.services.analytics_service import (
     build_weekly_tracking_context,
     has_nutrition_values,
@@ -13,6 +14,7 @@ from app.services.analytics_service import (
     safe_float,
     week_start_for,
 )
+from app.services.auth_service import role_required
 from app.services.nutrition_service import (
     NutritionServiceError,
     get_nutrition_data,
@@ -20,6 +22,9 @@ from app.services.nutrition_service import (
 )
 
 nutrition_bp = Blueprint("nutrition", __name__)
+WATER_DAILY_GOAL_ML = 2000
+MAX_SINGLE_WATER_ENTRY_ML = 5000
+RECENT_WATER_ENTRIES_LIMIT = 15
 
 
 def _meal_label(meal: MealLog) -> str:
@@ -27,13 +32,81 @@ def _meal_label(meal: MealLog) -> str:
     return f"{base} ({meal.meal_date.strftime('%d %b')})"
 
 
+def _meal_query_candidates(meal: MealLog) -> list[str]:
+    candidates: list[str] = []
+
+    def add_candidate(value: str | None):
+        text = (value or "").strip()
+        if text and text not in candidates:
+            candidates.append(text)
+
+    add_candidate(meal.title)
+    add_candidate(meal.note)
+    add_candidate(f"{meal.title or ''} {meal.note or ''}".strip())
+    add_candidate(f"{meal.meal_type} meal")
+
+    # Final fallback for weak titles/notes so user analysis still works.
+    fallback_by_type = {
+        "breakfast": "oatmeal with fruit",
+        "lunch": "grilled chicken with rice",
+        "dinner": "grilled fish with vegetables",
+        "snack": "mixed nuts",
+    }
+    add_candidate(fallback_by_type.get((meal.meal_type or "").lower()))
+    return candidates
+
+
+def _meal_visibility_filter(query):
+    if current_user.role == "admin":
+        return query
+    return query.filter(MealLog.user_id == current_user.id)
+
+
+def _water_tracker_context(user_id: int) -> dict:
+    today = date.today()
+    today_entries = (
+        WaterIntake.query.filter(
+            WaterIntake.user_id == user_id,
+            WaterIntake.intake_date == today,
+        )
+        .order_by(WaterIntake.created_at.desc())
+        .all()
+    )
+    recent_entries = (
+        WaterIntake.query.filter(WaterIntake.user_id == user_id)
+        .order_by(WaterIntake.created_at.desc())
+        .limit(RECENT_WATER_ENTRIES_LIMIT)
+        .all()
+    )
+
+    total_today_ml = sum(entry.amount_ml for entry in today_entries)
+    goal_ml = WATER_DAILY_GOAL_ML
+    remaining_ml = max(goal_ml - total_today_ml, 0)
+    progress_percent = round((total_today_ml / goal_ml) * 100, 1) if goal_ml > 0 else 0.0
+
+    return {
+        "today_entries": today_entries,
+        "recent_entries": recent_entries,
+        "today_date": today,
+        "total_today_ml": total_today_ml,
+        "goal_ml": goal_ml,
+        "remaining_ml": remaining_ml,
+        "goal_achieved": total_today_ml >= goal_ml,
+        "progress_percent": min(progress_percent, 100.0),
+    }
+
+
 @nutrition_bp.route("/nutrition-search", methods=["GET", "POST"])
+@login_required
+@role_required("user", "admin")
 def nutrition_search():
     nutrition_result = None
     insights = []
     food_name = ""
 
-    recent_meals = MealLog.query.order_by(MealLog.created_at.desc()).limit(8).all()
+    recent_query = MealLog.query.order_by(MealLog.created_at.desc())
+    recent_query = _meal_visibility_filter(recent_query)
+    recent_meals = recent_query.limit(8).all()
 
     if request.method == "POST":
         food_name = (request.form.get("food_name") or "").strip()
@@ -45,6 +118,7 @@ def nutrition_search():
                     "nutrition/nutrition_search.html",
                     food_name=food_name,
                     recent_meals=recent_meals,
+                    is_system_view=current_user.role == "admin",
                 ),
                 400,
             )
@@ -68,14 +142,72 @@ def nutrition_search():
         nutrition_result=nutrition_result,
         insights=insights,
         recent_meals=recent_meals,
+        is_system_view=current_user.role == "admin",
     )
 
 
+@nutrition_bp.route("/water-intake", methods=["GET", "POST"])
+@login_required
+@role_required("user")
+def water_tracker():
+    if request.method == "POST":
+        raw_amount = (request.form.get("amount_ml") or "").strip()
+        if not raw_amount:
+            flash("Please enter water amount in ml.", "danger")
+            return redirect(url_for("nutrition.water_tracker"))
+
+        try:
+            parsed_amount = float(raw_amount)
+        except ValueError:
+            flash("Water amount must be a valid number.", "danger")
+            return redirect(url_for("nutrition.water_tracker"))
+
+        if parsed_amount <= 0:
+            flash("Water amount must be greater than zero.", "danger")
+            return redirect(url_for("nutrition.water_tracker"))
+
+        if parsed_amount > MAX_SINGLE_WATER_ENTRY_ML:
+            flash(
+                f"Single water entry looks too high. Please enter up to {MAX_SINGLE_WATER_ENTRY_ML} ml.",
+                "danger",
+            )
+            return redirect(url_for("nutrition.water_tracker"))
+
+        amount_ml = int(round(parsed_amount))
+        if amount_ml <= 0:
+            flash("Water amount must be greater than zero.", "danger")
+            return redirect(url_for("nutrition.water_tracker"))
+
+        try:
+            db.session.add(
+                WaterIntake(
+                    user_id=current_user.id,
+                    amount_ml=amount_ml,
+                    intake_date=date.today(),
+                )
+            )
+            db.session.commit()
+            flash(f"Added {amount_ml} ml to today's water intake.", "success")
+        except Exception:
+            db.session.rollback()
+            flash("Could not save water entry. Please try again.", "danger")
+
+        return redirect(url_for("nutrition.water_tracker"))
+
+    return render_template("nutrition/water_tracker.html", **_water_tracker_context(current_user.id))
+
+
 @nutrition_bp.route("/analyze-meal/<int:id>", methods=["POST"])
+@login_required
+@role_required("user", "admin")
 def analyze_meal(id: int):
     meal = db.session.get(MealLog, id)
     if not meal:
         abort(404)
+
+    if current_user.role == "user" and meal.user_id != current_user.id:
+        flash("You can analyze only your own meals. Save this meal to My Meal Logs first.", "danger")
+        return redirect(url_for("meal.meal_detail", meal_id=id))
 
     next_url = (
         request.form.get("next") or request.referrer or url_for("meal.meal_detail", meal_id=id)
@@ -85,10 +217,22 @@ def analyze_meal(id: int):
         flash("Nutrition already analyzed for this meal.", "info")
         return redirect(next_url)
 
-    food_query = (meal.title or meal.note or f"{meal.meal_type} meal").strip()
-
     try:
-        nutrition = get_nutrition_data(food_query)
+        nutrition = None
+        for food_query in _meal_query_candidates(meal):
+            try:
+                nutrition = get_nutrition_data(food_query)
+                if nutrition:
+                    break
+            except NutritionServiceError:
+                nutrition = None
+                continue
+
+        if not nutrition:
+            raise NutritionServiceError(
+                "Could not analyze nutrition for this meal. Edit title/note with a clearer food name and try again."
+            )
+
         meal.calories = nutrition.get("calories")
         meal.protein = nutrition.get("protein")
         meal.carbohydrates = nutrition.get("carbohydrates")
@@ -107,19 +251,20 @@ def analyze_meal(id: int):
 
 
 @nutrition_bp.route("/nutrition-analytics")
+@login_required
+@role_required("user", "admin")
 def nutrition_analytics():
-    analyzed_meals = (
-        MealLog.query.filter(
-            or_(
-                MealLog.calories.isnot(None),
-                MealLog.protein.isnot(None),
-                MealLog.carbohydrates.isnot(None),
-                MealLog.fats.isnot(None),
-            )
+    analyzed_query = MealLog.query.filter(
+        or_(
+            MealLog.calories.isnot(None),
+            MealLog.protein.isnot(None),
+            MealLog.carbohydrates.isnot(None),
+            MealLog.fats.isnot(None),
         )
-        .order_by(MealLog.meal_date.desc(), MealLog.created_at.desc())
-        .all()
     )
+    analyzed_query = _meal_visibility_filter(analyzed_query)
+
+    analyzed_meals = analyzed_query.order_by(MealLog.meal_date.desc(), MealLog.created_at.desc()).all()
 
     total_calories = sum(safe_float(meal.calories) for meal in analyzed_meals)
     total_protein = sum(safe_float(meal.protein) for meal in analyzed_meals)
@@ -153,17 +298,25 @@ def nutrition_analytics():
         average_calories=round(average_calories, 2),
         recent_meals=recent_meals,
         insight_tags=insight_tags,
+        is_system_view=current_user.role == "admin",
     )
 
 
 @nutrition_bp.route("/weekly-tracking")
+@login_required
+@role_required("user", "admin")
 def weekly_tracking():
     requested_start = request.args.get("start_date")
     week_start = parse_week_start(requested_start)
-    weekly_context = build_weekly_tracking_context(week_start)
+
+    target_user_id = None if current_user.role == "admin" else current_user.id
+    weekly_context = build_weekly_tracking_context(week_start, user_id=target_user_id)
 
     current_week_start = week_start_for(date.today())
-    latest_meal = MealLog.query.order_by(MealLog.meal_date.desc()).first()
+
+    latest_meal_query = MealLog.query.order_by(MealLog.meal_date.desc())
+    latest_meal_query = _meal_visibility_filter(latest_meal_query)
+    latest_meal = latest_meal_query.first()
 
     latest_data_week_start = None
     latest_data_week_label = None
@@ -187,23 +340,25 @@ def weekly_tracking():
         is_current_week=(week_start == current_week_start),
         latest_data_week_start=latest_data_week_start,
         latest_data_week_label=latest_data_week_label,
+        is_system_view=current_user.role == "admin",
     )
 
 
 @nutrition_bp.route("/api/nutrition-analytics-data")
+@login_required
+@role_required("user", "admin")
 def nutrition_analytics_data_api():
-    analyzed_meals = (
-        MealLog.query.filter(
-            or_(
-                MealLog.calories.isnot(None),
-                MealLog.protein.isnot(None),
-                MealLog.carbohydrates.isnot(None),
-                MealLog.fats.isnot(None),
-            )
+    analyzed_query = MealLog.query.filter(
+        or_(
+            MealLog.calories.isnot(None),
+            MealLog.protein.isnot(None),
+            MealLog.carbohydrates.isnot(None),
+            MealLog.fats.isnot(None),
         )
-        .order_by(MealLog.meal_date.asc(), MealLog.created_at.asc())
-        .all()
     )
+    analyzed_query = _meal_visibility_filter(analyzed_query)
+
+    analyzed_meals = analyzed_query.order_by(MealLog.meal_date.asc(), MealLog.created_at.asc()).all()
 
     calories_by_meal = [
         {
@@ -240,10 +395,13 @@ def nutrition_analytics_data_api():
 
 
 @nutrition_bp.route("/api/weekly-tracking-data")
+@login_required
+@role_required("user", "admin")
 def weekly_tracking_data_api():
     requested_start = request.args.get("start_date")
     week_start = parse_week_start(requested_start)
-    context = build_weekly_tracking_context(week_start)
+    target_user_id = None if current_user.role == "admin" else current_user.id
+    context = build_weekly_tracking_context(week_start, user_id=target_user_id)
 
     return jsonify(
         {

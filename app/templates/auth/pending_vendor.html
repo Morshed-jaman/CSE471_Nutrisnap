@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Vendor Approval Status | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card status-card reveal-on-scroll" data-delay="0">
+    <p class="eyebrow mb-1">Vendor Access Control</p>
+    <h1 class="section-title mb-2">Vendor Account Status</h1>
+
+    {% if vendor_status == 'approved' %}
+        <p class="page-subtitle">Your vendor account is approved. You can now access the vendor dashboard.</p>
+        <span class="badge rounded-pill text-bg-success">Approved</span>
+        <div class="mt-4">
+            <a href="{{ url_for('vendor.vendor_dashboard') }}" class="btn btn-industrial">Go to Vendor Dashboard</a>
+        </div>
+    {% elif vendor_status == 'rejected' %}
+        <p class="page-subtitle">Your vendor account was rejected by admin review.</p>
+        <span class="badge rounded-pill text-bg-danger">Rejected</span>
+        {% if vendor_profile and vendor_profile.admin_review_note %}
+            <div class="mt-3 empty-panel">
+                <strong>Admin Note:</strong> {{ vendor_profile.admin_review_note }}
+            </div>
+        {% endif %}
+        <div class="mt-4 d-flex flex-wrap gap-2">
+            <a href="{{ url_for('meal.landing') }}" class="btn btn-outline-industrial">Back to Landing</a>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary">Logout</a>
+        </div>
+    {% else %}
+        <p class="page-subtitle">Your vendor application is pending admin verification. Please check back later.</p>
+        <span class="badge rounded-pill text-bg-warning">Pending Approval</span>
+
+        {% if vendor_profile %}
+            <div class="mt-3 empty-panel">
+                <p class="mb-1"><strong>Business:</strong> {{ vendor_profile.business_name }}</p>
+                <p class="mb-1"><strong>Category:</strong> {{ vendor_profile.business_category }}</p>
+                <p class="mb-0"><strong>Address:</strong> {{ vendor_profile.business_address }}</p>
+            </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-industrial">Logout</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

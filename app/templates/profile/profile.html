@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Profile | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2">
+        <div>
+            <p class="eyebrow mb-1">Account Settings</p>
+            <h1 class="section-title mb-1">My Profile</h1>
+            <p class="page-subtitle mb-0">Update your personal information and password.</p>
+        </div>
+        <a href="{{ url_for('meal.home') }}" class="btn btn-outline-industrial">Back to Home</a>
+    </div>
+</section>
+
+<section class="surface-card mt-4 reveal-on-scroll" data-delay="1">
+    <form method="post" class="row g-3">
+        <div class="col-md-6">
+            <label for="name" class="form-label">Name</label>
+            <input type="text" class="form-control form-control-industrial" id="name" name="name" value="{{ current_user.name }}" required>
+        </div>
+        <div class="col-md-6">
+            <label for="phone" class="form-label">Phone</label>
+            <input type="text" class="form-control form-control-industrial" id="phone" name="phone" value="{{ current_user.phone }}" required>
+        </div>
+        <div class="col-12">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control form-control-industrial" value="{{ current_user.email }}" readonly>
+        </div>
+
+        <div class="col-12 mt-3"><h2 class="h6 mb-0">Change Password (Optional)</h2></div>
+        <div class="col-md-4">
+            <label for="current_password" class="form-label">Current Password</label>
+            <input type="password" class="form-control form-control-industrial" id="current_password" name="current_password">
+        </div>
+        <div class="col-md-4">
+            <label for="new_password" class="form-label">New Password</label>
+            <input type="password" class="form-control form-control-industrial" id="new_password" name="new_password">
+        </div>
+        <div class="col-md-4">
+            <label for="confirm_new_password" class="form-label">Confirm New Password</label>
+            <input type="password" class="form-control form-control-industrial" id="confirm_new_password" name="confirm_new_password">
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-industrial">Update Profile</button>
+        </div>
+    </form>
+</section>
+
+<section class="surface-card mt-4 reveal-on-scroll" data-delay="2">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h5 mb-0">Subscription Access</h2>
+        <span class="badge text-bg-{% if current_user.is_subscribed %}success{% else %}secondary{% endif %}">
+            {% if current_user.is_subscribed %}Subscribed{% else %}Not Subscribed{% endif %}
+        </span>
+    </div>
+
+    <p class="mb-3">Nutritionist Advice is available only for subscribed users.</p>
+
+    <div class="d-flex flex-wrap gap-2">
+        {% if current_user.is_subscribed %}
+            <a href="{{ url_for('advice.user_advice') }}" class="btn btn-industrial">Open Nutritionist Advice</a>
+            <form method="post" action="{{ url_for('auth.cancel_subscription') }}" class="d-inline">
+                <button type="submit" class="btn btn-outline-danger">Cancel Subscription</button>
+            </form>
+        {% else %}
+            <form method="post" action="{{ url_for('auth.activate_subscription') }}" class="d-inline">
+                <button type="submit" class="btn btn-industrial">Activate Subscription</button>
+            </form>
+            <span class="chip align-self-center">Subscription required for expert advice requests</span>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

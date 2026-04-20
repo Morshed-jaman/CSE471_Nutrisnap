@@ -10,7 +10,13 @@
             <h1 class="section-title mb-1">Discover Vendors</h1>
             <p class="page-subtitle mb-0">Search by name or category and explore healthier menu options.</p>
         </div>
-        <a href="{{ url_for('meal.home') }}" class="btn btn-outline-industrial">Back to Home</a>
+        {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-outline-industrial">Back to Admin Dashboard</a>
+        {% elif current_user.role == 'vendor' %}
+            <a href="{{ url_for('vendor.vendor_dashboard') }}" class="btn btn-outline-industrial">Back to Vendor Dashboard</a>
+        {% else %}
+            <a href="{{ url_for('meal.home') }}" class="btn btn-outline-industrial">Back to Home</a>
+        {% endif %}
     </div>
 
     <form method="get" action="{{ url_for('vendor.vendors') }}" class="row g-3 align-items-end mt-1">
@@ -58,6 +64,18 @@
                 <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                     <h2 class="vendor-title mb-0">{{ vendor.name }}</h2>
                     <span class="badge text-bg-secondary category-badge">{{ vendor.category }}</span>
+                </div>
+
+                {% set vendor_rating = vendor_rating_map.get(vendor.id) if vendor_rating_map else None %}
+                <div class="rating-inline mb-2">
+                    <span class="rating-stars-display">
+                        {% set avg_value = vendor_rating['avg_rating'] if vendor_rating else 0 %}
+                        {% for star in range(1, 6) %}
+                            <i class="bi {% if avg_value >= star - 0.25 %}bi-star-fill{% elif avg_value >= star - 0.75 %}bi-star-half{% else %}bi-star{% endif %}"></i>
+                        {% endfor %}
+                    </span>
+                    <span class="rating-inline-score">{{ '%.1f'|format(avg_value) }}</span>
+                    <span class="rating-inline-count">({{ vendor_rating['review_count'] if vendor_rating else 0 }} reviews)</span>
                 </div>
 
                 <p class="vendor-description mb-2">

@@ -9,6 +9,15 @@
             <p class="eyebrow mb-1">Menu Item Detail</p>
             <h1 class="section-title mb-1">{{ item.name }}</h1>
             <p class="page-subtitle mb-0">From <a href="{{ url_for('vendor.vendor_detail', vendor_id=item.vendor.id) }}">{{ item.vendor.name }}</a></p>
+            <div class="rating-summary-chip mt-2">
+                <span class="rating-stars-display">
+                    {% for star in range(1, 6) %}
+                        <i class="bi {% if item_avg_rating >= star - 0.25 %}bi-star-fill{% elif item_avg_rating >= star - 0.75 %}bi-star-half{% else %}bi-star{% endif %}"></i>
+                    {% endfor %}
+                </span>
+                <strong>{{ '%.1f'|format(item_avg_rating) }}</strong>
+                <span class="text-muted">({{ item_review_count }} reviews)</span>
+            </div>
         </div>
         <a href="{{ url_for('vendor.vendor_detail', vendor_id=item.vendor.id) }}" class="btn btn-outline-industrial">Back to Vendor</a>
     </div>
@@ -28,6 +37,11 @@
             <p class="mb-3">{{ item.description or 'No description available.' }}</p>
 
             <div class="price-box mb-3">Price: ${{ '%.2f'|format(item.price|float) }}</div>
+            <p class="mb-3">
+                <span class="badge {% if item.is_available %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                    {% if item.is_available %}Available{% else %}Unavailable{% endif %}
+                </span>
+            </p>
 
             <div class="row g-2 mb-3">
                 <div class="col-sm-6"><div class="meta-box"><strong>Calories:</strong> {{ item.calories if item.calories is not none else 'N/A' }}</div></div>
@@ -35,7 +49,102 @@
                 <div class="col-sm-6"><div class="meta-box"><strong>Carbohydrates:</strong> {{ item.carbohydrates if item.carbohydrates is not none else 'N/A' }} g</div></div>
                 <div class="col-sm-6"><div class="meta-box"><strong>Fats:</strong> {{ item.fats if item.fats is not none else 'N/A' }} g</div></div>
             </div>
+
+            {% if current_user.role == 'user' %}
+                <form method="post" action="{{ url_for('meal.add_vendor_item_to_my_meals', item_id=item.id) }}" class="surface-subtle p-3 rounded-3">
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label for="meal_type" class="form-label mb-1">Meal Type</label>
+                            <select id="meal_type" name="meal_type" class="form-select form-control-industrial" required>
+                                {% for type in meal_types %}
+                                    <option value="{{ type }}" {% if type == 'lunch' %}selected{% endif %}>{{ type|capitalize }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="meal_date" class="form-label mb-1">Meal Date</label>
+                            <input id="meal_date" type="date" name="meal_date" class="form-control form-control-industrial" value="{{ default_meal_date }}" required>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-industrial w-100">Add to My Meals</button>
+                        </div>
+                    </div>
+                </form>
+            {% endif %}
         </div>
     </div>
+</section>
+
+<section class="surface-card reveal-on-scroll mt-4" data-delay="2" id="item-reviews">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h4 mb-0">Item Reviews</h2>
+        <span class="chip">{{ item_review_count }} total reviews</span>
+    </div>
+
+    {% if can_submit_review %}
+        <form method="post" action="{{ url_for('vendor.submit_menu_item_review', item_id=item.id) }}" class="review-form-card mb-3">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="item_rating" class="form-label">Your Rating</label>
+                    <div class="star-input" role="radiogroup" aria-label="Menu item rating">
+                        {% for star in range(5, 0, -1) %}
+                            <input type="radio" id="item-star-{{ item.id }}-{{ star }}" name="rating" value="{{ star }}" {% if my_item_review and my_item_review.rating == star %}checked{% endif %} required>
+                            <label for="item-star-{{ item.id }}-{{ star }}" title="{{ star }} stars"><i class="bi bi-star-fill"></i></label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <label for="item_review_text" class="form-label">Short Review (Optional)</label>
+                    <textarea id="item_review_text" name="review_text" class="form-control form-control-industrial" rows="2" maxlength="500" placeholder="Share your experience with this item...">{{ my_item_review.review_text if my_item_review and my_item_review.review_text else '' }}</textarea>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-industrial">
+                        {% if my_item_review %}Update Review{% else %}Submit Review{% endif %}
+                    </button>
+                </div>
+            </div>
+        </form>
+        {% if my_item_review %}
+            <form action="{{ url_for('vendor.delete_menu_item_review', review_id=my_item_review.id) }}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-danger" data-confirm-delete="Delete your review?">Delete My Review</button>
+            </form>
+        {% endif %}
+    {% endif %}
+
+    {% if item_reviews %}
+        <div class="row g-3 mt-1">
+            {% for review in item_reviews %}
+                <div class="col-12 reveal-on-scroll" data-delay="{{ loop.index0 % 3 }}">
+                    <article class="review-card">
+                        <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+                            <div>
+                                <h3 class="h6 mb-1">{{ review.user.name if review.user else 'User' }}</h3>
+                                <div class="review-stars">
+                                    {% for star in range(1, 6) %}
+                                        <i class="bi {% if review.rating >= star %}bi-star-fill{% else %}bi-star{% endif %}"></i>
+                                    {% endfor %}
+                                    <span class="review-stars-score">{{ review.rating }}/5</span>
+                                </div>
+                            </div>
+                            <small class="text-muted">{{ review.updated_at.strftime('%d %b %Y') }}</small>
+                        </div>
+                        <p class="mb-2">{{ review.review_text or 'No written review provided.' }}</p>
+                        {% if current_user.is_authenticated and (current_user.role == 'admin' or current_user.id == review.user_id) %}
+                            <form action="{% if current_user.role == 'admin' %}{{ url_for('admin.admin_delete_review', review_id=review.id) }}{% else %}{{ url_for('vendor.delete_menu_item_review', review_id=review.id) }}{% endif %}" method="post">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm-delete="Delete this review?">
+                                    {% if current_user.role == 'admin' %}Moderate Delete{% else %}Delete{% endif %}
+                                </button>
+                            </form>
+                        {% endif %}
+                    </article>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-panel">
+            <p class="mb-0">No reviews yet for this menu item.</p>
+        </div>
+    {% endif %}
 </section>
 {% endblock %}

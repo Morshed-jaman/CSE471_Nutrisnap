@@ -1,12 +1,27 @@
 ﻿import os
+import re
 
 import requests
+from flask import current_app, has_app_context
 
 SPOONACULAR_ENDPOINT = "https://api.spoonacular.com/recipes/guessNutrition"
+SPOONACULAR_SEARCH_ENDPOINT = "https://api.spoonacular.com/recipes/complexSearch"
 
 
 class NutritionServiceError(RuntimeError):
     """Raised when nutrition data cannot be retrieved or parsed."""
+
+
+def _config_or_env(key: str, default: str | None = None) -> str | None:
+    if has_app_context():
+        config_value = current_app.config.get(key)
+        if config_value not in (None, ""):
+            return str(config_value)
+
+    env_value = os.getenv(key)
+    if env_value not in (None, ""):
+        return env_value
+    return default
 
 
 def _as_float(nutrient_block):
@@ -18,26 +33,22 @@ def _as_float(nutrient_block):
     else:
         value = nutrient_block
 
+    if isinstance(value, str):
+        match = re.search(r"-?\d+(\.\d+)?", value)
+        value = match.group(0) if match else None
+
     try:
         return float(value) if value is not None else None
     except (TypeError, ValueError):
         return None
 
 
-def get_nutrition_data(food_name: str) -> dict:
-    api_key = os.getenv("NUTRITION_API_KEY")
-    if not api_key:
-        raise NutritionServiceError("NUTRITION_API_KEY is missing. Please set it in your .env file.")
-
-    query = (food_name or "").strip()
-    if not query:
-        raise NutritionServiceError("Please provide a food name for nutrition analysis.")
-
+def _call_spoonacular(url: str, api_key: str, params: dict) -> dict:
     try:
         response = requests.get(
-            SPOONACULAR_ENDPOINT,
-            params={"apiKey": api_key, "title": query},
-            timeout=12,
+            url,
+            params={"apiKey": api_key, **params},
+            timeout=15,
         )
     except requests.RequestException as exc:
         raise NutritionServiceError("Could not connect to the nutrition service.") from exc
@@ -52,24 +63,94 @@ def get_nutrition_data(food_name: str) -> dict:
         raise NutritionServiceError("Nutrition service rejected this request.")
 
     try:
-        payload = response.json()
+        return response.json()
     except ValueError as exc:
         raise NutritionServiceError("Received an invalid response from nutrition service.") from exc
 
-    calories = _as_float(payload.get("calories"))
-    protein = _as_float(payload.get("protein"))
-    carbohydrates = _as_float(payload.get("carbs"))
-    fats = _as_float(payload.get("fat"))
 
-    if all(value is None for value in [calories, protein, carbohydrates, fats]):
-        raise NutritionServiceError("No nutrition data found for this food.")
-
+def _normalize_payload(calories, protein, carbohydrates, fats):
     return {
-        "calories": calories,
-        "protein": protein,
-        "carbohydrates": carbohydrates,
-        "fats": fats,
+        "calories": _as_float(calories),
+        "protein": _as_float(protein),
+        "carbohydrates": _as_float(carbohydrates),
+        "fats": _as_float(fats),
     }
+
+
+def _has_any_nutrition(data: dict) -> bool:
+    return any(data.get(key) is not None for key in ("calories", "protein", "carbohydrates", "fats"))
+
+
+def _extract_guess_nutrition(payload: dict) -> dict:
+    return _normalize_payload(
+        payload.get("calories"),
+        payload.get("protein"),
+        payload.get("carbs"),
+        payload.get("fat"),
+    )
+
+
+def _extract_complex_search_nutrition(payload: dict) -> dict:
+    results = payload.get("results") or []
+    if not results:
+        return _normalize_payload(None, None, None, None)
+
+    first = results[0] or {}
+    nutrients = (first.get("nutrition") or {}).get("nutrients") or []
+
+    calories = protein = carbohydrates = fats = None
+    for nutrient in nutrients:
+        name = (nutrient.get("name") or "").strip().lower()
+        value = nutrient.get("amount")
+        if name == "calories":
+            calories = value
+        elif name == "protein":
+            protein = value
+        elif name in {"carbohydrates", "carbs"}:
+            carbohydrates = value
+        elif name in {"fat", "fats"}:
+            fats = value
+
+    return _normalize_payload(calories, protein, carbohydrates, fats)
+
+
+def get_nutrition_data(food_name: str) -> dict:
+    api_key = _config_or_env("NUTRITION_API_KEY")
+    if not api_key:
+        raise NutritionServiceError("NUTRITION_API_KEY is missing. Please set it in your .env file.")
+
+    query = (food_name or "").strip()
+    if not query:
+        raise NutritionServiceError("Please provide a food name for nutrition analysis.")
+
+    # 1) Direct nutrition guess by free text title
+    guess_payload = _call_spoonacular(
+        SPOONACULAR_ENDPOINT,
+        api_key,
+        {"title": query},
+    )
+    guess_data = _extract_guess_nutrition(guess_payload)
+    if _has_any_nutrition(guess_data):
+        return guess_data
+
+    # 2) Fallback: recipe search with embedded nutrition
+    search_payload = _call_spoonacular(
+        SPOONACULAR_SEARCH_ENDPOINT,
+        api_key,
+        {
+            "query": query,
+            "number": 1,
+            "addRecipeNutrition": True,
+            "instructionsRequired": False,
+        },
+    )
+    search_data = _extract_complex_search_nutrition(search_payload)
+    if _has_any_nutrition(search_data):
+        return search_data
+
+    raise NutritionServiceError(
+        "No nutrition data found for this food. Try a more specific name (e.g., 'grilled chicken breast')."
+    )
 
 
 def get_nutrition_insights(calories, protein, carbohydrates, fats):

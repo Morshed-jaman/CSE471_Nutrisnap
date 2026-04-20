@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}My Meal Logs | NutriSnap{% endblock %}
+{% block body_class %}meal-logs-page{% endblock %}
+
+{% block content %}
+<section class="surface-card page-header-card meal-logs-hero reveal-on-scroll" data-delay="0">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+        <div>
+            <p class="eyebrow mb-1">Personal Meal Space</p>
+            <h1 class="section-title mb-1 meal-logs-title">My Meal Logs</h1>
+            <p class="page-subtitle mb-0">Only your own meals are shown here. Edit, delete, and analyze from this private view.</p>
+            <span class="meal-logs-accent"></span>
+        </div>
+        <div class="d-flex flex-wrap gap-2 meal-logs-hero-actions">
+            <a href="{{ url_for('meal.meal_logs') }}" class="btn meal-logs-analytics-btn">
+                <i class="bi bi-images me-1"></i> Central Meal Logs
+            </a>
+            <a href="{{ url_for('meal.upload_meal') }}" class="btn meal-logs-add-btn">
+                <i class="bi bi-plus-circle me-1"></i> Add New Meal
+            </a>
+        </div>
+    </div>
+</section>
+
+{% if logs %}
+<section class="row g-4 mt-1 meal-logs-grid">
+    {% for meal in logs %}
+    <div class="col-sm-6 col-xl-4 reveal-on-scroll" data-delay="{{ loop.index0 % 5 }}">
+        <article class="meal-card meal-card-premium h-100">
+            <div class="meal-media-wrap">
+                <img src="{{ meal.image_url }}" class="meal-thumb" alt="Meal image">
+                <span class="meal-badge meal-badge-floating">{{ meal.meal_type|capitalize }}</span>
+                <div class="meal-image-overlay"></div>
+            </div>
+            <div class="meal-card-body meal-card-body-premium">
+                <h2 class="meal-card-title">{{ meal.title if meal.title else meal.meal_type|capitalize ~ ' Meal' }}</h2>
+                <p class="meal-card-date"><i class="bi bi-calendar3 me-1"></i>{{ meal.meal_date.strftime('%d %b %Y') }}</p>
+
+                {% if meal.calories is not none or meal.protein is not none or meal.carbohydrates is not none or meal.fats is not none %}
+                    <div class="nutrition-chip-grid my-3">
+                        <span class="nutrition-chip nutrition-chip-calories"><i class="bi bi-fire"></i>Kcal: {{ meal.calories if meal.calories is not none else 'N/A' }}</span>
+                        <span class="nutrition-chip nutrition-chip-protein"><i class="bi bi-lightning-charge"></i>P: {{ meal.protein if meal.protein is not none else 'N/A' }}g</span>
+                        <span class="nutrition-chip nutrition-chip-carbs"><i class="bi bi-bar-chart"></i>C: {{ meal.carbohydrates if meal.carbohydrates is not none else 'N/A' }}g</span>
+                        <span class="nutrition-chip nutrition-chip-fats"><i class="bi bi-droplet-half"></i>F: {{ meal.fats if meal.fats is not none else 'N/A' }}g</span>
+                    </div>
+                {% else %}
+                    <p class="small text-muted mb-3 meal-nutrition-empty">Nutrition not analyzed yet.</p>
+                {% endif %}
+
+                <div class="d-flex flex-wrap gap-2 meal-action-row mt-2">
+                    <a href="{{ url_for('meal.meal_detail', meal_id=meal.id) }}" class="btn btn-sm meal-action-btn meal-action-view">
+                        <i class="bi bi-eye"></i><span>View</span>
+                    </a>
+                    <a href="{{ url_for('meal.edit_meal', meal_id=meal.id) }}" class="btn btn-sm meal-action-btn meal-action-edit">
+                        <i class="bi bi-pencil-square"></i><span>Edit</span>
+                    </a>
+                    <form action="{{ url_for('nutrition.analyze_meal', id=meal.id) }}" method="post" class="d-inline">
+                        <input type="hidden" name="next" value="{{ url_for('meal.my_meal_logs') }}">
+                        <button type="submit" class="btn btn-sm meal-action-btn meal-action-analyze">
+                            <i class="bi bi-stars"></i><span>Analyze</span>
+                        </button>
+                    </form>
+                    <form action="{{ url_for('meal.delete_meal', meal_id=meal.id) }}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-sm meal-action-btn meal-action-delete" data-confirm-delete="Delete this meal log?">
+                            <i class="bi bi-trash3"></i><span>Delete</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </article>
+    </div>
+    {% endfor %}
+</section>
+{% else %}
+<section class="surface-card text-center reveal-on-scroll meal-logs-empty" data-delay="1">
+    <div class="meal-logs-empty-icon"><i class="bi bi-image-alt"></i></div>
+    <h2 class="section-title mb-2">No personal meals yet</h2>
+    <p class="text-muted mb-4">Upload your first meal or copy one from the central feed.</p>
+    <div class="d-flex flex-wrap justify-content-center gap-2">
+        <a href="{{ url_for('meal.upload_meal') }}" class="btn meal-logs-add-btn">
+            <i class="bi bi-cloud-arrow-up me-1"></i> Upload Your First Meal
+        </a>
+        <a href="{{ url_for('meal.meal_logs') }}" class="btn meal-logs-analytics-btn">
+            <i class="bi bi-images me-1"></i> Browse Central Meals
+        </a>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -17,11 +17,14 @@
         <nav class="home-side-nav">
             <a class="active" href="{{ url_for('meal.home') }}"><i class="bi bi-house-door"></i><span>Home</span></a>
             <a href="{{ url_for('meal.upload_meal') }}"><i class="bi bi-cloud-arrow-up"></i><span>Upload Meal</span></a>
-            <a href="{{ url_for('meal.meal_logs') }}"><i class="bi bi-journal-text"></i><span>Meal Logs</span></a>
+            <a href="{{ url_for('meal.my_meal_logs') }}"><i class="bi bi-journal-check"></i><span>My Meal Logs</span></a>
+            <a href="{{ url_for('meal.meal_logs') }}"><i class="bi bi-images"></i><span>Central Meal Logs</span></a>
             <a href="{{ url_for('vendor.vendors') }}"><i class="bi bi-shop"></i><span>Vendors</span></a>
             <a href="{{ url_for('nutrition.nutrition_search') }}"><i class="bi bi-search-heart"></i><span>Nutrition Search</span></a>
             <a href="{{ url_for('nutrition.weekly_tracking') }}"><i class="bi bi-calendar2-week"></i><span>Weekly Tracking</span></a>
             <a href="{{ url_for('nutrition.nutrition_analytics') }}"><i class="bi bi-graph-up-arrow"></i><span>Nutrition Analytics</span></a>
+            <a href="{{ url_for('nutrition.water_tracker') }}"><i class="bi bi-droplet"></i><span>Water Tracker</span></a>
+            <a href="{{ url_for('advice.user_advice') }}"><i class="bi bi-chat-heart"></i><span>Nutritionist Advice</span></a>
         </nav>
 
         <div class="home-side-foot">
@@ -39,10 +42,13 @@
             </div>
             <div class="home-top-actions">
                 <a href="{{ url_for('meal.upload_meal') }}" class="btn btn-industrial btn-sm">Upload Meal</a>
-                <a href="{{ url_for('meal.meal_logs') }}" class="btn btn-outline-industrial btn-sm">View Logs</a>
+                <a href="{{ url_for('meal.my_meal_logs') }}" class="btn btn-outline-industrial btn-sm">My Meals</a>
+                <a href="{{ url_for('meal.meal_logs') }}" class="btn btn-outline-industrial btn-sm">Central Feed</a>
                 <a href="{{ url_for('vendor.vendors') }}" class="btn btn-outline-industrial btn-sm">Browse Vendors</a>
                 <a href="{{ url_for('nutrition.nutrition_search') }}" class="btn btn-outline-secondary btn-sm">Nutrition Search</a>
                 <a href="{{ url_for('nutrition.weekly_tracking') }}" class="btn btn-outline-industrial btn-sm">Weekly Tracking</a>
+                <a href="{{ url_for('nutrition.water_tracker') }}" class="btn btn-outline-industrial btn-sm">Water Tracker</a>
+                <a href="{{ url_for('advice.user_advice') }}" class="btn btn-outline-industrial btn-sm">Nutritionist Advice</a>
             </div>
         </section>
 
@@ -83,10 +89,17 @@
             </div>
             <div class="row g-3">
                 <div class="col-md-6 col-xl-3">
-                    <a href="{{ url_for('meal.meal_logs') }}" class="shortcut-card">
+                    <a href="{{ url_for('meal.my_meal_logs') }}" class="shortcut-card">
                         <i class="bi bi-camera2"></i>
-                        <h3>Meal Logging</h3>
-                        <p>Upload, edit, and manage your meal history.</p>
+                        <h3>My Meal Logging</h3>
+                        <p>Upload, edit, and manage your own meal history.</p>
+                    </a>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <a href="{{ url_for('meal.meal_logs') }}" class="shortcut-card">
+                        <i class="bi bi-images"></i>
+                        <h3>Central Meals</h3>
+                        <p>Browse meals from all users and copy to your logs.</p>
                     </a>
                 </div>
                 <div class="col-md-6 col-xl-3">
@@ -117,6 +130,20 @@
                         <p>Track weekly totals, daily breakdowns, and trends.</p>
                     </a>
                 </div>
+                <div class="col-md-6 col-xl-3">
+                    <a href="{{ url_for('nutrition.water_tracker') }}" class="shortcut-card">
+                        <i class="bi bi-droplet"></i>
+                        <h3>Water Tracker</h3>
+                        <p>Log daily water intake and check hydration progress.</p>
+                    </a>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <a href="{{ url_for('advice.user_advice') }}" class="shortcut-card">
+                        <i class="bi bi-chat-heart"></i>
+                        <h3>Nutritionist Advice</h3>
+                        <p>Ask subscribed nutrition questions and review expert responses.</p>
+                    </a>
+                </div>
             </div>
         </section>
 
@@ -124,8 +151,8 @@
             <div class="col-xl-6 reveal-on-scroll" data-delay="7">
                 <article class="preview-card h-100">
                     <div class="home-section-head">
-                        <h2>Recent Meals</h2>
-                        <a href="{{ url_for('meal.meal_logs') }}">All Logs</a>
+                        <h2>My Recent Meals</h2>
+                        <a href="{{ url_for('meal.my_meal_logs') }}">My Logs</a>
                     </div>
                     {% if latest_meals %}
                         {% for meal in latest_meals %}
