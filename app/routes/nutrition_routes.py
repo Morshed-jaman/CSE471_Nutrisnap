@@ -1,7 +1,8 @@
-﻿from collections import defaultdict
+from collections import defaultdict
 from datetime import date, timedelta
 
 from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
 from sqlalchemy import or_
 
 from app.extensions import db
@@ -13,6 +14,7 @@ from app.services.analytics_service import (
     safe_float,
     week_start_for,
 )
+from app.services.auth_service import role_required
 from app.services.nutrition_service import (
     NutritionServiceError,
     get_nutrition_data,
@@ -27,13 +29,45 @@ def _meal_label(meal: MealLog) -> str:
     return f"{base} ({meal.meal_date.strftime('%d %b')})"
 
 
+def _meal_query_candidates(meal: MealLog) -> list[str]:
+    candidates: list[str] = []
+
+    def add_candidate(value: str | None):
+        text = (value or "").strip()
+        if text and text not in candidates:
+            candidates.append(text)
+
+    add_candidate(meal.title)
+    add_candidate(meal.note)
+    add_candidate(f"{meal.title or ''} {meal.note or ''}".strip())
+    add_candidate(f"{meal.meal_type} meal")
+
+    fallback_by_type = {
+        "breakfast": "oatmeal with fruit",
+        "lunch": "grilled chicken with rice",
+        "dinner": "grilled fish with vegetables",
+        "snack": "mixed nuts",
+    }
+    add_candidate(fallback_by_type.get((meal.meal_type or "").lower()))
+    return candidates
+
+
+def _meal_visibility_filter(query):
+    if current_user.role == "admin":
+        return query
+    return query.filter(MealLog.user_id == current_user.id)
+
+
 @nutrition_bp.route("/nutrition-search", methods=["GET", "POST"])
+@login_required
+@role_required("user", "admin")
 def nutrition_search():
     nutrition_result = None
     insights = []
     food_name = ""
 
-    recent_meals = MealLog.query.order_by(MealLog.created_at.desc()).limit(8).all()
+    recent_query = MealLog.query.order_by(MealLog.created_at.desc())
+    recent_meals = _meal_visibility_filter(recent_query).limit(8).all()
 
     if request.method == "POST":
         food_name = (request.form.get("food_name") or "").strip()
@@ -72,10 +106,16 @@ def nutrition_search():
 
 
 @nutrition_bp.route("/analyze-meal/<int:id>", methods=["POST"])
+@login_required
+@role_required("user", "admin")
 def analyze_meal(id: int):
     meal = db.session.get(MealLog, id)
     if not meal:
         abort(404)
+
+    if current_user.role == "user" and meal.user_id != current_user.id:
+        flash("You can analyze only your own meal logs.", "danger")
+        return redirect(url_for("meal.meal_logs"))
 
     next_url = (
         request.form.get("next") or request.referrer or url_for("meal.meal_detail", meal_id=id)
@@ -85,10 +125,22 @@ def analyze_meal(id: int):
         flash("Nutrition already analyzed for this meal.", "info")
         return redirect(next_url)
 
-    food_query = (meal.title or meal.note or f"{meal.meal_type} meal").strip()
-
     try:
-        nutrition = get_nutrition_data(food_query)
+        nutrition = None
+        for food_query in _meal_query_candidates(meal):
+            try:
+                nutrition = get_nutrition_data(food_query)
+                if nutrition:
+                    break
+            except NutritionServiceError:
+                nutrition = None
+                continue
+
+        if not nutrition:
+            raise NutritionServiceError(
+                "Could not analyze nutrition for this meal. Edit title/note with a clearer food name and try again."
+            )
+
         meal.calories = nutrition.get("calories")
         meal.protein = nutrition.get("protein")
         meal.carbohydrates = nutrition.get("carbohydrates")
@@ -107,19 +159,20 @@ def analyze_meal(id: int):
 
 
 @nutrition_bp.route("/nutrition-analytics")
+@login_required
+@role_required("user", "admin")
 def nutrition_analytics():
-    analyzed_meals = (
-        MealLog.query.filter(
-            or_(
-                MealLog.calories.isnot(None),
-                MealLog.protein.isnot(None),
-                MealLog.carbohydrates.isnot(None),
-                MealLog.fats.isnot(None),
-            )
+    analyzed_query = MealLog.query.filter(
+        or_(
+            MealLog.calories.isnot(None),
+            MealLog.protein.isnot(None),
+            MealLog.carbohydrates.isnot(None),
+            MealLog.fats.isnot(None),
         )
-        .order_by(MealLog.meal_date.desc(), MealLog.created_at.desc())
-        .all()
     )
+    analyzed_meals = _meal_visibility_filter(
+        analyzed_query.order_by(MealLog.meal_date.desc(), MealLog.created_at.desc())
+    ).all()
 
     total_calories = sum(safe_float(meal.calories) for meal in analyzed_meals)
     total_protein = sum(safe_float(meal.protein) for meal in analyzed_meals)
@@ -157,13 +210,17 @@ def nutrition_analytics():
 
 
 @nutrition_bp.route("/weekly-tracking")
+@login_required
+@role_required("user", "admin")
 def weekly_tracking():
     requested_start = request.args.get("start_date")
     week_start = parse_week_start(requested_start)
-    weekly_context = build_weekly_tracking_context(week_start)
+    target_user_id = None if current_user.role == "admin" else current_user.id
+    weekly_context = build_weekly_tracking_context(week_start, user_id=target_user_id)
 
     current_week_start = week_start_for(date.today())
-    latest_meal = MealLog.query.order_by(MealLog.meal_date.desc()).first()
+    latest_meal_query = MealLog.query.order_by(MealLog.meal_date.desc())
+    latest_meal = _meal_visibility_filter(latest_meal_query).first()
 
     latest_data_week_start = None
     latest_data_week_label = None
@@ -191,19 +248,20 @@ def weekly_tracking():
 
 
 @nutrition_bp.route("/api/nutrition-analytics-data")
+@login_required
+@role_required("user", "admin")
 def nutrition_analytics_data_api():
-    analyzed_meals = (
-        MealLog.query.filter(
-            or_(
-                MealLog.calories.isnot(None),
-                MealLog.protein.isnot(None),
-                MealLog.carbohydrates.isnot(None),
-                MealLog.fats.isnot(None),
-            )
+    analyzed_query = MealLog.query.filter(
+        or_(
+            MealLog.calories.isnot(None),
+            MealLog.protein.isnot(None),
+            MealLog.carbohydrates.isnot(None),
+            MealLog.fats.isnot(None),
         )
-        .order_by(MealLog.meal_date.asc(), MealLog.created_at.asc())
-        .all()
     )
+    analyzed_meals = _meal_visibility_filter(
+        analyzed_query.order_by(MealLog.meal_date.asc(), MealLog.created_at.asc())
+    ).all()
 
     calories_by_meal = [
         {
@@ -240,10 +298,13 @@ def nutrition_analytics_data_api():
 
 
 @nutrition_bp.route("/api/weekly-tracking-data")
+@login_required
+@role_required("user", "admin")
 def weekly_tracking_data_api():
     requested_start = request.args.get("start_date")
     week_start = parse_week_start(requested_start)
-    context = build_weekly_tracking_context(week_start)
+    target_user_id = None if current_user.role == "admin" else current_user.id
+    context = build_weekly_tracking_context(week_start, user_id=target_user_id)
 
     return jsonify(
         {

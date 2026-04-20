@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -30,15 +30,25 @@
     <div class="ambient-glow"></div>
 
     {% set endpoint = request.endpoint or '' %}
+    {% if current_user.is_authenticated %}
+      {% if current_user.role == 'vendor' %}
+        {% set brand_url = url_for('vendor.vendor_dashboard') %}
+      {% elif current_user.role == 'admin' %}
+        {% set brand_url = url_for('vendor.vendors') %}
+      {% else %}
+        {% set brand_url = url_for('meal.home') %}
+      {% endif %}
+    {% else %}
+      {% set brand_url = url_for('meal.landing') %}
+    {% endif %}
+
     <nav
       class="navbar navbar-expand-xl industrial-nav sticky-top app-navbar"
       id="appNavbar"
     >
       <div class="container-xl py-2">
-        <a class="navbar-brand brand-mark" href="{{ url_for('meal.home') }}">
-          <span class="brand-mark-icon"
-            ><i class="bi bi-hexagon-fill"></i
-          ></span>
+        <a class="navbar-brand brand-mark" href="{{ brand_url }}">
+          <span class="brand-mark-icon"><i class="bi bi-hexagon-fill"></i></span>
           <span>
             NutriSnap
             <small>Smart Food Workspace</small>
@@ -62,9 +72,7 @@
           aria-labelledby="mainNavLabel"
         >
           <div class="offcanvas-header border-bottom border-secondary-subtle">
-            <h5 class="offcanvas-title" id="mainNavLabel">
-              NutriSnap Navigation
-            </h5>
+            <h5 class="offcanvas-title" id="mainNavLabel">NutriSnap Navigation</h5>
             <button
               type="button"
               class="btn-close btn-close-white"
@@ -73,85 +81,161 @@
             ></button>
           </div>
           <div class="offcanvas-body">
-            <ul
-              class="navbar-nav ms-xl-auto nav-pills-wrap align-items-xl-center"
-            >
-              <li class="nav-item">
-                <a
-                  class="nav-link {% if endpoint == 'meal.home' %}active{% endif %}"
-                  href="{{ url_for('meal.home') }}"
-                >
-                  <i class="bi bi-house-door"></i><span>Home</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a
-                  class="nav-link {% if endpoint == 'meal.upload_meal' %}active{% endif %}"
-                  href="{{ url_for('meal.upload_meal') }}"
-                >
-                  <i class="bi bi-cloud-arrow-up"></i><span>Upload Meal</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a
-                  class="nav-link {% if endpoint in ['meal.meal_logs', 'meal.meal_detail', 'meal.edit_meal'] %}active{% endif %}"
-                  href="{{ url_for('meal.meal_logs') }}"
-                >
-                  <i class="bi bi-journal-text"></i><span>Meal Logs</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a
-                  class="nav-link {% if endpoint == 'meal.healthy_food_indicator' %}active{% endif %}"
-                  href="{{ url_for('meal.healthy_food_indicator') }}"
-                >
-                  <i class="bi bi-shield-check"></i
-                  ><span>Healthy Indicator</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a
-                  class="nav-link {% if endpoint in ['vendor.vendors', 'vendor.vendor_detail', 'vendor.menu_item_detail'] %}active{% endif %}"
-                  href="{{ url_for('vendor.vendors') }}"
-                >
-                  <i class="bi bi-shop"></i><span>Vendors</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a
-                  class="nav-link {% if endpoint in ['favorites.favorites_list'] %}active{% endif %}"
-                  href="{{ url_for('favorites.favorites_list') }}"
-                >
-                  <i class="bi bi-heart"></i><span>Favorites</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a
-                  class="nav-link {% if endpoint == 'nutrition.nutrition_search' %}active{% endif %}"
-                  href="{{ url_for('nutrition.nutrition_search') }}"
-                >
-                  <i class="bi bi-search-heart"></i
-                  ><span>Nutrition Search</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a
-                  class="nav-link {% if endpoint == 'nutrition.weekly_tracking' %}active{% endif %}"
-                  href="{{ url_for('nutrition.weekly_tracking') }}"
-                >
-                  <i class="bi bi-calendar2-week"></i
-                  ><span>Weekly Tracking</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a
-                  class="nav-link {% if endpoint == 'nutrition.nutrition_analytics' %}active{% endif %}"
-                  href="{{ url_for('nutrition.nutrition_analytics') }}"
-                >
-                  <i class="bi bi-graph-up-arrow"></i
-                  ><span>Nutrition Analytics</span>
-                </a>
-              </li>
+            <ul class="navbar-nav ms-xl-auto nav-pills-wrap align-items-xl-center">
+              {% if current_user.is_authenticated %}
+                {% if current_user.role == 'vendor' %}
+                  <li class="nav-item">
+                    <a
+                      class="nav-link {% if endpoint in ['vendor.vendors', 'vendor.vendor_detail', 'vendor.menu_item_detail'] %}active{% endif %}"
+                      href="{{ url_for('vendor.vendors') }}"
+                    >
+                      <i class="bi bi-shop"></i><span>Vendors</span>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link {% if endpoint == 'vendor.vendor_dashboard' %}active{% endif %}"
+                      href="{{ url_for('vendor.vendor_dashboard') }}"
+                    >
+                      <i class="bi bi-shop-window"></i><span>Dashboard</span>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link {% if endpoint in ['vendor.vendor_menu_items', 'vendor.create_menu_item', 'vendor.edit_menu_item'] %}active{% endif %}"
+                      href="{{ url_for('vendor.vendor_menu_items') }}"
+                    >
+                      <i class="bi bi-card-checklist"></i><span>My Menu</span>
+                    </a>
+                  </li>
+                {% elif current_user.role == 'admin' %}
+                  <li class="nav-item">
+                    <a
+                      class="nav-link {% if endpoint in ['vendor.vendors', 'vendor.vendor_detail', 'vendor.menu_item_detail'] %}active{% endif %}"
+                      href="{{ url_for('vendor.vendors') }}"
+                    >
+                      <i class="bi bi-shop"></i><span>Vendors</span>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link {% if endpoint in ['meal.meal_logs', 'meal.meal_detail', 'meal.edit_meal'] %}active{% endif %}"
+                      href="{{ url_for('meal.meal_logs') }}"
+                    >
+                      <i class="bi bi-journal-text"></i><span>Meal Logs</span>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link {% if endpoint == 'nutrition.nutrition_search' %}active{% endif %}"
+                      href="{{ url_for('nutrition.nutrition_search') }}"
+                    >
+                      <i class="bi bi-search-heart"></i><span>Nutrition Search</span>
+                    </a>
+                  </li>
+                {% else %}
+                  <li class="nav-item">
+                    <a
+                      class="nav-link {% if endpoint == 'meal.home' %}active{% endif %}"
+                      href="{{ url_for('meal.home') }}"
+                    >
+                      <i class="bi bi-house-door"></i><span>Home</span>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link {% if endpoint == 'meal.upload_meal' %}active{% endif %}"
+                      href="{{ url_for('meal.upload_meal') }}"
+                    >
+                      <i class="bi bi-cloud-arrow-up"></i><span>Upload Meal</span>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link {% if endpoint in ['meal.meal_logs', 'meal.meal_detail', 'meal.edit_meal'] %}active{% endif %}"
+                      href="{{ url_for('meal.meal_logs') }}"
+                    >
+                      <i class="bi bi-journal-text"></i><span>Meal Logs</span>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link {% if endpoint == 'meal.healthy_food_indicator' %}active{% endif %}"
+                      href="{{ url_for('meal.healthy_food_indicator') }}"
+                    >
+                      <i class="bi bi-shield-check"></i><span>Healthy Indicator</span>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link {% if endpoint in ['vendor.vendors', 'vendor.vendor_detail', 'vendor.menu_item_detail'] %}active{% endif %}"
+                      href="{{ url_for('vendor.vendors') }}"
+                    >
+                      <i class="bi bi-shop"></i><span>Vendors</span>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link {% if endpoint in ['favorites.favorites_list'] %}active{% endif %}"
+                      href="{{ url_for('favorites.favorites_list') }}"
+                    >
+                      <i class="bi bi-heart"></i><span>Favorites</span>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link {% if endpoint == 'nutrition.nutrition_search' %}active{% endif %}"
+                      href="{{ url_for('nutrition.nutrition_search') }}"
+                    >
+                      <i class="bi bi-search-heart"></i><span>Nutrition Search</span>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link {% if endpoint == 'nutrition.weekly_tracking' %}active{% endif %}"
+                      href="{{ url_for('nutrition.weekly_tracking') }}"
+                    >
+                      <i class="bi bi-calendar2-week"></i><span>Weekly Tracking</span>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a
+                      class="nav-link {% if endpoint == 'nutrition.nutrition_analytics' %}active{% endif %}"
+                      href="{{ url_for('nutrition.nutrition_analytics') }}"
+                    >
+                      <i class="bi bi-graph-up-arrow"></i><span>Nutrition Analytics</span>
+                    </a>
+                  </li>
+                {% endif %}
+                <li class="nav-item">
+                  <form action="{{ url_for('auth.logout') }}" method="post" class="m-0">
+                    <button type="submit" class="btn btn-sm btn-outline-light">
+                      <i class="bi bi-box-arrow-right me-1"></i>Logout
+                    </button>
+                  </form>
+                </li>
+              {% else %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{{ url_for('meal.landing') }}">
+                    <i class="bi bi-house"></i><span>Landing</span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="{{ url_for('auth.login') }}">
+                    <i class="bi bi-box-arrow-in-right"></i><span>Login</span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="{{ url_for('auth.register') }}">
+                    <i class="bi bi-person-plus"></i><span>User Register</span>
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="{{ url_for('auth.vendor_register') }}">
+                    <i class="bi bi-shop-window"></i><span>Vendor Register</span>
+                  </a>
+                </li>
+              {% endif %}
             </ul>
           </div>
         </div>
@@ -159,34 +243,30 @@
     </nav>
 
     <main class="container-xl py-4 py-md-5 page-shell">
-      {% with messages = get_flashed_messages(with_categories=true) %} {% if
-      messages %}
-      <div class="flash-stack mb-4 reveal-on-scroll is-visible">
-        {% for category, message in messages %}
-        <div
-          class="alert alert-{{ category }} alert-dismissible fade show app-alert"
-          role="alert"
-        >
-          {{ message }}
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="alert"
-            aria-label="Close"
-          ></button>
-        </div>
-        {% endfor %}
-      </div>
-      {% endif %} {% endwith %} {% block content %}{% endblock %}
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-stack mb-4 reveal-on-scroll is-visible">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show app-alert" role="alert">
+                {{ message }}
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="alert"
+                  aria-label="Close"
+                ></button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
     </main>
 
     <footer class="app-footer">
-      <div
-        class="container-xl d-flex flex-wrap justify-content-between align-items-center gap-2"
-      >
+      <div class="container-xl d-flex flex-wrap justify-content-between align-items-center gap-2">
         <p class="mb-0">
-          <strong>NutriSnap</strong> - Meal logs, vendor discovery, and
-          nutrition intelligence.
+          <strong>NutriSnap</strong> - Meal logs, vendor discovery, and nutrition intelligence.
         </p>
         <a href="{{ url_for('meal.landing') }}">Visit Landing Page</a>
       </div>

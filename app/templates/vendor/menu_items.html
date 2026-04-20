@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}My Menu Items | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+        <div>
+            <p class="eyebrow mb-1">Vendor Menu Listing Management</p>
+            <h1 class="section-title mb-1">My Menu Items</h1>
+            <p class="page-subtitle mb-0">Add, update, delete, and control availability of your vendor menu items.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('vendor.vendor_dashboard') }}" class="btn btn-outline-industrial">Vendor Dashboard</a>
+            <a href="{{ url_for('vendor.create_menu_item') }}" class="btn btn-industrial">
+                <i class="bi bi-plus-circle me-1"></i>Add Menu Item
+            </a>
+        </div>
+    </div>
+</section>
+
+{% if menu_items %}
+<section class="row g-4 mt-1">
+    {% for item in menu_items %}
+        <div class="col-md-6 col-xl-4 reveal-on-scroll" data-delay="{{ loop.index0 % 4 }}">
+            <article class="menu-item-card h-100">
+                {% if item.image_url %}
+                    <img src="{{ item.image_url }}" class="menu-thumb" alt="{{ item.name }} image">
+                {% else %}
+                    <div class="menu-thumb vendor-placeholder">{{ item.name[0] }}</div>
+                {% endif %}
+                <div class="p-3 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                        <h3 class="h6 mb-0">{{ item.name }}</h3>
+                        <span class="badge {% if item.is_available %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                            {% if item.is_available %}Available{% else %}Unavailable{% endif %}
+                        </span>
+                    </div>
+                    <p class="text-muted small mb-2">{{ item.description or 'No description available.' }}</p>
+                    <p class="fw-semibold mb-2">Price: ${{ '%.2f'|format(item.price|float) }}</p>
+                    <div class="nutrition-list mb-3">
+                        <span>Calories: {{ item.calories if item.calories is not none else 'N/A' }}</span>
+                        <span>Protein: {{ item.protein if item.protein is not none else 'N/A' }} g</span>
+                        <span>Carbs: {{ item.carbohydrates if item.carbohydrates is not none else 'N/A' }} g</span>
+                        <span>Fats: {{ item.fats if item.fats is not none else 'N/A' }} g</span>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mt-auto">
+                        <a href="{{ url_for('vendor.edit_menu_item', item_id=item.id) }}" class="btn btn-sm btn-outline-industrial">Edit</a>
+                        <form action="{{ url_for('vendor.toggle_menu_item_availability', item_id=item.id) }}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                {% if item.is_available %}Set Unavailable{% else %}Set Available{% endif %}
+                            </button>
+                        </form>
+                        <form action="{{ url_for('vendor.delete_menu_item', item_id=item.id) }}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm-delete="Delete this menu item?">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </article>
+        </div>
+    {% endfor %}
+</section>
+{% else %}
+<section class="surface-card mt-4 text-center reveal-on-scroll" data-delay="1">
+    <h2 class="section-title mb-2">No menu items yet</h2>
+    <p class="text-muted mb-4">Create your first listing to make your vendor profile discoverable.</p>
+    <a href="{{ url_for('vendor.create_menu_item') }}" class="btn btn-industrial">Create First Menu Item</a>
+</section>
+{% endif %}
+{% endblock %}

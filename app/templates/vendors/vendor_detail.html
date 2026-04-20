@@ -1,16 +1,30 @@
-﻿{% extends "base.html" %} {% block title %}{{ vendor.name }} | NutriSnap{%
-endblock %} {% block content %}
+{% extends "base.html" %}
+
+{% block title %}{{ vendor.name }} | NutriSnap{% endblock %}
+
+{% block content %}
 <section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
   <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
     <div>
       <p class="eyebrow mb-1">Vendor Profile</p>
       <h1 class="section-title mb-1">{{ vendor.name }}</h1>
       <p class="page-subtitle mb-0">
-        Category: {{ vendor.category }}{% if vendor.address %} &middot; {{
-        vendor.address }}{% endif %}
+        Category: {{ vendor.category }}{% if vendor.address %} &middot; {{ vendor.address }}{% endif %}
       </p>
+      <p class="small text-muted mt-2 mb-0">Subscribers: {{ subscriber_count }}</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
+      {% if can_subscribe %}
+        <form
+          action="{{ url_for('vendor.unsubscribe_vendor' if is_subscribed else 'vendor.subscribe_vendor', vendor_id=vendor.id) }}"
+          method="post"
+          class="d-inline"
+        >
+          <button type="submit" class="btn {% if is_subscribed %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+            {% if is_subscribed %}Unsubscribe{% else %}Subscribe{% endif %}
+          </button>
+        </form>
+      {% endif %}
       <form
         action="{{ url_for('favorites.toggle_vendor_favorite', vendor_id=vendor.id) }}"
         method="post"
@@ -27,11 +41,7 @@ endblock %} {% block content %}
           {% if is_vendor_favorited %}Saved{% else %}Save Vendor{% endif %}
         </button>
       </form>
-      <a
-        href="{{ url_for('vendor.vendors') }}"
-        class="btn btn-outline-industrial"
-        >Back to Vendors</a
-      >
+      <a href="{{ url_for('vendor.vendors') }}" class="btn btn-outline-industrial">Back to Vendors</a>
     </div>
   </div>
 </section>
@@ -57,14 +67,10 @@ endblock %} {% block content %}
     <div class="col-lg-8">
       <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
         <h2 class="h4 mb-0">Vendor Information</h2>
-        <span class="badge text-bg-secondary category-badge"
-          >{{ vendor.category }}</span
-        >
+        <span class="badge text-bg-secondary category-badge">{{ vendor.category }}</span>
       </div>
 
-      <p class="mb-3">
-        {{ vendor.description or 'No description available.' }}
-      </p>
+      <p class="mb-3">{{ vendor.description or 'No description available.' }}</p>
 
       <div class="row g-2 mb-3">
         <div class="col-md-6">
@@ -88,96 +94,70 @@ endblock %} {% block content %}
 </section>
 
 <section class="surface-card reveal-on-scroll mt-4" data-delay="2">
-  <div
-    class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"
-  >
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <h2 class="h4 mb-0">Menu Items</h2>
-    <span class="chip">Available items: {{ menu_items|length }}</span>
+    <span class="chip">
+      {% if show_all_items %}Total items: {{ menu_items|length }}{% else %}Available items: {{ menu_items|length }}{% endif %}
+    </span>
   </div>
 
   {% if menu_items %}
   <div class="row g-4">
     {% for item in menu_items %}
-    <div
-      class="col-md-6 col-xl-4 reveal-on-scroll"
-      data-delay="{{ loop.index0 % 4 }}"
-    >
+    <div class="col-md-6 col-xl-4 reveal-on-scroll" data-delay="{{ loop.index0 % 4 }}">
       <article class="menu-item-card h-100">
         {% if item.image_url %}
-        <img
-          src="{{ item.image_url }}"
-          class="menu-thumb"
-          alt="{{ item.name }} image"
-        />
+        <img src="{{ item.image_url }}" class="menu-thumb" alt="{{ item.name }} image" />
         {% else %}
         <div class="menu-thumb vendor-placeholder">{{ item.name[0] }}</div>
         {% endif %}
 
         <div class="p-3 d-flex flex-column">
-          <div
-            class="d-flex justify-content-between align-items-start gap-2 mb-1"
-          >
+          <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
             <h3 class="h6 mb-0">{{ item.name }}</h3>
-            <form
-              action="{{ url_for('favorites.toggle_menu_item_favorite', item_id=item.id) }}"
-              method="post"
-              class="d-inline favorite-toggle-form"
-            >
-              <input type="hidden" name="next" value="{{ request.path }}" />
-              <button
-                type="submit"
-                class="btn btn-sm favorite-toggle-btn {% if item.id in favorite_menu_item_ids %}is-active{% endif %}"
-                aria-label="{% if item.id in favorite_menu_item_ids %}Remove from favorites{% else %}Save menu item{% endif %}"
-                title="{% if item.id in favorite_menu_item_ids %}Remove from favorites{% else %}Save menu item{% endif %}"
+            <div class="d-flex align-items-center gap-2">
+              {% if show_all_items %}
+                <span class="badge {% if item.is_available %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                  {% if item.is_available %}Available{% else %}Unavailable{% endif %}
+                </span>
+              {% endif %}
+              <form
+                action="{{ url_for('favorites.toggle_menu_item_favorite', item_id=item.id) }}"
+                method="post"
+                class="d-inline favorite-toggle-form"
               >
-                <i
-                  class="bi {% if item.id in favorite_menu_item_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"
-                ></i>
-              </button>
-            </form>
+                <input type="hidden" name="next" value="{{ request.path }}" />
+                <button
+                  type="submit"
+                  class="btn btn-sm favorite-toggle-btn {% if item.id in favorite_menu_item_ids %}is-active{% endif %}"
+                  aria-label="{% if item.id in favorite_menu_item_ids %}Remove from favorites{% else %}Save menu item{% endif %}"
+                  title="{% if item.id in favorite_menu_item_ids %}Remove from favorites{% else %}Save menu item{% endif %}"
+                >
+                  <i class="bi {% if item.id in favorite_menu_item_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                </button>
+              </form>
+            </div>
           </div>
-          <p class="text-muted small mb-2">
-            {{ item.description or 'No description available.' }}
-          </p>
-          <p class="fw-semibold mb-2">
-            Price: ${{ '%.2f'|format(item.price|float) }}
-          </p>
+          <p class="text-muted small mb-2">{{ item.description or 'No description available.' }}</p>
+          <p class="fw-semibold mb-2">Price: ${{ '%.2f'|format(item.price|float) }}</p>
 
           <div class="nutrition-list mb-3">
-            <span
-              >Calories: {{ item.calories if item.calories is not none else
-              'N/A' }}</span
-            >
-            <span
-              >Protein: {{ item.protein if item.protein is not none else 'N/A'
-              }} g</span
-            >
-            <span
-              >Carbs: {{ item.carbohydrates if item.carbohydrates is not none
-              else 'N/A' }} g</span
-            >
-            <span
-              >Fats: {{ item.fats if item.fats is not none else 'N/A' }} g</span
-            >
+            <span>Calories: {{ item.calories if item.calories is not none else 'N/A' }}</span>
+            <span>Protein: {{ item.protein if item.protein is not none else 'N/A' }} g</span>
+            <span>Carbs: {{ item.carbohydrates if item.carbohydrates is not none else 'N/A' }} g</span>
+            <span>Fats: {{ item.fats if item.fats is not none else 'N/A' }} g</span>
           </div>
 
-          {% set item_tags = menu_item_indicators.get(item.id, []) %} {% if
-          item_tags %}
+          {% set item_tags = menu_item_indicators.get(item.id, []) %}
+          {% if item_tags %}
           <div class="d-flex flex-wrap gap-2 mb-3">
             {% for tag in item_tags %}
-            <span
-              class="badge rounded-pill indicator-pill indicator-{{ tag|lower|replace(' ', '-') }}"
-              >{{ tag }}</span
-            >
+            <span class="badge rounded-pill indicator-pill indicator-{{ tag|lower|replace(' ', '-') }}">{{ tag }}</span>
             {% endfor %}
           </div>
           {% endif %}
 
-          <a
-            href="{{ url_for('vendor.menu_item_detail', item_id=item.id) }}"
-            class="btn btn-outline-industrial btn-sm mt-auto"
-            >View Item</a
-          >
+          <a href="{{ url_for('vendor.menu_item_detail', item_id=item.id) }}" class="btn btn-outline-industrial btn-sm mt-auto">View Item</a>
         </div>
       </article>
     </div>

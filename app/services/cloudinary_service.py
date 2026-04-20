@@ -1,4 +1,4 @@
-﻿import cloudinary
+import cloudinary
 import cloudinary.uploader
 from flask import current_app
 
@@ -21,9 +21,9 @@ def _configure_cloudinary() -> None:
     )
 
 
-def upload_image(file_path: str) -> tuple[str, str | None]:
+def upload_image(file_path: str, folder: str = "meal_logs") -> tuple[str, str | None]:
     _configure_cloudinary()
-    result = cloudinary.uploader.upload(file_path, folder="meal_logs")
+    result = cloudinary.uploader.upload(file_path, folder=folder)
     secure_url = result.get("secure_url")
     public_id = result.get("public_id")
     if not secure_url:

@@ -1,4 +1,4 @@
-﻿from datetime import datetime
+from datetime import datetime
 
 from app.extensions import db
 
@@ -7,6 +7,7 @@ class Vendor(db.Model):
     __tablename__ = "vendors"
 
     id = db.Column(db.Integer, primary_key=True)
+    owner_user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True, index=True)
     name = db.Column(db.String(120), nullable=False)
     category = db.Column(db.String(80), nullable=False)
     description = db.Column(db.Text, nullable=True)
@@ -23,9 +24,19 @@ class Vendor(db.Model):
     menu_items = db.relationship(
         "MenuItem", back_populates="vendor", lazy="select", cascade="all, delete-orphan"
     )
+    owner_user = db.relationship("User", back_populates="owned_vendor")
+    subscriptions = db.relationship(
+        "VendorSubscription",
+        back_populates="vendor",
+        lazy="select",
+        cascade="all, delete-orphan",
+    )
     favorite_entry = db.relationship(
         "FavoriteVendor", back_populates="vendor", uselist=False, cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:
-        return f"<Vendor id={self.id} name={self.name} category={self.category}>"
+        return (
+            f"<Vendor id={self.id} name={self.name} category={self.category} "
+            f"owner_user_id={self.owner_user_id}>"
+        )

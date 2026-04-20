@@ -1,13 +1,15 @@
-﻿import os
+import os
 import tempfile
 from datetime import datetime, timedelta
 
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_required
 from sqlalchemy import func, or_
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
 from app.models import FavoriteMeal, FavoriteMenuItem, FavoriteVendor, MealLog, MenuItem, Vendor
+from app.services.auth_service import redirect_for_role, role_required
 from app.services.cloudinary_service import delete_image, upload_image
 from app.services.nutrition_service import get_healthy_food_indicators, get_nutrition_insights
 
@@ -43,22 +45,44 @@ def _save_temp_file(file_storage):
     return temp_file.name
 
 
-@meal_bp.route("/")
-def landing():
-    return render_template("landing.html")
+def _can_access_meal(meal: MealLog) -> bool:
+    if current_user.role == "admin":
+        return True
+    return meal.user_id == current_user.id
 
 
-def _home_page_context():
-    total_meal_logs = db.session.query(func.count(MealLog.id)).scalar() or 0
+def _image_referenced_by_others(image_url: str | None, exclude_meal_id: int) -> bool:
+    if not image_url:
+        return False
+
+    count = (
+        MealLog.query.filter(MealLog.id != exclude_meal_id, MealLog.image_url == image_url)
+        .limit(1)
+        .count()
+    )
+    return count > 0
+
+
+def _meal_visibility_filter(query):
+    if current_user.role == "admin":
+        return query
+    return query.filter(MealLog.user_id == current_user.id)
+
+
+def _home_page_context(user_id: int):
+    total_meal_logs = (
+        db.session.query(func.count(MealLog.id)).filter(MealLog.user_id == user_id).scalar() or 0
+    )
     meals_with_nutrition = (
         db.session.query(func.count(MealLog.id))
         .filter(
+            MealLog.user_id == user_id,
             or_(
                 MealLog.calories.isnot(None),
                 MealLog.protein.isnot(None),
                 MealLog.carbohydrates.isnot(None),
                 MealLog.fats.isnot(None),
-            )
+            ),
         )
         .scalar()
         or 0
@@ -72,7 +96,10 @@ def _home_page_context():
     total_menu_items = db.session.query(func.count(MenuItem.id)).scalar() or 0
     recent_uploads = (
         db.session.query(func.count(MealLog.id))
-        .filter(MealLog.created_at >= datetime.utcnow() - timedelta(days=7))
+        .filter(
+            MealLog.user_id == user_id,
+            MealLog.created_at >= datetime.utcnow() - timedelta(days=7),
+        )
         .scalar()
         or 0
     )
@@ -84,7 +111,10 @@ def _home_page_context():
     )
 
     latest_meals = (
-        MealLog.query.order_by(MealLog.meal_date.desc(), MealLog.created_at.desc()).limit(6).all()
+        MealLog.query.filter(MealLog.user_id == user_id)
+        .order_by(MealLog.meal_date.desc(), MealLog.created_at.desc())
+        .limit(6)
+        .all()
     )
     featured_vendors = (
         Vendor.query.filter(Vendor.is_active.is_(True))
@@ -94,12 +124,13 @@ def _home_page_context():
     )
     nutrition_ready_meals = (
         MealLog.query.filter(
+            MealLog.user_id == user_id,
             or_(
                 MealLog.calories.isnot(None),
                 MealLog.protein.isnot(None),
                 MealLog.carbohydrates.isnot(None),
                 MealLog.fats.isnot(None),
-            )
+            ),
         )
         .order_by(MealLog.updated_at.desc())
         .limit(6)
@@ -126,12 +157,23 @@ def _home_page_context():
     )
 
 
+@meal_bp.route("/")
+def landing():
+    if current_user.is_authenticated:
+        return redirect(redirect_for_role(current_user))
+    return render_template("landing.html")
+
+
 @meal_bp.route("/home")
+@login_required
+@role_required("user")
 def home():
-    return render_template("home.html", **_home_page_context())
+    return render_template("home.html", **_home_page_context(current_user.id))
 
 
 @meal_bp.route("/upload-meal", methods=["GET", "POST"])
+@login_required
+@role_required("user")
 def upload_meal():
     if request.method == "GET":
         return render_template("meals/upload_meal.html", meal_types=sorted(ALLOWED_MEAL_TYPES))
@@ -169,6 +211,7 @@ def upload_meal():
         image_url, public_id = upload_image(temp_path)
 
         meal_log = MealLog(
+            user_id=current_user.id,
             image_url=image_url,
             cloudinary_public_id=public_id,
             meal_type=meal_type,
@@ -178,7 +221,7 @@ def upload_meal():
         )
         db.session.add(meal_log)
         db.session.commit()
-        flash("Meal log saved successfully.", "success")
+        flash("Meal log saved to your personal meal logs.", "success")
         return redirect(url_for("meal.meal_logs"))
     except RuntimeError as exc:
         db.session.rollback()
@@ -196,8 +239,11 @@ def upload_meal():
 
 
 @meal_bp.route("/meal-logs")
+@login_required
+@role_required("user", "admin")
 def meal_logs():
-    logs = MealLog.query.order_by(MealLog.created_at.desc()).all()
+    logs_query = MealLog.query.order_by(MealLog.created_at.desc())
+    logs = _meal_visibility_filter(logs_query).all()
     favorite_meal_ids = {row[0] for row in db.session.query(FavoriteMeal.meal_log_id).all()}
     meal_indicators = {
         meal.id: get_healthy_food_indicators(
@@ -217,19 +263,18 @@ def meal_logs():
 
 
 @meal_bp.route("/healthy-indicator")
+@login_required
+@role_required("user", "admin")
 def healthy_food_indicator():
-    analyzed_meals = (
-        MealLog.query.filter(
-            or_(
-                MealLog.calories.isnot(None),
-                MealLog.protein.isnot(None),
-                MealLog.carbohydrates.isnot(None),
-                MealLog.fats.isnot(None),
-            )
+    analyzed_query = MealLog.query.filter(
+        or_(
+            MealLog.calories.isnot(None),
+            MealLog.protein.isnot(None),
+            MealLog.carbohydrates.isnot(None),
+            MealLog.fats.isnot(None),
         )
-        .order_by(MealLog.meal_date.desc(), MealLog.created_at.desc())
-        .all()
-    )
+    ).order_by(MealLog.meal_date.desc(), MealLog.created_at.desc())
+    analyzed_meals = _meal_visibility_filter(analyzed_query).all()
 
     def _safe_float(value):
         try:
@@ -351,9 +396,11 @@ def healthy_food_indicator():
 
 
 @meal_bp.route("/meal-log/<int:meal_id>")
+@login_required
+@role_required("user", "admin")
 def meal_detail(meal_id):
     meal = db.session.get(MealLog, meal_id)
-    if not meal:
+    if not meal or not _can_access_meal(meal):
         abort(404)
 
     meal_insights = []
@@ -373,9 +420,11 @@ def meal_detail(meal_id):
 
 
 @meal_bp.route("/edit-meal/<int:meal_id>", methods=["GET", "POST"])
+@login_required
+@role_required("user", "admin")
 def edit_meal(meal_id):
     meal = db.session.get(MealLog, meal_id)
-    if not meal:
+    if not meal or not _can_access_meal(meal):
         abort(404)
 
     if request.method == "GET":
@@ -452,17 +501,20 @@ def edit_meal(meal_id):
 
 
 @meal_bp.route("/delete-meal/<int:meal_id>", methods=["POST"])
+@login_required
+@role_required("user", "admin")
 def delete_meal(meal_id):
     meal = db.session.get(MealLog, meal_id)
-    if not meal:
+    if not meal or not _can_access_meal(meal):
         abort(404)
 
     public_id = meal.cloudinary_public_id
+    image_url = meal.image_url
     try:
         db.session.delete(meal)
         db.session.commit()
 
-        if public_id:
+        if public_id and not _image_referenced_by_others(image_url, meal_id):
             try:
                 delete_image(public_id)
             except Exception:

@@ -1,4 +1,4 @@
-﻿from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from app.models import MealLog
 
@@ -75,17 +75,17 @@ def build_weekly_insights(
     return insights[:3]
 
 
-def build_weekly_tracking_context(week_start: date) -> dict:
+def build_weekly_tracking_context(week_start: date, user_id: int | None = None) -> dict:
     week_end = week_start + timedelta(days=6)
 
-    weekly_meals = (
-        MealLog.query.filter(
-            MealLog.meal_date >= week_start,
-            MealLog.meal_date <= week_end,
-        )
-        .order_by(MealLog.meal_date.desc(), MealLog.created_at.desc())
-        .all()
+    weekly_query = MealLog.query.filter(
+        MealLog.meal_date >= week_start,
+        MealLog.meal_date <= week_end,
     )
+    if user_id is not None:
+        weekly_query = weekly_query.filter(MealLog.user_id == user_id)
+
+    weekly_meals = weekly_query.order_by(MealLog.meal_date.desc(), MealLog.created_at.desc()).all()
 
     daily_map = {
         week_start + timedelta(days=offset): {
