@@ -1,4 +1,5 @@
 ﻿{% extends "base.html" %}
+#feature 2 memeber 2 weeklty frontend
 
 {% block title %}Weekly Tracking | NutriSnap{% endblock %}
 
@@ -16,6 +17,10 @@
                 {% endif %}
             </p>
         </div>
+
+
+
+        
         <div class="d-flex flex-wrap gap-2 weekly-nav-controls">
             <a href="{{ url_for('nutrition.weekly_tracking', start_date=previous_week_start) }}" class="btn btn-outline-industrial btn-sm">
                 <i class="bi bi-chevron-left me-1"></i> Previous Week
@@ -270,3 +275,4 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{{ url_for('static', filename='js/weekly_tracking.js') }}"></script>
 {% endblock %}
+#end he

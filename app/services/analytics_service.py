@@ -2,23 +2,26 @@ from datetime import date, datetime, timedelta
 
 from app.models import MealLog
 
-
+#feature 2 member 1 analysidst(calculation)
 def safe_float(value):
+    #safely convert the valus for dat bse
     try:
         return float(value) if value is not None else 0.0
     except (TypeError, ValueError):
         return 0.0
 
 
+#Used to count 'analyzed' vs 'unanalyzed' meals in weekly stats.
+
+
 def has_nutrition_values(meal: MealLog) -> bool:
     return any(
         value is not None
-        for value in [meal.calories, meal.protein, meal.carbohydrates, meal.fats]
+        for value in [meal.calories, 
+        meal.protein, meal.carbohydrates, meal.fats]
     )
 
 
-def week_start_for(day_value: date) -> date:
-    return day_value - timedelta(days=day_value.weekday())
 
 
 def parse_week_start(raw_start_date: str | None) -> date:
@@ -74,9 +77,15 @@ def build_weekly_insights(
 
     return insights[:3]
 
+def week_start_for(day_value: date) -> date:
+    return day_value - timedelta(days=day_value.weekday())
+
 
 def build_weekly_tracking_context(week_start: date, user_id: int | None = None) -> dict:
     week_end = week_start + timedelta(days=6)
+
+
+
 
     query = MealLog.query.filter(
         MealLog.meal_date >= week_start,
@@ -104,6 +113,7 @@ def build_weekly_tracking_context(week_start: date, user_id: int | None = None) 
     }
 
     total_calories = 0.0
+    #default
     total_protein = 0.0
     total_carbohydrates = 0.0
     total_fats = 0.0
@@ -188,3 +198,4 @@ def build_weekly_tracking_context(week_start: date, user_id: int | None = None) 
         "weekly_insights": weekly_insights,
         "chart_payload": chart_payload,
     }
+#weekly

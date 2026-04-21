@@ -361,47 +361,6 @@ def nutrition_analytics():
     )
 
 
-@nutrition_bp.route("/weekly-tracking")
-@login_required
-@role_required("user", "admin")
-def weekly_tracking():
-    requested_start = request.args.get("start_date")
-    week_start = parse_week_start(requested_start)
-
-    target_user_id = None if current_user.role == "admin" else current_user.id
-    weekly_context = build_weekly_tracking_context(week_start, user_id=target_user_id)
-
-    current_week_start = week_start_for(date.today())
-
-    latest_meal_query = MealLog.query.order_by(MealLog.meal_date.desc())
-    latest_meal_query = _meal_visibility_filter(latest_meal_query)
-    latest_meal = latest_meal_query.first()
-
-    latest_data_week_start = None
-    latest_data_week_label = None
-    if latest_meal:
-        latest_data_week_start_value = week_start_for(latest_meal.meal_date)
-        if latest_data_week_start_value != week_start:
-            latest_data_week_start = latest_data_week_start_value.isoformat()
-            latest_data_week_end = latest_data_week_start_value + timedelta(days=6)
-            latest_data_week_label = (
-                f"{latest_data_week_start_value.strftime('%d %b %Y')} - "
-                f"{latest_data_week_end.strftime('%d %b %Y')}"
-            )
-
-    return render_template(
-        "nutrition/weekly_tracking.html",
-        **weekly_context,
-        selected_start_date=week_start.isoformat(),
-        previous_week_start=(week_start - timedelta(days=7)).isoformat(),
-        next_week_start=(week_start + timedelta(days=7)).isoformat(),
-        current_week_start=current_week_start.isoformat(),
-        is_current_week=(week_start == current_week_start),
-        latest_data_week_start=latest_data_week_start,
-        latest_data_week_label=latest_data_week_label,
-        is_system_view=current_user.role == "admin",
-    )
-
 
 @nutrition_bp.route("/healthy-indicator")
 @login_required
@@ -524,11 +483,12 @@ def nutrition_analytics_data_api():
         }
     )
 
-
+######these are feature 2 of member 2
 @nutrition_bp.route("/api/weekly-tracking-data")
 @login_required
 @role_required("user", "admin")
 def weekly_tracking_data_api():
+    #GoT /api/weekly-tracking-data?start_date=YYYY-MM-DD
     requested_start = request.args.get("start_date")
     week_start = parse_week_start(requested_start)
     target_user_id = None if current_user.role == "admin" else current_user.id
@@ -568,3 +528,44 @@ def weekly_tracking_data_api():
             "weekly_insights": context["weekly_insights"],
         }
     )
+@nutrition_bp.route("/weekly-tracking")
+@login_required
+@role_required("user", "admin")
+def weekly_tracking():
+    requested_start = request.args.get("start_date")
+    week_start = parse_week_start(requested_start)
+
+    target_user_id = None if current_user.role == "admin" else current_user.id
+    weekly_context = build_weekly_tracking_context(week_start, user_id=target_user_id)
+
+    current_week_start = week_start_for(date.today())
+
+    latest_meal_query = MealLog.query.order_by(MealLog.meal_date.desc())
+    latest_meal_query = _meal_visibility_filter(latest_meal_query)
+    latest_meal = latest_meal_query.first()
+
+    latest_data_week_start = None
+    latest_data_week_label = None
+    if latest_meal:
+        latest_data_week_start_value = week_start_for(latest_meal.meal_date)
+        if latest_data_week_start_value != week_start:
+            latest_data_week_start = latest_data_week_start_value.isoformat()
+            latest_data_week_end = latest_data_week_start_value + timedelta(days=6)
+            latest_data_week_label = (
+                f"{latest_data_week_start_value.strftime('%d %b %Y')} - "
+                f"{latest_data_week_end.strftime('%d %b %Y')}"
+            )
+
+    return render_template(
+        "nutrition/weekly_tracking.html",
+        **weekly_context,
+        selected_start_date=week_start.isoformat(),
+        previous_week_start=(week_start - timedelta(days=7)).isoformat(),
+        next_week_start=(week_start + timedelta(days=7)).isoformat(),
+        current_week_start=current_week_start.isoformat(),
+        is_current_week=(week_start == current_week_start),
+        latest_data_week_start=latest_data_week_start,
+        latest_data_week_label=latest_data_week_label,
+        is_system_view=current_user.role == "admin",
+    )
+#end for week tracer member 2 feature 2
