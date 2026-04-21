@@ -3,10 +3,17 @@
 {% block title %}{{ vendor.name }} | NutriSnap{% endblock %}
 
 {% block content %}
+#feature 1 member 2
+#vendor details frotend
 <section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+
+
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
         <div>
             <p class="eyebrow mb-1">Vendor Profile</p>
+
+
+
             <h1 class="section-title mb-1">{{ vendor.name }}</h1>
             <p class="page-subtitle mb-0">Category: {{ vendor.category }}{% if vendor.address %} &middot; {{ vendor.address }}{% endif %}</p>
             <div class="rating-summary-chip mt-2">
@@ -248,4 +255,8 @@
         </div>
     {% endif %}
 </section>
+
+
 {% endblock %}
+
+#end feature vendor details

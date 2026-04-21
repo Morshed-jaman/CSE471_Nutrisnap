@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from app.extensions import db
+#feature 1 vendor profile 2 main
 
 
 class VendorProfile(db.Model):

@@ -121,6 +121,8 @@ def _normalized_review_text(raw_text: str, max_length: int = 500):
 @vendor_bp.route("/vendors")
 @login_required
 @role_required("user", "vendor", "admin")
+#featue1 member 2
+#route for vonders
 def vendors():
     search = (request.args.get("search") or "").strip()
     category = (request.args.get("category") or "").strip()
@@ -175,6 +177,7 @@ def vendors():
 @vendor_bp.route("/vendor/<int:vendor_id>")
 @login_required
 @role_required("user", "vendor", "admin")
+
 def vendor_detail(vendor_id: int):
     vendor = _active_vendor_or_404(vendor_id)
 
@@ -777,3 +780,4 @@ def toggle_menu_item_availability(item_id: int):
         current_app.logger.exception("Failed to toggle item availability: %s", exc)
         flash("Could not update availability status.", "danger")
     return redirect(url_for("vendor.vendor_menu_items"))
+#many are not included in feature 1

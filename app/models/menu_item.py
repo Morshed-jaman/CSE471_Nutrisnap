@@ -1,9 +1,12 @@
+###feature 1 member 2 extensions
+
 from datetime import datetime
 
 from app.extensions import db
 
 
 class MenuItem(db.Model):
+
     __tablename__ = "menu_items"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -35,8 +38,11 @@ class MenuItem(db.Model):
         cascade="all, delete-orphan",
     )
 
+
+#########
     def __repr__(self) -> str:
         return (
             f"<MenuItem id={self.id} name={self.name} vendor_id={self.vendor_id} "
             f"price={self.price}>"
         )
+###end feature menu item

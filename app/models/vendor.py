@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from app.extensions import db
-
+#feature 1memeber 2 main 
 
 class Vendor(db.Model):
     __tablename__ = "vendors"
