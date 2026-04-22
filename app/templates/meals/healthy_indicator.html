@@ -26,6 +26,11 @@ content %}
 
   <div class="d-flex flex-wrap gap-2 mt-3">
     <span class="chip">Analyzed meals: {{ total_analyzed }}</span>
+    <span class="chip">Avg health score: {{ average_health_score }}</span>
+    <span class="chip">Excellent: {{ excellent_count }}</span>
+    <span class="chip">Good: {{ good_count }}</span>
+    <span class="chip">Fair: {{ fair_count }}</span>
+    <span class="chip">Needs attention: {{ attention_count }}</span>
     <span class="chip"
       >Low Calorie: {{ tag_counts.get('Low Calorie', 0) }}</span
     >
@@ -38,9 +43,70 @@ content %}
   </div>
 </section>
 
+{% if meal_cards %}
+<section class="row g-4 mt-1">
+  <div class="col-xl-6 reveal-on-scroll" data-delay="1">
+    <article class="surface-card h-100">
+      <h2 class="h5 mb-3">Health Snapshot</h2>
+      {% if top_health_card %}
+      <div class="surface-subtle rounded-3 p-3 mb-3">
+        <p class="small text-muted mb-1">Top Performer</p>
+        <h3 class="h6 mb-1">
+          {{ top_health_card.meal.title or
+          top_health_card.meal.meal_type|capitalize ~ ' Meal' }}
+        </h3>
+        <p class="mb-0">
+          Score: <strong>{{ top_health_card.health.score }}</strong> / {{
+          top_health_card.health.label }}
+        </p>
+      </div>
+      {% endif %} {% if focus_cards %}
+      <h3 class="h6 mb-2">Priority Meals</h3>
+      <div class="d-flex flex-column gap-2">
+        {% for card in focus_cards %}
+        <div
+          class="surface-subtle rounded-3 p-2 d-flex justify-content-between gap-2"
+        >
+          <span
+            >{{ card.meal.title or card.meal.meal_type|capitalize ~ ' Meal'
+            }}</span
+          >
+          <strong>{{ card.health.score }}</strong>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-panel">
+        <p class="mb-0">No priority meals right now. Keep the momentum.</p>
+      </div>
+      {% endif %}
+    </article>
+  </div>
+
+  <div class="col-xl-6 reveal-on-scroll" data-delay="2">
+    <article class="surface-card h-100">
+      <h2 class="h5 mb-3">Actionable Recommendations</h2>
+      {% if summary_recommendations %}
+      <div class="d-flex flex-column gap-2">
+        {% for recommendation in summary_recommendations %}
+        <div class="surface-subtle rounded-3 p-3">
+          <p class="mb-0">{{ recommendation }}</p>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-panel">
+        <p class="mb-0">Add more analyzed meals to unlock recommendations.</p>
+      </div>
+      {% endif %}
+    </article>
+  </div>
+</section>
+{% endif %}
+
 <section
   class="surface-card mt-4 reveal-on-scroll healthy-indicator-note"
-  data-delay="1"
+  data-delay="3"
 >
   <p class="mb-0">
     <strong>Meter notes:</strong>
@@ -82,6 +148,34 @@ content %}
             >{{ tag }}</span
           >
           {% endfor %}
+        </div>
+
+        <div class="surface-subtle rounded-3 p-3 mb-3">
+          <div
+            class="d-flex justify-content-between align-items-center gap-2 mb-2"
+          >
+            <span class="small text-muted">Health Score</span>
+            <strong>{{ card.health.score }}/100</strong>
+          </div>
+          <div class="meter-track">
+            <span
+              class="meter-fill meter-tone-{{ card.health.tone }}"
+              style="width: {{ card.health.score }}%"
+            ></span>
+          </div>
+          <small class="meter-hint mt-2 d-block">{{ card.health.label }}</small>
+
+          {% if card.health.strengths %}
+          <div class="mt-2">
+            <small class="text-muted d-block">Strengths</small>
+            <small>{{ card.health.strengths|join(' • ') }}</small>
+          </div>
+          {% endif %} {% if card.health.warnings %}
+          <div class="mt-2">
+            <small class="text-muted d-block">Improve Next</small>
+            <small>{{ card.health.warnings|join(' • ') }}</small>
+          </div>
+          {% endif %}
         </div>
 
         <div class="meter-stack mb-3">
@@ -130,6 +224,43 @@ content %}
             </button>
           </form>
           {% endif %}
+          <form
+            method="post"
+            action="{{ url_for('nutrition.nutrition_explanation') }}"
+            class="d-inline"
+          >
+            <input
+              type="hidden"
+              name="food_name"
+              value="{{ meal.title or meal.meal_type|capitalize ~ ' Meal' }}"
+            />
+            <input
+              type="hidden"
+              name="calories"
+              value="{{ meal.calories if meal.calories is not none else '' }}"
+            />
+            <input
+              type="hidden"
+              name="protein"
+              value="{{ meal.protein if meal.protein is not none else '' }}"
+            />
+            <input
+              type="hidden"
+              name="carbohydrates"
+              value="{{ meal.carbohydrates if meal.carbohydrates is not none else '' }}"
+            />
+            <input
+              type="hidden"
+              name="fats"
+              value="{{ meal.fats if meal.fats is not none else '' }}"
+            />
+            <button
+              type="submit"
+              class="btn btn-sm meal-action-btn meal-action-analyze"
+            >
+              <i class="bi bi-stars"></i><span>AI Explain</span>
+            </button>
+          </form>
           <a
             href="{{ url_for('meal.meal_detail', meal_id=meal.id) }}"
             class="btn btn-sm meal-action-btn meal-action-view"

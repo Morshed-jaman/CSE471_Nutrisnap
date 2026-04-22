@@ -1,0 +1,188 @@
+{% extends "base.html" %} {% block title %}AI Nutrition Explanation |
+NutriSnap{% endblock %} {% block content %}
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+      <p class="eyebrow mb-1">AI-Based Nutrition Explanation</p>
+      <h1 class="section-title mb-1">Nutrition Explanation</h1>
+      <p class="page-subtitle mb-0">
+        {% if is_system_view %} Generate a short nutrition explanation as admin
+        from provided nutrition values. {% else %} Get a simple explanation of
+        nutritional benefits from provided nutrition values. {% endif %}
+      </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a
+        href="{{ url_for('nutrition.nutrition_search') }}"
+        class="btn btn-outline-industrial"
+        >Back to Nutrition Search</a
+      >
+      <a
+        href="{{ url_for('nutrition.nutrition_analytics') }}"
+        class="btn btn-outline-industrial"
+        >Open Nutrition Analytics</a
+      >
+    </div>
+  </div>
+
+  <form
+    method="post"
+    action="{{ url_for('nutrition.nutrition_explanation') }}"
+    class="row g-3 align-items-end mt-1"
+  >
+    <div class="col-lg-8">
+      <label for="food_name" class="form-label">Food Name</label>
+      <input
+        type="text"
+        id="food_name"
+        name="food_name"
+        value="{{ food_name or '' }}"
+        class="form-control form-control-industrial"
+        placeholder="e.g., chicken rice, grilled salmon, oat bowl"
+        required
+      />
+    </div>
+    <div class="col-lg-4 d-grid">
+      <button type="submit" class="btn btn-industrial">
+        <i class="bi bi-stars me-1"></i> Generate AI Explanation
+      </button>
+      <small class="d-block text-muted mt-2"
+        >This page does not call Nutrition API.</small
+      >
+    </div>
+
+    <div class="col-sm-6 col-lg-3">
+      <label for="calories" class="form-label">Calories</label>
+      <input
+        type="number"
+        step="any"
+        min="0"
+        id="calories"
+        name="calories"
+        class="form-control form-control-industrial"
+        value="{{ nutrition_result.calories if nutrition_result and nutrition_result.calories is not none else '' }}"
+        placeholder="e.g., 450"
+      />
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <label for="protein" class="form-label">Protein (g)</label>
+      <input
+        type="number"
+        step="any"
+        min="0"
+        id="protein"
+        name="protein"
+        class="form-control form-control-industrial"
+        value="{{ nutrition_result.protein if nutrition_result and nutrition_result.protein is not none else '' }}"
+        placeholder="e.g., 25"
+      />
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <label for="carbohydrates" class="form-label">Carbs (g)</label>
+      <input
+        type="number"
+        step="any"
+        min="0"
+        id="carbohydrates"
+        name="carbohydrates"
+        class="form-control form-control-industrial"
+        value="{{ nutrition_result.carbohydrates if nutrition_result and nutrition_result.carbohydrates is not none else '' }}"
+        placeholder="e.g., 40"
+      />
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <label for="fats" class="form-label">Fats (g)</label>
+      <input
+        type="number"
+        step="any"
+        min="0"
+        id="fats"
+        name="fats"
+        class="form-control form-control-industrial"
+        value="{{ nutrition_result.fats if nutrition_result and nutrition_result.fats is not none else '' }}"
+        placeholder="e.g., 15"
+      />
+    </div>
+  </form>
+</section>
+
+<section class="row g-4 mt-1">
+  <div class="col-lg-6 reveal-on-scroll" data-delay="1">
+    <div class="surface-card h-100">
+      <h2 class="h5 mb-3">Nutrition Data Used</h2>
+
+      {% if nutrition_result %}
+      <div class="nutrition-grid mb-3">
+        <div class="nutrition-box">
+          <span>Calories</span>
+          <strong
+            >{{ nutrition_result.calories if nutrition_result.calories is not
+            none else 'N/A' }}</strong
+          >
+        </div>
+        <div class="nutrition-box">
+          <span>Protein</span>
+          <strong
+            >{{ nutrition_result.protein if nutrition_result.protein is not none
+            else 'N/A' }} g</strong
+          >
+        </div>
+        <div class="nutrition-box">
+          <span>Carbs</span>
+          <strong
+            >{{ nutrition_result.carbohydrates if nutrition_result.carbohydrates
+            is not none else 'N/A' }} g</strong
+          >
+        </div>
+        <div class="nutrition-box">
+          <span>Fats</span>
+          <strong
+            >{{ nutrition_result.fats if nutrition_result.fats is not none else
+            'N/A' }} g</strong
+          >
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2">
+        {% for insight in insights %}
+        <span class="badge rounded-pill text-bg-info insight-pill"
+          >{{ insight }}</span
+        >
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-panel">
+        <p class="mb-2">
+          Enter calories, protein, carbs, and fats above to generate
+          explanation.
+        </p>
+        <small class="text-muted"
+          >You can also open this page from Nutrition Search with prefilled
+          values.</small
+        >
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-6 reveal-on-scroll" data-delay="2">
+    <div class="surface-card h-100">
+      <h2 class="h5 mb-3">AI Explanation Result</h2>
+
+      {% if ai_explanation %}
+      <div class="surface-subtle rounded-3 p-3">
+        <h3 class="h6 mb-2">Short Nutrition Benefit Summary</h3>
+        <p class="mb-0">{{ ai_explanation }}</p>
+      </div>
+      {% else %}
+      <div class="empty-panel">
+        <p class="mb-2">No explanation generated yet.</p>
+        <small class="text-muted"
+          >Click Generate AI Explanation to produce a short summary.</small
+        >
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

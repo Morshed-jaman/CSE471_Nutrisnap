@@ -151,7 +151,9 @@ favorite_menu_items|length + favorite_meals|length %}
             >
             {% endfor %}
           </div>
-          {% endif %}
+          {% endif %} {% set has_item_nutrition = item.calories is not none or
+          item.protein is not none or item.carbohydrates is not none or
+          item.fats is not none %}
 
           <div class="d-flex flex-wrap gap-2 mt-auto">
             <a
@@ -159,6 +161,38 @@ favorite_menu_items|length + favorite_meals|length %}
               class="btn btn-outline-industrial btn-sm"
               >View Item</a
             >
+            {% if has_item_nutrition %}
+            <form
+              method="post"
+              action="{{ url_for('nutrition.nutrition_explanation') }}"
+              class="d-inline"
+            >
+              <input type="hidden" name="food_name" value="{{ item.name }}" />
+              <input
+                type="hidden"
+                name="calories"
+                value="{{ item.calories if item.calories is not none else '' }}"
+              />
+              <input
+                type="hidden"
+                name="protein"
+                value="{{ item.protein if item.protein is not none else '' }}"
+              />
+              <input
+                type="hidden"
+                name="carbohydrates"
+                value="{{ item.carbohydrates if item.carbohydrates is not none else '' }}"
+              />
+              <input
+                type="hidden"
+                name="fats"
+                value="{{ item.fats if item.fats is not none else '' }}"
+              />
+              <button type="submit" class="btn btn-outline-industrial btn-sm">
+                <i class="bi bi-stars me-1"></i>AI Explain
+              </button>
+            </form>
+            {% endif %}
             <form
               action="{{ url_for('favorites.toggle_menu_item_favorite', item_id=item.id) }}"
               method="post"
@@ -227,7 +261,9 @@ favorite_menu_items|length + favorite_meals|length %}
             >
             {% endfor %}
           </div>
-          {% endif %}
+          {% endif %} {% set has_meal_nutrition = meal.calories is not none or
+          meal.protein is not none or meal.carbohydrates is not none or
+          meal.fats is not none %}
 
           <div class="d-flex flex-wrap gap-2 mt-auto">
             <a
@@ -235,6 +271,42 @@ favorite_menu_items|length + favorite_meals|length %}
               class="btn btn-outline-industrial btn-sm"
               >Open</a
             >
+            {% if has_meal_nutrition %}
+            <form
+              method="post"
+              action="{{ url_for('nutrition.nutrition_explanation') }}"
+              class="d-inline"
+            >
+              <input
+                type="hidden"
+                name="food_name"
+                value="{{ meal.title or meal.meal_type|capitalize ~ ' Meal' }}"
+              />
+              <input
+                type="hidden"
+                name="calories"
+                value="{{ meal.calories if meal.calories is not none else '' }}"
+              />
+              <input
+                type="hidden"
+                name="protein"
+                value="{{ meal.protein if meal.protein is not none else '' }}"
+              />
+              <input
+                type="hidden"
+                name="carbohydrates"
+                value="{{ meal.carbohydrates if meal.carbohydrates is not none else '' }}"
+              />
+              <input
+                type="hidden"
+                name="fats"
+                value="{{ meal.fats if meal.fats is not none else '' }}"
+              />
+              <button type="submit" class="btn btn-outline-industrial btn-sm">
+                <i class="bi bi-stars me-1"></i>AI Explain
+              </button>
+            </form>
+            {% endif %}
             <form
               action="{{ url_for('favorites.toggle_meal_favorite', meal_id=meal.id) }}"
               method="post"

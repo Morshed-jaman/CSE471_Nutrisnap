@@ -1,124 +1,244 @@
-﻿{% extends "base.html" %}
-
-{% block title %}Nutrition Search | NutriSnap{% endblock %}
-
-{% block content %}
+﻿{% extends "base.html" %} {% block title %}Nutrition Search | NutriSnap{%
+endblock %} {% block content %}
 <section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
-    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
-        <div>
-            <p class="eyebrow mb-1">External Nutrition API</p>
-            <h1 class="section-title mb-1">Nutrition Search</h1>
-            <p class="page-subtitle mb-0">
-                {% if is_system_view %}
-                    Search any food and apply nutrition analysis as a system admin.
-                {% else %}
-                    Search any food and get instant calories, protein, carbohydrates, and fats.
-                {% endif %}
-            </p>
-        </div>
-        <a href="{{ url_for('nutrition.nutrition_analytics') }}" class="btn btn-outline-industrial">Open Nutrition Analytics</a>
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+      <p class="eyebrow mb-1">External Nutrition API</p>
+      <h1 class="section-title mb-1">Nutrition Search</h1>
+      <p class="page-subtitle mb-0">
+        {% if is_system_view %} Search any food and apply nutrition analysis as
+        a system admin. {% else %} Search any food and get instant calories,
+        protein, carbohydrates, and fats. {% endif %}
+      </p>
     </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a
+        href="{{ url_for('nutrition.nutrition_explanation') }}"
+        class="btn btn-outline-industrial"
+        >AI Explanation Page</a
+      >
+      <a
+        href="{{ url_for('nutrition.nutrition_analytics') }}"
+        class="btn btn-outline-industrial"
+        >Open Nutrition Analytics</a
+      >
+    </div>
+  </div>
 
-    <form method="post" action="{{ url_for('nutrition.nutrition_search') }}" class="row g-3 align-items-end mt-1">
-        <div class="col-md-9">
-            <label for="food_name" class="form-label">Food Name</label>
-            <input
-                type="text"
-                id="food_name"
-                name="food_name"
-                value="{{ food_name or '' }}"
-                class="form-control form-control-industrial"
-                placeholder="e.g., chicken rice, grilled salmon, oat bowl"
-                required
-            >
-        </div>
-        <div class="col-md-3 d-grid">
-            <button type="submit" class="btn btn-industrial">
-                <i class="bi bi-search me-1"></i> Analyze Food
-            </button>
-        </div>
-    </form>
+  <form
+    method="post"
+    action="{{ url_for('nutrition.nutrition_search') }}"
+    class="row g-3 align-items-end mt-1"
+  >
+    <div class="col-md-9">
+      <label for="food_name" class="form-label">Food Name</label>
+      <input
+        type="text"
+        id="food_name"
+        name="food_name"
+        value="{{ food_name or '' }}"
+        class="form-control form-control-industrial"
+        placeholder="e.g., chicken rice, grilled salmon, oat bowl"
+        required
+      />
+    </div>
+    <div class="col-md-3 d-grid">
+      <button type="submit" class="btn btn-industrial">
+        <i class="bi bi-search me-1"></i> Analyze Food
+      </button>
+    </div>
+  </form>
 </section>
 
 <section class="row g-4 mt-1">
-    <div class="col-lg-6 reveal-on-scroll" data-delay="1">
-        <div class="surface-card h-100">
-            <h2 class="h5 mb-3">Manual Search Result</h2>
+  <div class="col-lg-6 reveal-on-scroll" data-delay="1">
+    <div class="surface-card h-100">
+      <h2 class="h5 mb-3">Manual Search Result</h2>
 
-            {% if nutrition_result %}
-                <div class="nutrition-grid mb-3">
-                    <div class="nutrition-box">
-                        <span>Calories</span>
-                        <strong>{{ nutrition_result.calories if nutrition_result.calories is not none else 'N/A' }}</strong>
-                    </div>
-                    <div class="nutrition-box">
-                        <span>Protein</span>
-                        <strong>{{ nutrition_result.protein if nutrition_result.protein is not none else 'N/A' }} g</strong>
-                    </div>
-                    <div class="nutrition-box">
-                        <span>Carbs</span>
-                        <strong>{{ nutrition_result.carbohydrates if nutrition_result.carbohydrates is not none else 'N/A' }} g</strong>
-                    </div>
-                    <div class="nutrition-box">
-                        <span>Fats</span>
-                        <strong>{{ nutrition_result.fats if nutrition_result.fats is not none else 'N/A' }} g</strong>
-                    </div>
-                </div>
-
-                <div class="d-flex flex-wrap gap-2">
-                    {% for insight in insights %}
-                        <span class="badge rounded-pill text-bg-info insight-pill">{{ insight }}</span>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="empty-panel">
-                    <p class="mb-2">Search any food name to retrieve API nutrition data instantly.</p>
-                    <small class="text-muted">Powered by Spoonacular Nutrition API.</small>
-                </div>
-            {% endif %}
+      {% if nutrition_result %}
+      <div class="nutrition-grid mb-3">
+        <div class="nutrition-box">
+          <span>Calories</span>
+          <strong
+            >{{ nutrition_result.calories if nutrition_result.calories is not
+            none else 'N/A' }}</strong
+          >
         </div>
-    </div>
-
-    <div class="col-lg-6 reveal-on-scroll" data-delay="2">
-        <div class="surface-card h-100">
-            <h2 class="h5 mb-3">Analyze Existing Meal Logs</h2>
-
-            {% if recent_meals %}
-                <div class="list-group list-group-flush nutrition-log-list">
-                    {% for meal in recent_meals %}
-                        {% set has_meal_nutrition = meal.calories is not none or meal.protein is not none or meal.carbohydrates is not none or meal.fats is not none %}
-                        <div class="list-group-item px-0 py-3 bg-transparent border-bottom-0 border-top nutrition-log-row">
-                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                                <div>
-                                    <strong>{{ meal.title or meal.meal_type|capitalize ~ ' Meal' }}</strong>
-                                    <div class="small text-muted">{{ meal.meal_date.strftime('%d %b %Y') }}</div>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    {% if has_meal_nutrition %}
-                                        <span class="badge text-bg-success">Analyzed</span>
-                                    {% endif %}
-                                    <form method="post" action="{{ url_for('nutrition.analyze_meal', id=meal.id) }}">
-                                        <input type="hidden" name="next" value="{{ url_for('nutrition.nutrition_search') }}">
-                                        <button type="submit" class="btn btn-sm btn-outline-industrial">
-                                            {{ 'Re-Analyze' if has_meal_nutrition else 'Analyze Nutrition' }}
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="empty-panel">
-                    <p class="mb-2">No meal logs found yet.</p>
-                    {% if is_system_view %}
-                        <a href="{{ url_for('admin.admin_meal_logs') }}" class="btn btn-outline-industrial btn-sm">View admin meal logs</a>
-                    {% else %}
-                        <a href="{{ url_for('meal.upload_meal') }}" class="btn btn-outline-industrial btn-sm">Upload meal first</a>
-                    {% endif %}
-                </div>
-            {% endif %}
+        <div class="nutrition-box">
+          <span>Protein</span>
+          <strong
+            >{{ nutrition_result.protein if nutrition_result.protein is not none
+            else 'N/A' }} g</strong
+          >
         </div>
+        <div class="nutrition-box">
+          <span>Carbs</span>
+          <strong
+            >{{ nutrition_result.carbohydrates if nutrition_result.carbohydrates
+            is not none else 'N/A' }} g</strong
+          >
+        </div>
+        <div class="nutrition-box">
+          <span>Fats</span>
+          <strong
+            >{{ nutrition_result.fats if nutrition_result.fats is not none else
+            'N/A' }} g</strong
+          >
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2">
+        {% for insight in insights %}
+        <span class="badge rounded-pill text-bg-info insight-pill"
+          >{{ insight }}</span
+        >
+        {% endfor %}
+      </div>
+
+      <form
+        method="post"
+        action="{{ url_for('nutrition.nutrition_explanation') }}"
+        class="mt-3"
+      >
+        <input type="hidden" name="food_name" value="{{ food_name or '' }}" />
+        <input
+          type="hidden"
+          name="calories"
+          value="{{ nutrition_result.calories if nutrition_result.calories is not none else '' }}"
+        />
+        <input
+          type="hidden"
+          name="protein"
+          value="{{ nutrition_result.protein if nutrition_result.protein is not none else '' }}"
+        />
+        <input
+          type="hidden"
+          name="carbohydrates"
+          value="{{ nutrition_result.carbohydrates if nutrition_result.carbohydrates is not none else '' }}"
+        />
+        <input
+          type="hidden"
+          name="fats"
+          value="{{ nutrition_result.fats if nutrition_result.fats is not none else '' }}"
+        />
+        <button type="submit" class="btn btn-outline-industrial btn-sm">
+          <i class="bi bi-stars me-1"></i> Open AI Explanation Page
+        </button>
+        <small class="d-block text-muted mt-2"
+          >Opens the dedicated AI page with these values only (separate from
+          Nutrition API retrieval).</small
+        >
+      </form>
+      {% else %}
+      <div class="empty-panel">
+        <p class="mb-2">
+          Search any food name to retrieve API nutrition data instantly.
+        </p>
+        <small class="text-muted">Powered by Spoonacular Nutrition API.</small>
+      </div>
+      {% endif %}
     </div>
+  </div>
+
+  <div class="col-lg-6 reveal-on-scroll" data-delay="2">
+    <div class="surface-card h-100">
+      <h2 class="h5 mb-3">Analyze Existing Meal Logs</h2>
+
+      {% if recent_meals %}
+      <div class="list-group list-group-flush nutrition-log-list">
+        {% for meal in recent_meals %} {% set has_meal_nutrition = meal.calories
+        is not none or meal.protein is not none or meal.carbohydrates is not
+        none or meal.fats is not none %}
+        <div
+          class="list-group-item px-0 py-3 bg-transparent border-bottom-0 border-top nutrition-log-row"
+        >
+          <div
+            class="d-flex flex-wrap align-items-center justify-content-between gap-2"
+          >
+            <div>
+              <strong
+                >{{ meal.title or meal.meal_type|capitalize ~ ' Meal' }}</strong
+              >
+              <div class="small text-muted">
+                {{ meal.meal_date.strftime('%d %b %Y') }}
+              </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              {% if has_meal_nutrition %}
+              <span class="badge text-bg-success">Analyzed</span>
+              {% endif %} {% if has_meal_nutrition %}
+              <form
+                method="post"
+                action="{{ url_for('nutrition.nutrition_explanation') }}"
+              >
+                <input
+                  type="hidden"
+                  name="food_name"
+                  value="{{ meal.title or meal.meal_type|capitalize ~ ' Meal' }}"
+                />
+                <input
+                  type="hidden"
+                  name="calories"
+                  value="{{ meal.calories if meal.calories is not none else '' }}"
+                />
+                <input
+                  type="hidden"
+                  name="protein"
+                  value="{{ meal.protein if meal.protein is not none else '' }}"
+                />
+                <input
+                  type="hidden"
+                  name="carbohydrates"
+                  value="{{ meal.carbohydrates if meal.carbohydrates is not none else '' }}"
+                />
+                <input
+                  type="hidden"
+                  name="fats"
+                  value="{{ meal.fats if meal.fats is not none else '' }}"
+                />
+                <button type="submit" class="btn btn-sm btn-outline-industrial">
+                  AI Explain
+                </button>
+              </form>
+              {% endif %}
+              <form
+                method="post"
+                action="{{ url_for('nutrition.analyze_meal', id=meal.id) }}"
+              >
+                <input
+                  type="hidden"
+                  name="next"
+                  value="{{ url_for('nutrition.nutrition_search') }}"
+                />
+                <button type="submit" class="btn btn-sm btn-outline-industrial">
+                  {{ 'Re-Analyze' if has_meal_nutrition else 'Analyze Nutrition'
+                  }}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-panel">
+        <p class="mb-2">No meal logs found yet.</p>
+        {% if is_system_view %}
+        <a
+          href="{{ url_for('admin.admin_meal_logs') }}"
+          class="btn btn-outline-industrial btn-sm"
+          >View admin meal logs</a
+        >
+        {% else %}
+        <a
+          href="{{ url_for('meal.upload_meal') }}"
+          class="btn btn-outline-industrial btn-sm"
+          >Upload meal first</a
+        >
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
 </section>
 {% endblock %}
