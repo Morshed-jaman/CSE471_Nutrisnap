@@ -20,11 +20,10 @@ from app.services.nutrition_service import (
     get_nutrition_data,
     get_nutrition_insights,
 )
+from app.services.weather_service import get_hydration_recommendation
 
 nutrition_bp = Blueprint("nutrition", __name__)
-WATER_DAILY_GOAL_ML = 2000
 MAX_SINGLE_WATER_ENTRY_ML = 5000
-RECENT_WATER_ENTRIES_LIMIT = 15
 
 
 def _meal_label(meal: MealLog) -> str:
@@ -131,28 +130,36 @@ def _water_tracker_context(user_id: int) -> dict:
         .order_by(WaterIntake.created_at.desc())
         .all()
     )
-    recent_entries = (
-        WaterIntake.query.filter(WaterIntake.user_id == user_id)
-        .order_by(WaterIntake.created_at.desc())
-        .limit(RECENT_WATER_ENTRIES_LIMIT)
-        .all()
-    )
 
-    total_today_ml = sum(entry.amount_ml for entry in today_entries)
-    goal_ml = WATER_DAILY_GOAL_ML
-    remaining_ml = max(goal_ml - total_today_ml, 0)
-    progress_percent = round((total_today_ml / goal_ml) * 100, 1) if goal_ml > 0 else 0.0
+    hydration = get_hydration_recommendation()
+    today_total_ml = sum(entry.amount_ml for entry in today_entries)
+    recommended_ml = hydration["recommended_ml"]
+    remaining_ml = max(recommended_ml - today_total_ml, 0)
+    progress_percent = round((today_total_ml / recommended_ml) * 100, 1) if recommended_ml > 0 else 0.0
 
     return {
         "today_entries": today_entries,
-        "recent_entries": recent_entries,
         "today_date": today,
-        "total_today_ml": total_today_ml,
-        "goal_ml": goal_ml,
+        "today_total_ml": today_total_ml,
+        "recommended_ml": recommended_ml,
         "remaining_ml": remaining_ml,
-        "goal_achieved": total_today_ml >= goal_ml,
+        "goal_achieved": today_total_ml >= recommended_ml,
         "progress_percent": min(progress_percent, 100.0),
+        "temperature_c": hydration["temperature_c"],
+        "hydration_reason": hydration["reason_text"],
     }
+
+
+def _parse_water_amount(raw_amount: str | None) -> int | None:
+    amount_text = (raw_amount or "").strip()
+    if not amount_text or not amount_text.isdigit():
+        return None
+
+    amount_ml = int(amount_text)
+    if amount_ml <= 0:
+        return None
+
+    return amount_ml
 
 
 @nutrition_bp.route("/nutrition-search", methods=["GET", "POST"])
@@ -205,55 +212,69 @@ def nutrition_search():
     )
 
 
-@nutrition_bp.route("/water-intake", methods=["GET", "POST"])
+@nutrition_bp.route("/water-intake", methods=["GET"])
+@nutrition_bp.route("/water-tracker", methods=["GET"])
 @login_required
 @role_required("user")
 def water_tracker():
-    if request.method == "POST":
-        raw_amount = (request.form.get("amount_ml") or "").strip()
-        if not raw_amount:
-            flash("Please enter water amount in ml.", "danger")
-            return redirect(url_for("nutrition.water_tracker"))
+    return render_template("nutrition/water_tracker.html", **_water_tracker_context(current_user.id))
 
-        try:
-            parsed_amount = float(raw_amount)
-        except ValueError:
-            flash("Water amount must be a valid number.", "danger")
-            return redirect(url_for("nutrition.water_tracker"))
 
-        if parsed_amount <= 0:
-            flash("Water amount must be greater than zero.", "danger")
-            return redirect(url_for("nutrition.water_tracker"))
-
-        if parsed_amount > MAX_SINGLE_WATER_ENTRY_ML:
-            flash(
-                f"Single water entry looks too high. Please enter up to {MAX_SINGLE_WATER_ENTRY_ML} ml.",
-                "danger",
-            )
-            return redirect(url_for("nutrition.water_tracker"))
-
-        amount_ml = int(round(parsed_amount))
-        if amount_ml <= 0:
-            flash("Water amount must be greater than zero.", "danger")
-            return redirect(url_for("nutrition.water_tracker"))
-
-        try:
-            db.session.add(
-                WaterIntake(
-                    user_id=current_user.id,
-                    amount_ml=amount_ml,
-                    intake_date=date.today(),
-                )
-            )
-            db.session.commit()
-            flash(f"Added {amount_ml} ml to today's water intake.", "success")
-        except Exception:
-            db.session.rollback()
-            flash("Could not save water entry. Please try again.", "danger")
-
+@nutrition_bp.route("/water-intake", methods=["POST"])
+@nutrition_bp.route("/water-tracker/add", methods=["POST"])
+@login_required
+@role_required("user")
+def add_water_entry():
+    amount_ml = _parse_water_amount(request.form.get("amount_ml"))
+    if amount_ml is None:
+        flash("Water amount must be a positive whole number in ml.", "danger")
         return redirect(url_for("nutrition.water_tracker"))
 
-    return render_template("nutrition/water_tracker.html", **_water_tracker_context(current_user.id))
+    if amount_ml > MAX_SINGLE_WATER_ENTRY_ML:
+        flash(
+            f"Single water entry looks too high. Please enter up to {MAX_SINGLE_WATER_ENTRY_ML} ml.",
+            "danger",
+        )
+        return redirect(url_for("nutrition.water_tracker"))
+
+    try:
+        db.session.add(
+            WaterIntake(
+                user_id=current_user.id,
+                amount_ml=amount_ml,
+                intake_date=date.today(),
+            )
+        )
+        db.session.commit()
+        flash(f"Added {amount_ml} ml to today's water intake.", "success")
+    except Exception:
+        db.session.rollback()
+        flash("Could not save water entry. Please try again.", "danger")
+
+    return redirect(url_for("nutrition.water_tracker"))
+
+
+@nutrition_bp.route("/water-tracker/delete/<int:entry_id>", methods=["POST"])
+@login_required
+@role_required("user")
+def delete_water_entry(entry_id: int):
+    entry = db.session.get(WaterIntake, entry_id)
+    if not entry:
+        abort(404)
+
+    if entry.user_id != current_user.id:
+        flash("You can delete only your own water entries.", "danger")
+        return redirect(url_for("nutrition.water_tracker"))
+
+    try:
+        db.session.delete(entry)
+        db.session.commit()
+        flash("Water entry deleted.", "success")
+    except Exception:
+        db.session.rollback()
+        flash("Could not delete this water entry. Please try again.", "danger")
+
+    return redirect(url_for("nutrition.water_tracker"))
 
 
 @nutrition_bp.route("/analyze-meal/<int:id>", methods=["POST"])

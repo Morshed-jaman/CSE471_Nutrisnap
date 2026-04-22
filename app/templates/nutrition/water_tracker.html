@@ -1,26 +1,87 @@
 {% extends "base.html" %}
 
-{% block title %}Water Intake Tracker | NutriSnap{% endblock %}
+{% block title %}Water Tracker | NutriSnap{% endblock %}
 
 {% block content %}
 <section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
         <div>
             <p class="eyebrow mb-1">Daily Hydration</p>
-            <h1 class="section-title mb-1">Water Intake Tracker</h1>
-            <p class="page-subtitle mb-0">Log your daily water intake and track progress against your hydration goal.</p>
+            <h1 class="section-title mb-1">Water Tracker</h1>
+            <p class="page-subtitle mb-0">Log today's water intake and compare it with a simple weather-based hydration recommendation.</p>
         </div>
         <a href="{{ url_for('meal.home') }}" class="btn btn-outline-industrial">Back to Home</a>
     </div>
 </section>
 
 <section class="row g-4 mt-1">
-    <div class="col-lg-5 reveal-on-scroll" data-delay="1">
+    <div class="col-lg-7 reveal-on-scroll" data-delay="1">
+        <div class="surface-card h-100">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                <div>
+                    <h2 class="h5 mb-1">Today's Summary</h2>
+                    <p class="text-muted mb-0">{{ hydration_reason }}</p>
+                </div>
+                <span class="badge text-bg-light border">{{ today_date.strftime('%d %b %Y') }}</span>
+            </div>
+
+            <div class="nutrition-grid mb-3">
+                <div class="nutrition-box">
+                    <span>Total Today</span>
+                    <strong>{{ today_total_ml }} ml</strong>
+                </div>
+                <div class="nutrition-box">
+                    <span>Recommended</span>
+                    <strong>{{ recommended_ml }} ml</strong>
+                </div>
+                <div class="nutrition-box">
+                    <span>Temperature</span>
+                    <strong>
+                        {% if temperature_c is not none %}
+                            {{ temperature_c }} C
+                        {% else %}
+                            Unavailable
+                        {% endif %}
+                    </strong>
+                </div>
+                <div class="nutrition-box">
+                    <span>Remaining</span>
+                    <strong>{{ remaining_ml }} ml</strong>
+                </div>
+            </div>
+
+            <div class="mb-2 d-flex justify-content-between">
+                <small class="text-muted">{{ progress_percent }}% of today's goal</small>
+                <small class="text-muted">{{ 'Goal reached' if goal_achieved else 'Keep going' }}</small>
+            </div>
+            <div class="progress mb-3" role="progressbar" aria-label="Water intake progress" aria-valuenow="{{ progress_percent|int }}" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar {% if goal_achieved %}bg-success{% else %}bg-info{% endif %}" style="width: {{ progress_percent }}%;"></div>
+            </div>
+
+            {% if goal_achieved %}
+                <div class="alert alert-success mb-0">Great job. You reached today's recommended hydration goal.</div>
+            {% else %}
+                <div class="alert alert-info mb-0">{{ remaining_ml }} ml remaining to reach today's recommendation.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-5 reveal-on-scroll" data-delay="2">
         <div class="surface-card h-100">
             <h2 class="h5 mb-3">Add Water Intake</h2>
-            <form method="post" action="{{ url_for('nutrition.water_tracker') }}" class="row g-3">
+
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                {% for quick_amount in [250, 500, 1000] %}
+                    <form method="post" action="{{ url_for('nutrition.add_water_entry') }}">
+                        <input type="hidden" name="amount_ml" value="{{ quick_amount }}">
+                        <button type="submit" class="btn btn-outline-industrial">{{ quick_amount }} ml</button>
+                    </form>
+                {% endfor %}
+            </div>
+
+            <form method="post" action="{{ url_for('nutrition.add_water_entry') }}" class="row g-3">
                 <div class="col-12">
-                    <label for="amount_ml" class="form-label">Water Amount (ml)</label>
+                    <label for="amount_ml" class="form-label">Custom Amount (ml)</label>
                     <input
                         type="number"
                         id="amount_ml"
@@ -29,117 +90,62 @@
                         max="5000"
                         step="1"
                         class="form-control form-control-industrial"
-                        placeholder="e.g., 250"
+                        placeholder="Enter a whole number like 750"
                         required
                     >
                 </div>
                 <div class="col-12 d-grid">
                     <button type="submit" class="btn btn-industrial">
-                        <i class="bi bi-droplet-half me-1"></i>Add Intake
+                        <i class="bi bi-droplet-half me-1"></i>Add Entry
                     </button>
                 </div>
             </form>
-
-            <hr>
-
-            <h3 class="h6 mb-2">Quick Add</h3>
-            <div class="d-flex flex-wrap gap-2">
-                {% for quick_amount in [250, 500, 1000] %}
-                    <form method="post" action="{{ url_for('nutrition.water_tracker') }}">
-                        <input type="hidden" name="amount_ml" value="{{ quick_amount }}">
-                        <button type="submit" class="btn btn-sm btn-outline-industrial">{{ quick_amount }} ml</button>
-                    </form>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-7 reveal-on-scroll" data-delay="2">
-        <div class="surface-card h-100">
-            <h2 class="h5 mb-3">Today's Hydration Summary</h2>
-
-            <div class="nutrition-grid mb-3">
-                <div class="nutrition-box">
-                    <span>Total Today</span>
-                    <strong>{{ total_today_ml }} ml</strong>
-                </div>
-                <div class="nutrition-box">
-                    <span>Daily Goal</span>
-                    <strong>{{ goal_ml }} ml</strong>
-                </div>
-                <div class="nutrition-box">
-                    <span>Remaining</span>
-                    <strong>{{ remaining_ml }} ml</strong>
-                </div>
-                <div class="nutrition-box">
-                    <span>Status</span>
-                    <strong>{{ 'Goal Reached' if goal_achieved else 'In Progress' }}</strong>
-                </div>
-            </div>
-
-            <div class="mb-2 d-flex justify-content-between">
-                <small class="text-muted">{{ progress_percent }}% completed</small>
-                <small class="text-muted">{{ today_date.strftime('%d %b %Y') }}</small>
-            </div>
-            <div class="progress mb-3" role="progressbar" aria-label="Water intake progress" aria-valuenow="{{ progress_percent|int }}" aria-valuemin="0" aria-valuemax="100">
-                <div class="progress-bar {% if goal_achieved %}bg-success{% else %}bg-info{% endif %}" style="width: {{ progress_percent }}%;"></div>
-            </div>
-
-            {% if goal_achieved %}
-                <div class="alert alert-success mb-0">Great job. You reached your daily water goal.</div>
-            {% else %}
-                <div class="alert alert-info mb-0">Keep going. {{ remaining_ml }} ml remaining to hit your daily goal.</div>
-            {% endif %}
         </div>
     </div>
 </section>
 
-<section class="row g-4 mt-1">
-    <div class="col-lg-6 reveal-on-scroll" data-delay="3">
-        <div class="surface-card h-100">
-            <h2 class="h5 mb-3">Today's Entries</h2>
-            {% if today_entries %}
-                <div class="list-group list-group-flush nutrition-log-list">
-                    {% for entry in today_entries %}
-                        <div class="list-group-item px-0 py-3 bg-transparent border-bottom-0 border-top nutrition-log-row">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <strong>{{ entry.amount_ml }} ml</strong>
-                                <small class="text-muted">{{ entry.created_at.strftime('%I:%M %p') }}</small>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="empty-panel">
-                    <p class="mb-0">No water intake logged today yet.</p>
-                </div>
-            {% endif %}
+<section class="reveal-on-scroll mt-4" data-delay="3">
+    <div class="surface-card">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+                <h2 class="h5 mb-1">Today's Entries</h2>
+                <p class="text-muted mb-0">Each entry is tied to your account and can be removed individually.</p>
+            </div>
+            <span class="badge text-bg-light border">{{ today_entries|length }} entries</span>
         </div>
-    </div>
 
-    <div class="col-lg-6 reveal-on-scroll" data-delay="4">
-        <div class="surface-card h-100">
-            <h2 class="h5 mb-3">Recent Entries</h2>
-            {% if recent_entries %}
-                <div class="list-group list-group-flush nutrition-log-list">
-                    {% for entry in recent_entries %}
-                        <div class="list-group-item px-0 py-3 bg-transparent border-bottom-0 border-top nutrition-log-row">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <strong>{{ entry.amount_ml }} ml</strong>
-                                <small class="text-muted">
-                                    {{ entry.intake_date.strftime('%d %b') }} &middot; {{ entry.created_at.strftime('%I:%M %p') }}
-                                </small>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="empty-panel">
-                    <p class="mb-0">No water intake entries found.</p>
-                </div>
-            {% endif %}
-        </div>
+        {% if today_entries %}
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Amount</th>
+                            <th scope="col">Logged At</th>
+                            <th scope="col" class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in today_entries %}
+                            <tr>
+                                <td><strong>{{ entry.amount_ml }} ml</strong></td>
+                                <td>{{ entry.created_at.strftime('%I:%M %p') }}</td>
+                                <td class="text-end">
+                                    <form method="post" action="{{ url_for('nutrition.delete_water_entry', entry_id=entry.id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm-delete="Delete this water entry?">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-panel">
+                <p class="mb-0">No water intake logged today yet. Use a quick-add button or enter a custom amount to get started.</p>
+            </div>
+        {% endif %}
     </div>
 </section>
 {% endblock %}
-
