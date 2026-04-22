@@ -244,7 +244,7 @@ def _water_tracker_context(user_id: int) -> dict:
     }
 
 
-<<<<<<< HEAD
+
 def _parse_water_amount(raw_amount: str | None) -> int | None:
     amount_text = (raw_amount or "").strip()
     if not amount_text or not amount_text.isdigit():
@@ -255,7 +255,7 @@ def _parse_water_amount(raw_amount: str | None) -> int | None:
         return None
 
     return amount_ml
-=======
+
 def _nutrition_search_recent_meals() -> list[MealLog]:
     recent_query = MealLog.query.order_by(MealLog.created_at.desc())
     recent_query = _meal_visibility_filter(recent_query)
@@ -290,7 +290,6 @@ def _render_nutrition_explanation_page(
     if status_code != 200:
         return response, status_code
     return response
->>>>>>> After-MOD-3-Final-Implementation
 
 
 @nutrition_bp.route("/nutrition-search", methods=["GET", "POST"])
@@ -341,10 +340,9 @@ def nutrition_search():
     )
 
 
-<<<<<<< HEAD
+
 @nutrition_bp.route("/water-intake", methods=["GET"])
 @nutrition_bp.route("/water-tracker", methods=["GET"])
-=======
 @nutrition_bp.route("/nutrition-explanation", methods=["GET", "POST"])
 @login_required
 @role_required("user", "admin")
@@ -404,7 +402,6 @@ def nutrition_explanation():
 
 
 @nutrition_bp.route("/water-intake", methods=["GET", "POST"])
->>>>>>> After-MOD-3-Final-Implementation
 @login_required
 @role_required("user")
 def water_tracker():
