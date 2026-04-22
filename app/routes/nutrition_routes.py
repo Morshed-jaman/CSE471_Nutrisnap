@@ -24,6 +24,7 @@ from app.services.weather_service import get_hydration_recommendation
 
 nutrition_bp = Blueprint("nutrition", __name__)
 MAX_SINGLE_WATER_ENTRY_ML = 5000
+RECENT_WATER_ENTRIES_LIMIT = 15
 
 
 def _meal_label(meal: MealLog) -> str:
@@ -130,6 +131,12 @@ def _water_tracker_context(user_id: int) -> dict:
         .order_by(WaterIntake.created_at.desc())
         .all()
     )
+    recent_entries = (
+        WaterIntake.query.filter(WaterIntake.user_id == user_id)
+        .order_by(WaterIntake.created_at.desc())
+        .limit(RECENT_WATER_ENTRIES_LIMIT)
+        .all()
+    )
 
     hydration = get_hydration_recommendation()
     today_total_ml = sum(entry.amount_ml for entry in today_entries)
@@ -139,6 +146,7 @@ def _water_tracker_context(user_id: int) -> dict:
 
     return {
         "today_entries": today_entries,
+        "recent_entries": recent_entries,
         "today_date": today,
         "today_total_ml": today_total_ml,
         "recommended_ml": recommended_ml,

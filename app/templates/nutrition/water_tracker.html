@@ -104,48 +104,82 @@
     </div>
 </section>
 
-<section class="reveal-on-scroll mt-4" data-delay="3">
-    <div class="surface-card">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <div>
-                <h2 class="h5 mb-1">Today's Entries</h2>
-                <p class="text-muted mb-0">Each entry is tied to your account and can be removed individually.</p>
+<section class="row g-4 mt-4">
+    <div class="col-lg-7 reveal-on-scroll" data-delay="3">
+        <div class="surface-card h-100">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div>
+                    <h2 class="h5 mb-1">Today's Entries</h2>
+                    <p class="text-muted mb-0">Each entry is tied to your account and can be removed individually.</p>
+                </div>
+                <span class="badge text-bg-light border">{{ today_entries|length }} entries</span>
             </div>
-            <span class="badge text-bg-light border">{{ today_entries|length }} entries</span>
-        </div>
 
-        {% if today_entries %}
-            <div class="table-responsive">
-                <table class="table align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th scope="col">Amount</th>
-                            <th scope="col">Logged At</th>
-                            <th scope="col" class="text-end">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for entry in today_entries %}
+            {% if today_entries %}
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
                             <tr>
-                                <td><strong>{{ entry.amount_ml }} ml</strong></td>
-                                <td>{{ entry.created_at.strftime('%I:%M %p') }}</td>
-                                <td class="text-end">
-                                    <form method="post" action="{{ url_for('nutrition.delete_water_entry', entry_id=entry.id) }}" class="d-inline">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm-delete="Delete this water entry?">
-                                            Delete
-                                        </button>
-                                    </form>
-                                </td>
+                                <th scope="col">Amount</th>
+                                <th scope="col">Logged At</th>
+                                <th scope="col" class="text-end">Action</th>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {% for entry in today_entries %}
+                                <tr>
+                                    <td><strong>{{ entry.amount_ml }} ml</strong></td>
+                                    <td>{{ entry.created_at.strftime('%I:%M %p') }}</td>
+                                    <td class="text-end">
+                                        <form method="post" action="{{ url_for('nutrition.delete_water_entry', entry_id=entry.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm-delete="Delete this water entry?">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-panel">
+                    <p class="mb-0">No water intake logged today yet. Use a quick-add button or enter a custom amount to get started.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-5 reveal-on-scroll" data-delay="4">
+        <div class="surface-card h-100">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div>
+                    <h2 class="h5 mb-1">Recent Entries</h2>
+                    <p class="text-muted mb-0">Your latest hydration logs across recent days.</p>
+                </div>
+                <span class="badge text-bg-light border">{{ recent_entries|length }} shown</span>
             </div>
-        {% else %}
-            <div class="empty-panel">
-                <p class="mb-0">No water intake logged today yet. Use a quick-add button or enter a custom amount to get started.</p>
-            </div>
-        {% endif %}
+
+            {% if recent_entries %}
+                <div class="list-group list-group-flush nutrition-log-list">
+                    {% for entry in recent_entries %}
+                        <div class="list-group-item px-0 py-3 bg-transparent border-bottom-0 border-top nutrition-log-row">
+                            <div class="d-flex justify-content-between align-items-center gap-3">
+                                <strong>{{ entry.amount_ml }} ml</strong>
+                                <small class="text-muted text-end">
+                                    {{ entry.intake_date.strftime('%d %b') }}<br>
+                                    {{ entry.created_at.strftime('%I:%M %p') }}
+                                </small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-panel">
+                    <p class="mb-0">No recent water intake entries found.</p>
+                </div>
+            {% endif %}
+        </div>
     </div>
 </section>
 {% endblock %}
