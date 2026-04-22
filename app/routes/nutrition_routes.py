@@ -17,6 +17,7 @@ from app.services.analytics_service import (
 from app.services.auth_service import role_required
 from app.services.nutrition_service import (
     NutritionServiceError,
+    get_ai_nutrition_explanation,
     get_nutrition_data,
     get_nutrition_insights,
 )
@@ -121,6 +122,91 @@ def _meter_payload(
     }
 
 
+def _meal_health_payload(calories, protein, carbohydrates, fats) -> dict:
+    calories_value = _optional_float(calories)
+    protein_value = _optional_float(protein)
+    carbs_value = _optional_float(carbohydrates)
+    fats_value = _optional_float(fats)
+
+    score = 0
+    strengths: list[str] = []
+    warnings: list[str] = []
+
+    if protein_value is None:
+        warnings.append("Protein data missing")
+    elif protein_value >= 25:
+        score += 28
+        strengths.append("Strong protein support")
+    elif protein_value >= 15:
+        score += 20
+        strengths.append("Moderate protein level")
+    elif protein_value >= 8:
+        score += 12
+        warnings.append("Protein could be higher")
+    else:
+        score += 5
+        warnings.append("Low protein for satiety")
+
+    if calories_value is None:
+        warnings.append("Calories data missing")
+    elif calories_value <= 450:
+        score += 24
+        strengths.append("Calorie target friendly")
+    elif calories_value <= 650:
+        score += 16
+    elif calories_value <= 850:
+        score += 10
+        warnings.append("Calories are on the higher side")
+    else:
+        score += 4
+        warnings.append("High calorie load")
+
+    if carbs_value is None:
+        warnings.append("Carbohydrates data missing")
+    elif 20 <= carbs_value <= 60:
+        score += 24
+        strengths.append("Carbs in balanced range")
+    elif 10 <= carbs_value < 20 or 60 < carbs_value <= 80:
+        score += 16
+    else:
+        score += 8
+        warnings.append("Carbohydrates are less balanced")
+
+    if fats_value is None:
+        warnings.append("Fats data missing")
+    elif 8 <= fats_value <= 22:
+        score += 24
+        strengths.append("Fats in healthy range")
+    elif 5 <= fats_value < 8 or 22 < fats_value <= 30:
+        score += 16
+    else:
+        score += 8
+        warnings.append("Fats are less balanced")
+
+    score = max(0, min(score, 100))
+
+    if score >= 80:
+        label = "Excellent"
+        tone = "good"
+    elif score >= 65:
+        label = "Good"
+        tone = "ok"
+    elif score >= 50:
+        label = "Fair"
+        tone = "warn"
+    else:
+        label = "Needs Attention"
+        tone = "warn"
+
+    return {
+        "score": score,
+        "label": label,
+        "tone": tone,
+        "strengths": strengths[:2],
+        "warnings": warnings[:2],
+    }
+
+
 def _water_tracker_context(user_id: int) -> dict:
     today = date.today()
     today_entries = (
@@ -158,6 +244,7 @@ def _water_tracker_context(user_id: int) -> dict:
     }
 
 
+<<<<<<< HEAD
 def _parse_water_amount(raw_amount: str | None) -> int | None:
     amount_text = (raw_amount or "").strip()
     if not amount_text or not amount_text.isdigit():
@@ -168,6 +255,42 @@ def _parse_water_amount(raw_amount: str | None) -> int | None:
         return None
 
     return amount_ml
+=======
+def _nutrition_search_recent_meals() -> list[MealLog]:
+    recent_query = MealLog.query.order_by(MealLog.created_at.desc())
+    recent_query = _meal_visibility_filter(recent_query)
+    return recent_query.limit(8).all()
+
+
+def _nutrition_payload_from_form() -> dict:
+    return {
+        "calories": _optional_float(request.form.get("calories")),
+        "protein": _optional_float(request.form.get("protein")),
+        "carbohydrates": _optional_float(request.form.get("carbohydrates")),
+        "fats": _optional_float(request.form.get("fats")),
+    }
+
+
+def _render_nutrition_explanation_page(
+    *,
+    food_name: str = "",
+    nutrition_result: dict | None = None,
+    insights: list[str] | None = None,
+    ai_explanation: str | None = None,
+    status_code: int = 200,
+):
+    response = render_template(
+        "nutrition/nutrition_explanation.html",
+        food_name=food_name,
+        nutrition_result=nutrition_result,
+        insights=insights or [],
+        ai_explanation=ai_explanation,
+        is_system_view=current_user.role == "admin",
+    )
+    if status_code != 200:
+        return response, status_code
+    return response
+>>>>>>> After-MOD-3-Final-Implementation
 
 
 @nutrition_bp.route("/nutrition-search", methods=["GET", "POST"])
@@ -178,9 +301,7 @@ def nutrition_search():
     insights = []
     food_name = ""
 
-    recent_query = MealLog.query.order_by(MealLog.created_at.desc())
-    recent_query = _meal_visibility_filter(recent_query)
-    recent_meals = recent_query.limit(8).all()
+    recent_meals = _nutrition_search_recent_meals()
 
     if request.method == "POST":
         food_name = (request.form.get("food_name") or "").strip()
@@ -220,8 +341,70 @@ def nutrition_search():
     )
 
 
+<<<<<<< HEAD
 @nutrition_bp.route("/water-intake", methods=["GET"])
 @nutrition_bp.route("/water-tracker", methods=["GET"])
+=======
+@nutrition_bp.route("/nutrition-explanation", methods=["GET", "POST"])
+@login_required
+@role_required("user", "admin")
+def nutrition_explanation():
+    if request.method == "GET":
+        return _render_nutrition_explanation_page()
+
+    food_name = (request.form.get("food_name") or "").strip()
+    nutrition_result = _nutrition_payload_from_form()
+    insights = []
+    ai_explanation = None
+
+    if not food_name:
+        flash("Please enter a food name for AI explanation.", "danger")
+        return _render_nutrition_explanation_page(
+            food_name=food_name,
+            nutrition_result=nutrition_result,
+            insights=insights,
+            ai_explanation=ai_explanation,
+            status_code=400,
+        )
+
+    if not any(value is not None for value in nutrition_result.values()):
+        flash(
+            "AI explanation is separated from Nutrition API retrieval. "
+            "Provide nutrition values here or open from Nutrition Search with prefilled data.",
+            "danger",
+        )
+        return _render_nutrition_explanation_page(
+            food_name=food_name,
+            nutrition_result=nutrition_result,
+            insights=insights,
+            ai_explanation=ai_explanation,
+            status_code=400,
+        )
+
+    insights = get_nutrition_insights(
+        nutrition_result.get("calories"),
+        nutrition_result.get("protein"),
+        nutrition_result.get("carbohydrates"),
+        nutrition_result.get("fats"),
+    )
+
+    try:
+        ai_explanation = get_ai_nutrition_explanation(food_name, nutrition_result)
+    except NutritionServiceError as exc:
+        flash(str(exc), "danger")
+    except Exception:
+        flash("Unexpected error occurred while generating AI nutrition explanation.", "danger")
+
+    return _render_nutrition_explanation_page(
+        food_name=food_name,
+        nutrition_result=nutrition_result,
+        insights=insights,
+        ai_explanation=ai_explanation,
+    )
+
+
+@nutrition_bp.route("/water-intake", methods=["GET", "POST"])
+>>>>>>> After-MOD-3-Final-Implementation
 @login_required
 @role_required("user")
 def water_tracker():
@@ -459,10 +642,18 @@ def healthy_indicator():
         for tag in tags:
             tag_counts[tag] += 1
 
+        health_payload = _meal_health_payload(
+            meal.calories,
+            meal.protein,
+            meal.carbohydrates,
+            meal.fats,
+        )
+
         meal_cards.append(
             {
                 "meal": meal,
                 "tags": tags,
+                "health": health_payload,
                 "meters": [
                     _meter_payload("Calories", meal.calories, "kcal", target=500, lower_is_better=True),
                     _meter_payload("Protein", meal.protein, "g", target=30),
@@ -494,6 +685,41 @@ def healthy_indicator():
             }
         )
 
+    health_scores = [card["health"]["score"] for card in meal_cards]
+    average_health_score = round(sum(health_scores) / len(health_scores), 1) if health_scores else 0.0
+    excellent_count = sum(1 for score in health_scores if score >= 80)
+    good_count = sum(1 for score in health_scores if 65 <= score < 80)
+    fair_count = sum(1 for score in health_scores if 50 <= score < 65)
+    attention_count = sum(1 for score in health_scores if score < 50)
+
+    top_health_card = max(meal_cards, key=lambda card: card["health"]["score"], default=None)
+    focus_cards = sorted(
+        [card for card in meal_cards if card["health"]["score"] < 65],
+        key=lambda card: card["health"]["score"],
+    )[:3]
+
+    summary_recommendations: list[str] = []
+    if analyzed_meals:
+        if average_health_score < 65:
+            summary_recommendations.append(
+                "Overall meal quality can improve. Prioritize balanced macros in your next uploads."
+            )
+
+        if tag_counts.get("High Protein", 0) < max(1, len(analyzed_meals) // 3):
+            summary_recommendations.append(
+                "Add more lean protein choices to improve satiety and muscle support."
+            )
+
+        if tag_counts.get("Balanced Meal", 0) < max(1, len(analyzed_meals) // 3):
+            summary_recommendations.append(
+                "Aim for more balanced meals by combining protein, moderate carbs, and controlled fats."
+            )
+
+        if not summary_recommendations:
+            summary_recommendations.append(
+                "Healthy consistency looks strong. Keep maintaining this pattern."
+            )
+
     return render_template(
         "meals/healthy_indicator.html",
         meal_cards=meal_cards,
@@ -501,6 +727,14 @@ def healthy_indicator():
         tag_counts=dict(tag_counts),
         favorite_meal_ids=favorite_meal_ids,
         can_manage_favorites=can_manage_favorites,
+        average_health_score=average_health_score,
+        excellent_count=excellent_count,
+        good_count=good_count,
+        fair_count=fair_count,
+        attention_count=attention_count,
+        top_health_card=top_health_card,
+        focus_cards=focus_cards,
+        summary_recommendations=summary_recommendations,
     )
 
 

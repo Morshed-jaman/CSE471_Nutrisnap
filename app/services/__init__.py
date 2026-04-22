@@ -3,6 +3,7 @@ from app.services.cloudinary_service import delete_image, upload_image
 from app.services.email_service import send_vendor_subscription_email
 from app.services.nutrition_service import (
     NutritionServiceError,
+    get_ai_nutrition_explanation,
     get_nutrition_data,
     get_nutrition_insights,
 )
@@ -14,6 +15,7 @@ __all__ = [
     "NutritionServiceError",
     "get_nutrition_data",
     "get_nutrition_insights",
+    "get_ai_nutrition_explanation",
     "parse_week_start",
     "week_start_for",
     "build_weekly_tracking_context",

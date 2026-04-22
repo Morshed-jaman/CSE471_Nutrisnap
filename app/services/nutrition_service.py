@@ -2,10 +2,14 @@
 import re
 
 import requests
+from dotenv import load_dotenv
 from flask import current_app, has_app_context
 
 SPOONACULAR_ENDPOINT = "https://api.spoonacular.com/recipes/guessNutrition"
 SPOONACULAR_SEARCH_ENDPOINT = "https://api.spoonacular.com/recipes/complexSearch"
+DEFAULT_AI_CHAT_COMPLETIONS_ENDPOINT = "https://api.openai.com/v1/chat/completions"
+OPENROUTER_CHAT_COMPLETIONS_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
+DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
 
 
 class NutritionServiceError(RuntimeError):
@@ -21,7 +25,39 @@ def _config_or_env(key: str, default: str | None = None) -> str | None:
     env_value = os.getenv(key)
     if env_value not in (None, ""):
         return env_value
+
+    # Recover from stale process env after runtime .env changes.
+    load_dotenv(override=True)
+    env_value = os.getenv(key)
+    if env_value not in (None, ""):
+        return env_value
+
     return default
+
+
+def _uses_openrouter(endpoint: str) -> bool:
+    return "openrouter.ai" in (endpoint or "").lower()
+
+
+def _ai_provider_name(endpoint: str) -> str:
+    return "OpenRouter" if _uses_openrouter(endpoint) else "OpenAI"
+
+
+def _build_ai_headers(api_key: str, endpoint: str) -> dict:
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+
+    if _uses_openrouter(endpoint):
+        site_url = _config_or_env("OPENROUTER_SITE_URL")
+        site_name = _config_or_env("OPENROUTER_SITE_NAME")
+        if site_url:
+            headers["HTTP-Referer"] = site_url
+        if site_name:
+            headers["X-OpenRouter-Title"] = site_name
+
+    return headers
 
 
 def _as_float(nutrient_block):
@@ -188,3 +224,126 @@ def get_nutrition_insights(calories, protein, carbohydrates, fats):
         insights.append("General Meal")
 
     return insights
+
+
+def get_ai_nutrition_explanation(food_name: str, nutrition_data: dict) -> str:
+    openai_api_key = _config_or_env("OPENAI_API_KEY") or _config_or_env("OPENROUTER_API_KEY")
+    if not openai_api_key:
+        raise NutritionServiceError(
+            "OPENAI_API_KEY (or OPENROUTER_API_KEY) is missing. Please set it in your .env file and reload the app."
+        )
+
+    model_name = _config_or_env("OPENAI_MODEL", DEFAULT_OPENAI_MODEL) or DEFAULT_OPENAI_MODEL
+    endpoint = (
+        _config_or_env("OPENAI_BASE_URL", DEFAULT_AI_CHAT_COMPLETIONS_ENDPOINT)
+        or DEFAULT_AI_CHAT_COMPLETIONS_ENDPOINT
+    )
+    provider_name = _ai_provider_name(endpoint)
+    query = (food_name or "").strip()
+    if not query:
+        raise NutritionServiceError("Please provide a food name for AI explanation.")
+
+    normalized_nutrition = _normalize_payload(
+        nutrition_data.get("calories"),
+        nutrition_data.get("protein"),
+        nutrition_data.get("carbohydrates"),
+        nutrition_data.get("fats"),
+    )
+
+    if not _has_any_nutrition(normalized_nutrition):
+        raise NutritionServiceError(
+            "No nutrition data available to explain. Analyze nutrition first."
+        )
+
+    def _display(value, unit: str = "") -> str:
+        if value is None:
+            return "N/A"
+        rounded = round(float(value), 2)
+        if unit:
+            return f"{rounded} {unit}"
+        return str(rounded)
+
+    user_message = (
+        "Food: "
+        f"{query}\n"
+        "Nutrition data:\n"
+        f"- Calories: {_display(normalized_nutrition.get('calories'))}\n"
+        f"- Protein: {_display(normalized_nutrition.get('protein'), 'g')}\n"
+        f"- Carbohydrates: {_display(normalized_nutrition.get('carbohydrates'), 'g')}\n"
+        f"- Fats: {_display(normalized_nutrition.get('fats'), 'g')}\n"
+        "Give a short and easy-to-understand explanation of nutritional benefits."
+    )
+
+    payload = {
+        "model": model_name,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "You are a nutrition assistant for general education. "
+                    "Write in simple language, keep it to 2-3 short sentences, and avoid medical claims."
+                ),
+            },
+            {
+                "role": "user",
+                "content": user_message,
+            },
+        ],
+        "temperature": 0.4,
+        "max_tokens": 180,
+    }
+
+    try:
+        response = requests.post(
+            endpoint,
+            headers=_build_ai_headers(openai_api_key, endpoint),
+            json=payload,
+            timeout=25,
+        )
+    except requests.RequestException as exc:
+        raise NutritionServiceError("Could not connect to the AI explanation service.") from exc
+
+    if response.status_code in (401, 403):
+        raise NutritionServiceError(f"{provider_name} API key is invalid or not authorized.")
+
+    if response.status_code == 429:
+        raise NutritionServiceError(
+            f"{provider_name} API rate limit or quota exceeded. Please try again later."
+        )
+
+    if response.status_code >= 500:
+        raise NutritionServiceError(f"{provider_name} service is temporarily unavailable.")
+
+    if response.status_code >= 400:
+        try:
+            error_payload = response.json()
+            api_message = (error_payload.get("error") or {}).get("message")
+        except ValueError:
+            api_message = None
+
+        if api_message:
+            raise NutritionServiceError(f"{provider_name} request failed: {api_message}")
+        raise NutritionServiceError("AI explanation request failed.")
+
+    try:
+        data = response.json()
+    except ValueError as exc:
+        raise NutritionServiceError("Received an invalid response from AI explanation service.") from exc
+
+    choices = data.get("choices") or []
+    message = (choices[0] or {}).get("message") if choices else {}
+    content = (message or {}).get("content")
+
+    if isinstance(content, list):
+        # Handle structured message formats by concatenating text segments.
+        content = " ".join(
+            item.get("text", "")
+            for item in content
+            if isinstance(item, dict) and item.get("text")
+        )
+
+    explanation = re.sub(r"\s+", " ", (content or "")).strip()
+    if not explanation:
+        raise NutritionServiceError("AI explanation service returned an empty response.")
+
+    return explanation
