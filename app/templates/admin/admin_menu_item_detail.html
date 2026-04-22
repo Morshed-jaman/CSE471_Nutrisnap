@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Menu Item Detail | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2">
+        <div>
+            <p class="eyebrow mb-1">Admin Monitoring</p>
+            <h1 class="section-title mb-1">Menu Item Detail</h1>
+            <p class="page-subtitle mb-0">Review and moderate vendor menu listing details.</p>
+        </div>
+        <a href="{{ url_for('admin.admin_menu_items') }}" class="btn btn-outline-industrial">Back to Menu Monitoring</a>
+    </div>
+</section>
+
+<section class="row g-4 mt-1">
+    <div class="col-lg-6 reveal-on-scroll" data-delay="1">
+        <div class="surface-card h-100">
+            {% if item.image_url %}
+                <img src="{{ item.image_url }}" alt="{{ item.name }}" class="img-fluid rounded-3 menu-item-detail-image mb-3">
+            {% endif %}
+            <h2 class="h5 mb-1">{{ item.name }}</h2>
+            <p class="text-muted mb-2">{{ item.description or 'No description provided.' }}</p>
+            <p class="fw-semibold mb-0">Price: ${{ '%.2f'|format(item.price|float) }}</p>
+        </div>
+    </div>
+    <div class="col-lg-6 reveal-on-scroll" data-delay="2">
+        <div class="surface-card h-100 detail-panel">
+            <h2 class="h5 mb-3">Ownership and Status</h2>
+            <div class="kv-list">
+                <div><span>Vendor</span><strong>{{ item.vendor.name }}</strong></div>
+                <div><span>Category</span><strong>{{ item.vendor.category }}</strong></div>
+                <div><span>Vendor Email</span><strong>{{ item.vendor.contact_email or 'N/A' }}</strong></div>
+                <div><span>Availability</span><strong>{% if item.is_available %}Available{% else %}Unavailable{% endif %}</strong></div>
+            </div>
+
+            <hr>
+            <h2 class="h6 mb-2">Nutrition</h2>
+            <div class="nutrition-mini-grid mb-2">
+                <span>Calories: {{ item.calories if item.calories is not none else 'N/A' }}</span>
+                <span>Protein: {{ item.protein if item.protein is not none else 'N/A' }} g</span>
+                <span>Carbs: {{ item.carbohydrates if item.carbohydrates is not none else 'N/A' }} g</span>
+                <span>Fats: {{ item.fats if item.fats is not none else 'N/A' }} g</span>
+            </div>
+
+            <p class="meta-time mb-1">Created: {{ item.created_at.strftime('%d %b %Y, %I:%M %p') }}</p>
+            <p class="meta-time">Updated: {{ item.updated_at.strftime('%d %b %Y, %I:%M %p') }}</p>
+
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <a href="{{ url_for('vendor.menu_item_detail', item_id=item.id) }}" class="btn btn-outline-industrial">Open Public Item View</a>
+                <form action="{{ url_for('admin.admin_delete_menu_item', item_id=item.id) }}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger" data-confirm-delete="Delete this menu item?">Delete Item</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

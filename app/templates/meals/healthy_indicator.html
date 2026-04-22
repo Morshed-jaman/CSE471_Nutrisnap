@@ -1,0 +1,156 @@
+{% extends "base.html" %} {% block title %}Healthy Food Indicator | NutriSnap{%
+endblock %} {% block body_class %}healthy-indicator-page{% endblock %} {% block
+content %}
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+      <p class="eyebrow mb-1">Meal Health Dashboard</p>
+      <h1 class="section-title mb-1">Healthy Food Indicator</h1>
+      <p class="page-subtitle mb-0">
+        Every analyzed meal is shown here with nutrient meters and healthy tags.
+      </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a
+        href="{{ url_for('meal.meal_logs') }}"
+        class="btn btn-outline-industrial"
+        >Meal Logs</a
+      >
+      <a
+        href="{{ url_for('nutrition.nutrition_analytics') }}"
+        class="btn btn-outline-industrial"
+        >Nutrition Analytics</a
+      >
+    </div>
+  </div>
+
+  <div class="d-flex flex-wrap gap-2 mt-3">
+    <span class="chip">Analyzed meals: {{ total_analyzed }}</span>
+    <span class="chip"
+      >Low Calorie: {{ tag_counts.get('Low Calorie', 0) }}</span
+    >
+    <span class="chip"
+      >High Protein: {{ tag_counts.get('High Protein', 0) }}</span
+    >
+    <span class="chip"
+      >Balanced Meal: {{ tag_counts.get('Balanced Meal', 0) }}</span
+    >
+  </div>
+</section>
+
+<section
+  class="surface-card mt-4 reveal-on-scroll healthy-indicator-note"
+  data-delay="1"
+>
+  <p class="mb-0">
+    <strong>Meter notes:</strong>
+    Calories, protein, carbohydrates, and fats are shown from your saved meal
+    nutrition data. Sugar and sodium are displayed as unavailable because they
+    are not stored in the current meal model.
+  </p>
+</section>
+
+{% if meal_cards %}
+<section class="row g-4 mt-1">
+  {% for card in meal_cards %} {% set meal = card.meal %} {% set tags =
+  card.tags %}
+  <div
+    class="col-md-6 col-xl-4 reveal-on-scroll"
+    data-delay="{{ loop.index0 % 5 }}"
+  >
+    <article class="meal-card h-100">
+      <div class="meal-media-wrap">
+        <img src="{{ meal.image_url }}" class="meal-thumb" alt="Meal image" />
+        <span class="meal-badge meal-badge-floating"
+          >{{ meal.meal_type|capitalize }}</span
+        >
+      </div>
+
+      <div class="meal-card-body d-flex flex-column">
+        <h2 class="meal-card-title mb-1">
+          {{ meal.title or meal.meal_type|capitalize ~ ' Meal' }}
+        </h2>
+        <p class="meal-card-date mb-2">
+          <i class="bi bi-calendar3 me-1"></i>{{ meal.meal_date.strftime('%d %b
+          %Y') }}
+        </p>
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          {% for tag in tags %}
+          <span
+            class="badge rounded-pill indicator-pill indicator-{{ tag|lower|replace(' ', '-') }}"
+            >{{ tag }}</span
+          >
+          {% endfor %}
+        </div>
+
+        <div class="meter-stack mb-3">
+          {% for meter in card.meters %}
+          <div class="meter-row">
+            <div class="meter-head">
+              <span>{{ meter.label }}</span>
+              <strong>
+                {% if meter.value is not none %} {{ meter.value }} {{ meter.unit
+                }} {% else %} N/A {% endif %}
+              </strong>
+            </div>
+
+            <div
+              class="meter-track {% if meter.percent is none %}is-muted{% endif %}"
+            >
+              <span
+                class="meter-fill meter-tone-{{ meter.tone }}"
+                style="width: {% if meter.percent is none %}24{% else %}{{ meter.percent }}{% endif %}%"
+              ></span>
+            </div>
+            <small class="meter-hint">{{ meter.hint }}</small>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mt-auto">
+          {% if can_manage_favorites %}
+          <form
+            action="{{ url_for('favorites.toggle_meal_favorite', meal_id=meal.id) }}"
+            method="post"
+            class="d-inline"
+          >
+            <input type="hidden" name="next" value="{{ request.path }}" />
+            <button
+              type="submit"
+              class="btn btn-sm meal-action-btn meal-action-favorite {% if meal.id in favorite_meal_ids %}is-active{% endif %}"
+            >
+              <i
+                class="bi {% if meal.id in favorite_meal_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"
+              ></i>
+              <span
+                >{% if meal.id in favorite_meal_ids %}Saved{% else %}Save{%
+                endif %}</span
+              >
+            </button>
+          </form>
+          {% endif %}
+          <a
+            href="{{ url_for('meal.meal_detail', meal_id=meal.id) }}"
+            class="btn btn-sm meal-action-btn meal-action-view"
+          >
+            <i class="bi bi-eye"></i><span>Open</span>
+          </a>
+        </div>
+      </div>
+    </article>
+  </div>
+  {% endfor %}
+</section>
+{% else %}
+<section class="surface-card mt-4 text-center reveal-on-scroll" data-delay="2">
+  <h2 class="section-title mb-2">No analyzed meals yet</h2>
+  <p class="text-muted mb-4">
+    Analyze meal nutrition first to populate this Healthy Food Indicator
+    dashboard.
+  </p>
+  <a href="{{ url_for('meal.meal_logs') }}" class="btn btn-industrial"
+    >Go to Meal Logs</a
+  >
+</section>
+{% endif %} {% endblock %}

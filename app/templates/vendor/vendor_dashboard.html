@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Vendor Dashboard | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+        <div>
+            <p class="eyebrow mb-1">Vendor Workspace</p>
+            <h1 class="section-title mb-1">Vendor Dashboard</h1>
+            <p class="page-subtitle mb-0">Manage your business profile and menu items from one place.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('vendor.vendors') }}" class="btn btn-outline-industrial">Browse Public Vendors</a>
+            <a href="{{ url_for('vendor.vendor_menu_items') }}" class="btn btn-outline-industrial">View My Menu Items</a>
+            <a href="{{ url_for('auth.vendor_profile') }}" class="btn btn-outline-industrial">Vendor Profile</a>
+            <a href="{{ url_for('vendor.create_menu_item') }}" class="btn btn-industrial">
+                <i class="bi bi-plus-circle me-1"></i> Add Menu Item
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="row g-3 mt-1">
+    <div class="col-md-6 reveal-on-scroll" data-delay="1">
+        <article class="surface-card h-100">
+            <h2 class="h5 mb-3">Business Information</h2>
+            <div class="meta-box mb-2"><strong>Name:</strong> {{ vendor.name }}</div>
+            <div class="meta-box mb-2"><strong>Category:</strong> {{ vendor.category }}</div>
+            <div class="meta-box mb-2"><strong>Email:</strong> {{ vendor.contact_email or 'N/A' }}</div>
+            <div class="meta-box"><strong>Address:</strong> {{ vendor.address or 'N/A' }}</div>
+        </article>
+    </div>
+    <div class="col-md-6 reveal-on-scroll" data-delay="2">
+        <article class="surface-card h-100">
+            <h2 class="h5 mb-3">Menu Summary</h2>
+            <div class="meta-box mb-2"><strong>Total Items:</strong> {{ total_items }}</div>
+            <div class="meta-box mb-2"><strong>Available Items:</strong> {{ available_items }}</div>
+            <div class="meta-box mb-2"><strong>Unavailable Items:</strong> {{ unavailable_items }}</div>
+            <div class="meta-box mb-2"><strong>Subscribers:</strong> {{ subscriber_count }}</div>
+            <div class="meta-box">
+                <strong>Customer Rating:</strong>
+                <span class="rating-stars-display ms-1">
+                    {% for star in range(1, 6) %}
+                        <i class="bi {% if vendor_avg_rating >= star - 0.25 %}bi-star-fill{% elif vendor_avg_rating >= star - 0.75 %}bi-star-half{% else %}bi-star{% endif %}"></i>
+                    {% endfor %}
+                </span>
+                <span class="ms-1">{{ '%.1f'|format(vendor_avg_rating) }} ({{ vendor_review_count }} reviews)</span>
+            </div>
+        </article>
+    </div>
+</section>
+
+<section class="surface-card mt-4 reveal-on-scroll" data-delay="3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h5 mb-0">Recent Subscribers</h2>
+        <span class="chip">{{ subscriber_count }} total subscribers</span>
+    </div>
+
+    {% if recent_subscriptions %}
+        <div class="table-responsive">
+            <table class="table align-middle app-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Subscribed On</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subscription in recent_subscriptions %}
+                        <tr>
+                            <td>{{ subscription.user.name if subscription.user else 'Unknown User' }}</td>
+                            <td>{{ subscription.user.email if subscription.user else 'N/A' }}</td>
+                            <td>{{ subscription.created_at.strftime('%d %b %Y') }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-panel">
+            <p class="mb-0">You do not have any subscribers yet.</p>
+        </div>
+    {% endif %}
+</section>
+
+<section class="surface-card mt-4 reveal-on-scroll" data-delay="4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h5 mb-0">Recent Menu Items</h2>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('vendor.vendor_menu_items') }}" class="btn btn-outline-industrial btn-sm">Open Full List</a>
+            <a href="{{ url_for('vendor.create_menu_item') }}" class="btn btn-outline-industrial btn-sm">Create New Item</a>
+        </div>
+    </div>
+
+    {% if menu_items %}
+        <div class="table-responsive">
+            <table class="table align-middle app-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Price</th>
+                        <th>Nutrition</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in menu_items %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if item.image_url %}
+                                        <img src="{{ item.image_url }}" alt="{{ item.name }}" class="table-thumb">
+                                    {% else %}
+                                        <span class="table-thumb vendor-placeholder d-inline-flex align-items-center justify-content-center">{{ item.name[0] }}</span>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ item.name }}</strong>
+                                        <div class="small text-muted">{{ item.description[:70] ~ '...' if item.description and item.description|length > 70 else (item.description or 'No description') }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>${{ '%.2f'|format(item.price|float) }}</td>
+                            <td>
+                                <div class="small">
+                                    K: {{ item.calories if item.calories is not none else 'N/A' }},
+                                    P: {{ item.protein if item.protein is not none else 'N/A' }}g,
+                                    C: {{ item.carbohydrates if item.carbohydrates is not none else 'N/A' }}g,
+                                    F: {{ item.fats if item.fats is not none else 'N/A' }}g
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge {% if item.is_available %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                                    {% if item.is_available %}Available{% else %}Unavailable{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a href="{{ url_for('vendor.edit_menu_item', item_id=item.id) }}" class="btn btn-sm btn-outline-industrial">Edit</a>
+                                    <form action="{{ url_for('vendor.toggle_menu_item_availability', item_id=item.id) }}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                            {% if item.is_available %}Set Unavailable{% else %}Set Available{% endif %}
+                                        </button>
+                                    </form>
+                                    <form action="{{ url_for('vendor.delete_menu_item', item_id=item.id) }}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm-delete="Delete this menu item?">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-panel">
+            <p class="mb-2">No menu items yet for your vendor account.</p>
+            <a href="{{ url_for('vendor.create_menu_item') }}" class="btn btn-outline-industrial btn-sm">Create first item</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

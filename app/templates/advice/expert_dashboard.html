@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Expert Advice Desk | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+        <div>
+            <p class="eyebrow mb-1">Nutrition Expert Workspace</p>
+            <h1 class="section-title mb-1">Advice Question Desk</h1>
+            <p class="page-subtitle mb-0">Review pending subscriber questions and submit healthy eating suggestions.</p>
+        </div>
+        <a href="{{ url_for('auth.nutrition_expert_profile') }}" class="btn btn-outline-industrial">My Expert Profile</a>
+    </div>
+</section>
+
+<section class="surface-card mt-4 reveal-on-scroll" data-delay="1">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h5 mb-0">Pending Questions</h2>
+        <span class="chip">{{ pending_questions|length }} pending</span>
+    </div>
+
+    {% if pending_questions %}
+        <div class="d-flex flex-column gap-3">
+            {% for question in pending_questions %}
+                <article class="review-card">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                        <small class="text-muted">
+                            {{ question.created_at.strftime('%d %b %Y, %I:%M %p') }}
+                        </small>
+                        <span class="badge text-bg-warning">Pending</span>
+                    </div>
+                    <p class="mb-2">
+                        <strong>From:</strong>
+                        {{ question.user.name if question.user else 'User' }}
+                        ({{ question.user.email if question.user else 'Unknown' }})
+                    </p>
+                    <p class="mb-3">{{ question.question_text }}</p>
+
+                    <form method="post" action="{{ url_for('advice.submit_advice_reply', question_id=question.id) }}" class="d-grid gap-2">
+                        <label for="response_text_{{ question.id }}" class="form-label mb-0">Advice Reply</label>
+                        <textarea
+                            id="response_text_{{ question.id }}"
+                            name="response_text"
+                            class="form-control form-control-industrial"
+                            rows="3"
+                            maxlength="2000"
+                            placeholder="Provide clear, practical nutrition guidance."
+                            required
+                        ></textarea>
+                        <button type="submit" class="btn btn-industrial btn-sm">Submit Reply</button>
+                    </form>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-panel">
+            <p class="mb-0">No pending questions right now.</p>
+        </div>
+    {% endif %}
+</section>
+
+<section class="surface-card mt-4 reveal-on-scroll" data-delay="2">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="h5 mb-0">My Answered Questions</h2>
+        <span class="chip">{{ answered_by_me|length }} answered</span>
+    </div>
+
+    {% if answered_by_me %}
+        <div class="d-flex flex-column gap-3">
+            {% for question in answered_by_me %}
+                <article class="review-card">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                        <small class="text-muted">
+                            Asked {{ question.created_at.strftime('%d %b %Y, %I:%M %p') }}
+                        </small>
+                        <span class="badge text-bg-success">Answered</span>
+                    </div>
+                    <p class="mb-2"><strong>Question:</strong> {{ question.question_text }}</p>
+                    <p class="mb-0"><strong>Your Advice:</strong> {{ question.response_text }}</p>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-panel">
+            <p class="mb-0">You have not answered any questions yet.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

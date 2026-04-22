@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Pending Vendors | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2">
+        <div>
+            <p class="eyebrow mb-1">Admin Verification</p>
+            <h1 class="section-title mb-1">Pending Vendor Requests</h1>
+            <p class="page-subtitle mb-0">Review vendor registrations and approve or reject access.</p>
+        </div>
+        <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-outline-industrial">Back to Admin Dashboard</a>
+    </div>
+</section>
+
+<section class="surface-card mt-4 reveal-on-scroll" data-delay="1">
+    {% if vendors %}
+        <div class="table-responsive">
+            <table class="table align-middle app-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Business Name</th>
+                        <th>Category</th>
+                        <th>Submitted</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vendor in vendors %}
+                        <tr>
+                            <td>{{ vendor.name }}</td>
+                            <td>{{ vendor.email }}</td>
+                            <td>{{ vendor.phone }}</td>
+                            <td>{{ vendor.vendor_profile.business_name if vendor.vendor_profile else 'N/A' }}</td>
+                            <td>{{ vendor.vendor_profile.business_category if vendor.vendor_profile else 'N/A' }}</td>
+                            <td>{{ vendor.created_at.strftime('%d %b %Y') }}</td>
+                            <td><a href="{{ url_for('admin.vendor_review', user_id=vendor.id) }}" class="btn btn-outline-industrial btn-sm">Review</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-panel">No pending vendor requests found.</div>
+    {% endif %}
+</section>
+{% endblock %}
