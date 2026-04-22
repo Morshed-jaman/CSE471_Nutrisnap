@@ -14,6 +14,7 @@ def _as_bool(value: str | None, default: bool = False) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+<<<<<<< HEAD
 def _as_float(value: str | None, default: float) -> float:
     try:
         return float(value) if value not in (None, "") else default
@@ -28,6 +29,8 @@ def _as_int(value: str | None, default: int) -> int:
         return default
 
 
+=======
+>>>>>>> 6dae3acd52729935819cc50f9b4e5f1e759c8cd3
 def _normalize_database_url(database_url: str | None) -> str | None:
     if not database_url:
         return None
@@ -67,7 +70,10 @@ class Config:
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     MAIL_USE_TLS = _as_bool(os.getenv("MAIL_USE_TLS"), default=True)
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER") or os.getenv("MAIL_USERNAME")
+<<<<<<< HEAD
 
     WATER_TRACKER_LATITUDE = _as_float(os.getenv("WATER_TRACKER_LATITUDE"), 23.8103)
     WATER_TRACKER_LONGITUDE = _as_float(os.getenv("WATER_TRACKER_LONGITUDE"), 90.4125)
     WATER_TRACKER_FALLBACK_GOAL_ML = _as_int(os.getenv("WATER_TRACKER_FALLBACK_GOAL_ML"), 2500)
+=======
+>>>>>>> 6dae3acd52729935819cc50f9b4e5f1e759c8cd3
