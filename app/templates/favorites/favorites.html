@@ -1,0 +1,337 @@
+{% extends "base.html" %} {% block title %}Favorites | NutriSnap{% endblock %}
+{% block content %} {% set total_saved = favorite_vendors|length +
+favorite_menu_items|length + favorite_meals|length %}
+
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+      <p class="eyebrow mb-1">Personal Saved List</p>
+      <h1 class="section-title mb-1">Favorites</h1>
+      <p class="page-subtitle mb-0">
+        Quickly revisit your preferred vendors, menu items, and meals.
+      </p>
+    </div>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      <span class="chip">Total saved: {{ total_saved }}</span>
+      <span class="chip">Vendors: {{ favorite_vendors|length }}</span>
+      <span class="chip">Menu items: {{ favorite_menu_items|length }}</span>
+      <span class="chip">Meals: {{ favorite_meals|length }}</span>
+      <a href="{{ url_for('meal.home') }}" class="btn btn-outline-industrial"
+        >Back to Home</a
+      >
+    </div>
+  </div>
+</section>
+
+<section class="surface-card mt-4 reveal-on-scroll" data-delay="1">
+  <div class="home-section-head mb-3">
+    <h2>Saved Vendors</h2>
+  </div>
+
+  {% if favorite_vendors %}
+  <div class="row g-4">
+    {% for favorite in favorite_vendors %} {% set vendor = favorite.vendor %}
+    <div class="col-md-6 col-xl-4">
+      <article class="vendor-card h-100">
+        {% if vendor.image_url %}
+        <img
+          src="{{ vendor.image_url }}"
+          class="vendor-thumb"
+          alt="{{ vendor.name }} image"
+        />
+        {% else %}
+        <div class="vendor-thumb vendor-placeholder">{{ vendor.name[0] }}</div>
+        {% endif %}
+
+        <div class="vendor-card-body d-flex flex-column">
+          <div
+            class="d-flex justify-content-between align-items-start gap-2 mb-2"
+          >
+            <h3 class="vendor-title mb-0">{{ vendor.name }}</h3>
+            <span class="badge text-bg-secondary category-badge"
+              >{{ vendor.category }}</span
+            >
+          </div>
+          <p class="vendor-description mb-3">
+            {% if vendor.description and vendor.description|length > 120 %} {{
+            vendor.description[:120] }}... {% else %} {{ vendor.description or
+            'No description available yet.' }} {% endif %}
+          </p>
+
+          <div class="d-flex flex-wrap gap-2 mt-auto">
+            <a
+              href="{{ url_for('vendor.vendor_detail', vendor_id=vendor.id) }}"
+              class="btn btn-outline-industrial btn-sm"
+              >View Details</a
+            >
+            <form
+              action="{{ url_for('favorites.toggle_vendor_favorite', vendor_id=vendor.id) }}"
+              method="post"
+              class="d-inline"
+            >
+              <input type="hidden" name="next" value="{{ request.path }}" />
+              <button type="submit" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-heartbreak me-1"></i>Remove
+              </button>
+            </form>
+          </div>
+        </div>
+      </article>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-panel">
+    <p class="mb-2">No vendors saved yet.</p>
+    <a
+      href="{{ url_for('vendor.vendors') }}"
+      class="btn btn-sm btn-outline-industrial"
+      >Browse vendors</a
+    >
+  </div>
+  {% endif %}
+</section>
+
+<section class="surface-card mt-4 reveal-on-scroll" data-delay="2">
+  <div class="home-section-head mb-3">
+    <h2>Saved Menu Items</h2>
+  </div>
+
+  {% if favorite_menu_items %}
+  <div class="row g-4">
+    {% for favorite in favorite_menu_items %} {% set item = favorite.menu_item
+    %}
+    <div class="col-md-6 col-xl-4">
+      <article class="menu-item-card h-100">
+        {% if item.image_url %}
+        <img
+          src="{{ item.image_url }}"
+          class="menu-thumb"
+          alt="{{ item.name }} image"
+        />
+        {% else %}
+        <div class="menu-thumb vendor-placeholder">{{ item.name[0] }}</div>
+        {% endif %}
+
+        <div class="p-3 d-flex flex-column h-100">
+          <h3 class="h6 mb-1">{{ item.name }}</h3>
+          <p class="small mb-2 text-muted">From {{ item.vendor.name }}</p>
+          <p class="text-muted small mb-2">
+            {{ item.description or 'No description available.' }}
+          </p>
+          <p class="fw-semibold mb-2">
+            Price: ${{ '%.2f'|format(item.price|float) }}
+          </p>
+
+          <div class="nutrition-list mb-3">
+            <span
+              >Calories: {{ item.calories if item.calories is not none else
+              'N/A' }}</span
+            >
+            <span
+              >Protein: {{ item.protein if item.protein is not none else 'N/A'
+              }} g</span
+            >
+            <span
+              >Carbs: {{ item.carbohydrates if item.carbohydrates is not none
+              else 'N/A' }} g</span
+            >
+            <span
+              >Fats: {{ item.fats if item.fats is not none else 'N/A' }} g</span
+            >
+          </div>
+
+          {% set item_tags = menu_item_indicator_map.get(item.id, []) %} {% if
+          item_tags %}
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            {% for tag in item_tags %}
+            <span
+              class="badge rounded-pill indicator-pill indicator-{{ tag|lower|replace(' ', '-') }}"
+              >{{ tag }}</span
+            >
+            {% endfor %}
+          </div>
+          {% endif %} {% set has_item_nutrition = item.calories is not none or
+          item.protein is not none or item.carbohydrates is not none or
+          item.fats is not none %}
+
+          <div class="d-flex flex-wrap gap-2 mt-auto">
+            <a
+              href="{{ url_for('vendor.menu_item_detail', item_id=item.id) }}"
+              class="btn btn-outline-industrial btn-sm"
+              >View Item</a
+            >
+            {% if has_item_nutrition %}
+            <form
+              method="post"
+              action="{{ url_for('nutrition.nutrition_explanation') }}"
+              class="d-inline"
+            >
+              <input type="hidden" name="food_name" value="{{ item.name }}" />
+              <input
+                type="hidden"
+                name="calories"
+                value="{{ item.calories if item.calories is not none else '' }}"
+              />
+              <input
+                type="hidden"
+                name="protein"
+                value="{{ item.protein if item.protein is not none else '' }}"
+              />
+              <input
+                type="hidden"
+                name="carbohydrates"
+                value="{{ item.carbohydrates if item.carbohydrates is not none else '' }}"
+              />
+              <input
+                type="hidden"
+                name="fats"
+                value="{{ item.fats if item.fats is not none else '' }}"
+              />
+              <button type="submit" class="btn btn-outline-industrial btn-sm">
+                <i class="bi bi-stars me-1"></i>AI Explain
+              </button>
+            </form>
+            {% endif %}
+            <form
+              action="{{ url_for('favorites.toggle_menu_item_favorite', item_id=item.id) }}"
+              method="post"
+              class="d-inline"
+            >
+              <input type="hidden" name="next" value="{{ request.path }}" />
+              <button type="submit" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-heartbreak me-1"></i>Remove
+              </button>
+            </form>
+          </div>
+        </div>
+      </article>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-panel">
+    <p class="mb-2">No menu items saved yet.</p>
+    <a
+      href="{{ url_for('vendor.vendors') }}"
+      class="btn btn-sm btn-outline-industrial"
+      >Explore menu items</a
+    >
+  </div>
+  {% endif %}
+</section>
+
+<section class="surface-card mt-4 reveal-on-scroll" data-delay="3">
+  <div class="home-section-head mb-3">
+    <h2>Saved Meals</h2>
+  </div>
+
+  {% if favorite_meals %}
+  <div class="row g-4">
+    {% for favorite in favorite_meals %} {% set meal = favorite.meal_log %}
+    <div class="col-md-6 col-xl-4">
+      <article class="meal-card h-100">
+        <div class="meal-media-wrap">
+          <img src="{{ meal.image_url }}" class="meal-thumb" alt="Meal image" />
+          <span class="meal-badge meal-badge-floating"
+            >{{ meal.meal_type|capitalize }}</span
+          >
+        </div>
+        <div class="meal-card-body d-flex flex-column">
+          <h3 class="meal-card-title">
+            {{ meal.title if meal.title else meal.meal_type|capitalize ~ ' Meal'
+            }}
+          </h3>
+          <p class="meal-card-date mb-2">
+            <i class="bi bi-calendar3 me-1"></i>{{ meal.meal_date.strftime('%d
+            %b %Y') }}
+          </p>
+
+          {% if meal.calories is not none %}
+          <p class="mb-3">
+            <span class="calorie-chip">{{ meal.calories }} kcal</span>
+          </p>
+          {% endif %} {% set meal_tags = meal_indicator_map.get(meal.id, []) %}
+          {% if meal_tags %}
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            {% for tag in meal_tags %}
+            <span
+              class="badge rounded-pill indicator-pill indicator-{{ tag|lower|replace(' ', '-') }}"
+              >{{ tag }}</span
+            >
+            {% endfor %}
+          </div>
+          {% endif %} {% set has_meal_nutrition = meal.calories is not none or
+          meal.protein is not none or meal.carbohydrates is not none or
+          meal.fats is not none %}
+
+          <div class="d-flex flex-wrap gap-2 mt-auto">
+            <a
+              href="{{ url_for('meal.meal_detail', meal_id=meal.id) }}"
+              class="btn btn-outline-industrial btn-sm"
+              >Open</a
+            >
+            {% if has_meal_nutrition %}
+            <form
+              method="post"
+              action="{{ url_for('nutrition.nutrition_explanation') }}"
+              class="d-inline"
+            >
+              <input
+                type="hidden"
+                name="food_name"
+                value="{{ meal.title or meal.meal_type|capitalize ~ ' Meal' }}"
+              />
+              <input
+                type="hidden"
+                name="calories"
+                value="{{ meal.calories if meal.calories is not none else '' }}"
+              />
+              <input
+                type="hidden"
+                name="protein"
+                value="{{ meal.protein if meal.protein is not none else '' }}"
+              />
+              <input
+                type="hidden"
+                name="carbohydrates"
+                value="{{ meal.carbohydrates if meal.carbohydrates is not none else '' }}"
+              />
+              <input
+                type="hidden"
+                name="fats"
+                value="{{ meal.fats if meal.fats is not none else '' }}"
+              />
+              <button type="submit" class="btn btn-outline-industrial btn-sm">
+                <i class="bi bi-stars me-1"></i>AI Explain
+              </button>
+            </form>
+            {% endif %}
+            <form
+              action="{{ url_for('favorites.toggle_meal_favorite', meal_id=meal.id) }}"
+              method="post"
+              class="d-inline"
+            >
+              <input type="hidden" name="next" value="{{ request.path }}" />
+              <button type="submit" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-heartbreak me-1"></i>Remove
+              </button>
+            </form>
+          </div>
+        </div>
+      </article>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-panel">
+    <p class="mb-2">No meals saved yet.</p>
+    <a
+      href="{{ url_for('meal.meal_logs') }}"
+      class="btn btn-sm btn-outline-industrial"
+      >Browse meal logs</a
+    >
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

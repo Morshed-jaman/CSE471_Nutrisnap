@@ -1,0 +1,15 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Not Found | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="error-panel reveal-on-scroll text-center" data-delay="0">
+    <p class="eyebrow">Page Not Found</p>
+    <h1 class="error-code">404</h1>
+    <p class="error-copy">The page you requested is not available or may have been moved.</p>
+    <div class="d-flex flex-wrap justify-content-center gap-2">
+        <a href="{{ url_for('meal.home') }}" class="btn btn-industrial mt-2">Back to Home</a>
+        <a href="{{ url_for('meal.landing') }}" class="btn btn-outline-industrial mt-2">Go to Landing</a>
+    </div>
+</section>
+{% endblock %}

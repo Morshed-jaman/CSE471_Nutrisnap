@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Reviews | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2">
+        <div>
+            <p class="eyebrow mb-1">Admin Moderation</p>
+            <h1 class="section-title mb-1">Review Moderation</h1>
+            <p class="page-subtitle mb-0">Monitor vendor and menu item feedback across the platform.</p>
+        </div>
+        <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-outline-industrial">Back to Admin Dashboard</a>
+    </div>
+</section>
+
+<section class="surface-card mt-4 reveal-on-scroll" data-delay="1">
+    {% if reviews %}
+        <div class="table-responsive">
+            <table class="table align-middle app-table">
+                <thead>
+                    <tr>
+                        <th>Reviewer</th>
+                        <th>Target</th>
+                        <th>Rating</th>
+                        <th>Review</th>
+                        <th>Updated</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for review in reviews %}
+                        <tr>
+                            <td>{{ review.user.name if review.user else 'Unknown User' }}</td>
+                            <td>
+                                {% if review.vendor_id %}
+                                    <span class="badge text-bg-primary me-1">Vendor</span>
+                                    <a href="{{ url_for('vendor.vendor_detail', vendor_id=review.vendor_id) }}">{{ review.vendor.name if review.vendor else 'Unknown Vendor' }}</a>
+                                {% else %}
+                                    <span class="badge text-bg-info me-1">Menu Item</span>
+                                    <a href="{{ url_for('vendor.menu_item_detail', item_id=review.menu_item_id) }}">{{ review.menu_item.name if review.menu_item else 'Unknown Item' }}</a>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="review-stars">
+                                    {% for star in range(1, 6) %}
+                                        <i class="bi {% if review.rating >= star %}bi-star-fill{% else %}bi-star{% endif %}"></i>
+                                    {% endfor %}
+                                </span>
+                                <span class="ms-1">{{ review.rating }}/5</span>
+                            </td>
+                            <td>{{ review.review_text or 'No text review' }}</td>
+                            <td>{{ review.updated_at.strftime('%d %b %Y') }}</td>
+                            <td>
+                                <form action="{{ url_for('admin.admin_delete_review', review_id=review.id) }}" method="post">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm-delete="Delete this review?">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-panel">No reviews available yet.</div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Vendor Review | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2">
+        <div>
+            <p class="eyebrow mb-1">Admin Verification</p>
+            <h1 class="section-title mb-1">Vendor Review</h1>
+            <p class="page-subtitle mb-0">Review vendor details and set approval status.</p>
+        </div>
+        <a href="{{ url_for('admin.pending_vendors') }}" class="btn btn-outline-industrial">Back to Pending List</a>
+    </div>
+</section>
+
+<section class="surface-card mt-4 reveal-on-scroll" data-delay="1">
+    <div class="row g-3">
+        <div class="col-md-6"><div class="meta-box"><strong>Contact Name:</strong> {{ vendor_user.name }}</div></div>
+        <div class="col-md-6"><div class="meta-box"><strong>Email:</strong> {{ vendor_user.email }}</div></div>
+        <div class="col-md-6"><div class="meta-box"><strong>Phone:</strong> {{ vendor_user.phone }}</div></div>
+        <div class="col-md-6"><div class="meta-box"><strong>Status:</strong> <span class="badge text-bg-{% if vendor_user.vendor_status == 'approved' %}success{% elif vendor_user.vendor_status == 'rejected' %}danger{% else %}warning{% endif %}">{{ vendor_user.vendor_status|capitalize }}</span></div></div>
+
+        <div class="col-md-6"><div class="meta-box"><strong>Business Name:</strong> {{ vendor_user.vendor_profile.business_name if vendor_user.vendor_profile else 'N/A' }}</div></div>
+        <div class="col-md-6"><div class="meta-box"><strong>Category:</strong> {{ vendor_user.vendor_profile.business_category if vendor_user.vendor_profile else 'N/A' }}</div></div>
+        <div class="col-12"><div class="meta-box"><strong>Address:</strong> {{ vendor_user.vendor_profile.business_address if vendor_user.vendor_profile else 'N/A' }}</div></div>
+        <div class="col-12"><div class="meta-box"><strong>Description:</strong> {{ vendor_user.vendor_profile.business_description if vendor_user.vendor_profile and vendor_user.vendor_profile.business_description else 'N/A' }}</div></div>
+        <div class="col-12"><div class="meta-box"><strong>Verification Note:</strong> {{ vendor_user.vendor_profile.verification_note if vendor_user.vendor_profile and vendor_user.vendor_profile.verification_note else 'N/A' }}</div></div>
+        {% if vendor_user.vendor_profile and vendor_user.vendor_profile.admin_review_note %}
+            <div class="col-12"><div class="meta-box"><strong>Latest Admin Note:</strong> {{ vendor_user.vendor_profile.admin_review_note }}</div></div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="surface-card mt-4 reveal-on-scroll" data-delay="2">
+    <h2 class="h5 mb-3">Review Actions</h2>
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <form method="post" action="{{ url_for('admin.approve_vendor', user_id=vendor_user.id) }}" class="d-grid gap-2">
+                <label for="approve_note" class="form-label">Approval Note (Optional)</label>
+                <textarea class="form-control form-control-industrial" id="approve_note" name="review_note" rows="3"></textarea>
+                <button type="submit" class="btn btn-success">Approve Vendor</button>
+            </form>
+        </div>
+        <div class="col-lg-6">
+            <form method="post" action="{{ url_for('admin.reject_vendor', user_id=vendor_user.id) }}" class="d-grid gap-2">
+                <label for="reject_note" class="form-label">Rejection Note (Optional)</label>
+                <textarea class="form-control form-control-industrial" id="reject_note" name="review_note" rows="3"></textarea>
+                <button type="submit" class="btn btn-danger">Reject Vendor</button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

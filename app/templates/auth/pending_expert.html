@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Expert Approval Status | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card status-card reveal-on-scroll" data-delay="0">
+    <p class="eyebrow mb-1">Nutrition Expert Access Control</p>
+    <h1 class="section-title mb-2">Nutrition Expert Account Status</h1>
+
+    {% if expert_status == 'approved' %}
+        <p class="page-subtitle">Your nutrition expert account is approved. You can now answer user advice questions.</p>
+        <span class="badge rounded-pill text-bg-success">Approved</span>
+        <div class="mt-4">
+            <a href="{{ url_for('advice.expert_advice_dashboard') }}" class="btn btn-industrial">Go to Expert Advice Desk</a>
+        </div>
+    {% elif expert_status == 'rejected' %}
+        <p class="page-subtitle">Your nutrition expert registration was rejected by admin review.</p>
+        <span class="badge rounded-pill text-bg-danger">Rejected</span>
+        {% if expert_review_note %}
+            <div class="mt-3 empty-panel">
+                <strong>Admin Note:</strong> {{ expert_review_note }}
+            </div>
+        {% endif %}
+        <div class="mt-4 d-flex flex-wrap gap-2">
+            <a href="{{ url_for('auth.nutrition_expert_profile') }}" class="btn btn-outline-industrial">Update Profile and Resubmit</a>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary">Logout</a>
+        </div>
+    {% else %}
+        <p class="page-subtitle">Your nutrition expert registration is pending admin verification. Please check back later.</p>
+        <span class="badge rounded-pill text-bg-warning">Pending Approval</span>
+        <div class="mt-4">
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-industrial">Logout</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

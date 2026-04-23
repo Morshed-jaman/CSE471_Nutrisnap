@@ -1,0 +1,428 @@
+﻿{% extends "base.html" %} {% block title %}{{ vendor.name }} | NutriSnap{%
+endblock %} {% block content %}
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+      <p class="eyebrow mb-1">Vendor Profile</p>
+      <h1 class="section-title mb-1">{{ vendor.name }}</h1>
+      <p class="page-subtitle mb-0">
+        Category: {{ vendor.category }}{% if vendor.address %} &middot; {{
+        vendor.address }}{% endif %}
+      </p>
+      <div class="rating-summary-chip mt-2">
+        <span class="rating-stars-display">
+          {% for star in range(1, 6) %}
+          <i
+            class="bi {% if vendor_avg_rating >= star - 0.25 %}bi-star-fill{% elif vendor_avg_rating >= star - 0.75 %}bi-star-half{% else %}bi-star{% endif %}"
+          ></i>
+          {% endfor %}
+        </span>
+        <strong>{{ '%.1f'|format(vendor_avg_rating) }}</strong>
+        <span class="text-muted">({{ vendor_review_count }} reviews)</span>
+      </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      {% if current_user.role == 'user' %} {% if is_vendor_subscribed %}
+      <form
+        method="post"
+        action="{{ url_for('vendor.unsubscribe_vendor', vendor_id=vendor.id) }}"
+        class="d-inline"
+      >
+        <input type="hidden" name="next" value="{{ request.path }}" />
+        <button type="submit" class="btn btn-outline-danger">
+          Unsubscribe
+        </button>
+      </form>
+      {% else %}
+      <form
+        method="post"
+        action="{{ url_for('vendor.subscribe_vendor', vendor_id=vendor.id) }}"
+        class="d-inline"
+      >
+        <input type="hidden" name="next" value="{{ request.path }}" />
+        <button type="submit" class="btn btn-industrial">Subscribe</button>
+      </form>
+      {% endif %}
+      <form
+        method="post"
+        action="{{ url_for('favorites.toggle_vendor_favorite', vendor_id=vendor.id) }}"
+        class="d-inline"
+      >
+        <input type="hidden" name="next" value="{{ request.path }}" />
+        <button
+          type="submit"
+          class="btn {% if is_vendor_favorited %}btn-outline-danger{% else %}btn-outline-industrial{% endif %}"
+        >
+          <i
+            class="bi {% if is_vendor_favorited %}bi-heart-fill{% else %}bi-heart{% endif %} me-1"
+          ></i>
+          {% if is_vendor_favorited %}Saved{% else %}Save{% endif %}
+        </button>
+      </form>
+      {% endif %}
+      <a
+        href="{{ url_for('vendor.vendors') }}"
+        class="btn btn-outline-industrial"
+        >Back to Vendors</a
+      >
+    </div>
+  </div>
+</section>
+
+<section class="surface-card reveal-on-scroll" data-delay="1">
+  <div class="row g-4 align-items-start">
+    <div class="col-lg-4">
+      {% if vendor.image_url %}
+      <img
+        src="{{ vendor.image_url }}"
+        class="img-fluid rounded-3 vendor-detail-image"
+        alt="{{ vendor.name }} image"
+      />
+      {% else %}
+      <div
+        class="vendor-detail-image vendor-placeholder d-flex align-items-center justify-content-center fs-1"
+      >
+        {{ vendor.name[0] }}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="col-lg-8">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <h2 class="h4 mb-0">Vendor Information</h2>
+        <span class="badge text-bg-secondary category-badge"
+          >{{ vendor.category }}</span
+        >
+      </div>
+
+      <p class="mb-3">
+        {{ vendor.description or 'No description available.' }}
+      </p>
+
+      <div class="row g-2 mb-3">
+        <div class="col-md-6">
+          <div class="meta-box">
+            <strong>Email:</strong> {{ vendor.contact_email or 'N/A' }}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="meta-box">
+            <strong>Phone:</strong> {{ vendor.phone or 'N/A' }}
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="meta-box">
+            <strong>Address:</strong> {{ vendor.address or 'N/A' }}
+          </div>
+        </div>
+      </div>
+
+      {% if current_user.role == 'user' %}
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <span class="chip">
+          {% if is_vendor_subscribed %}You are subscribed to this vendor{% else
+          %}Follow this vendor for updates{% endif %}
+        </span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section
+  class="surface-card reveal-on-scroll mt-4"
+  data-delay="2"
+  id="vendor-reviews"
+>
+  <div
+    class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"
+  >
+    <h2 class="h4 mb-0">Customer Reviews</h2>
+    <span class="chip">{{ vendor_review_count }} total reviews</span>
+  </div>
+
+  {% if can_submit_review %}
+  <form
+    method="post"
+    action="{{ url_for('vendor.submit_vendor_review', vendor_id=vendor.id) }}"
+    class="review-form-card mb-3"
+  >
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label for="rating" class="form-label">Your Rating</label>
+        <div class="star-input" role="radiogroup" aria-label="Vendor rating">
+          {% for star in range(5, 0, -1) %}
+          <input
+            type="radio"
+            id="vendor-star-{{ vendor.id }}-{{ star }}"
+            name="rating"
+            value="{{ star }}"
+            {% if my_vendor_review and my_vendor_review.rating == star %}checked{% endif %}
+            required
+          />
+          <label
+            for="vendor-star-{{ vendor.id }}-{{ star }}"
+            title="{{ star }} stars"
+            ><i class="bi bi-star-fill"></i
+          ></label>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="col-md-8">
+        <label for="review_text" class="form-label"
+          >Short Review (Optional)</label
+        >
+        <textarea
+          id="review_text"
+          name="review_text"
+          class="form-control form-control-industrial"
+          rows="2"
+          maxlength="500"
+          placeholder="Share your experience with this vendor..."
+        >
+{{ my_vendor_review.review_text if my_vendor_review and my_vendor_review.review_text else '' }}</textarea
+        >
+      </div>
+      <div class="col-12 d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-industrial">
+          {% if my_vendor_review %}Update Review{% else %}Submit Review{% endif
+          %}
+        </button>
+      </div>
+    </div>
+  </form>
+  {% if my_vendor_review %}
+  <form
+    action="{{ url_for('vendor.delete_vendor_review', review_id=my_vendor_review.id) }}"
+    method="post"
+    class="d-inline"
+  >
+    <button
+      type="submit"
+      class="btn btn-outline-danger"
+      data-confirm-delete="Delete your review?"
+    >
+      Delete My Review
+    </button>
+  </form>
+  {% endif %} {% endif %} {% if vendor_reviews %}
+  <div class="row g-3">
+    {% for review in vendor_reviews %}
+    <div class="col-12 reveal-on-scroll" data-delay="{{ loop.index0 % 3 }}">
+      <article class="review-card">
+        <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+          <div>
+            <h3 class="h6 mb-1">
+              {{ review.user.name if review.user else 'User' }}
+            </h3>
+            <div class="review-stars">
+              {% for star in range(1, 6) %}
+              <i
+                class="bi {% if review.rating >= star %}bi-star-fill{% else %}bi-star{% endif %}"
+              ></i>
+              {% endfor %}
+              <span class="review-stars-score">{{ review.rating }}/5</span>
+            </div>
+          </div>
+          <small class="text-muted"
+            >{{ review.updated_at.strftime('%d %b %Y') }}</small
+          >
+        </div>
+        <p class="mb-2">
+          {{ review.review_text or 'No written review provided.' }}
+        </p>
+        {% if current_user.is_authenticated and (current_user.role == 'admin' or
+        current_user.id == review.user_id) %}
+        <form
+          action="{% if current_user.role == 'admin' %}{{ url_for('admin.admin_delete_review', review_id=review.id) }}{% else %}{{ url_for('vendor.delete_vendor_review', review_id=review.id) }}{% endif %}"
+          method="post"
+        >
+          <button
+            type="submit"
+            class="btn btn-sm btn-outline-danger"
+            data-confirm-delete="Delete this review?"
+          >
+            {% if current_user.role == 'admin' %}Moderate Delete{% else
+            %}Delete{% endif %}
+          </button>
+        </form>
+        {% endif %}
+      </article>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-panel">
+    <p class="mb-0">No reviews yet. Be the first to rate this vendor.</p>
+  </div>
+  {% endif %}
+</section>
+
+<section class="surface-card reveal-on-scroll mt-4" data-delay="3">
+  <div
+    class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"
+  >
+    <h2 class="h4 mb-0">Menu Items</h2>
+    <span class="chip">
+      {% if show_all_items %}Total items: {{ menu_items|length }}{% else
+      %}Available items: {{ menu_items|length }}{% endif %}
+    </span>
+  </div>
+
+  {% if menu_items %}
+  <div class="row g-4">
+    {% for item in menu_items %}
+    <div
+      class="col-md-6 col-xl-4 reveal-on-scroll"
+      data-delay="{{ loop.index0 % 4 }}"
+    >
+      <article class="menu-item-card h-100">
+        {% if item.image_url %}
+        <img
+          src="{{ item.image_url }}"
+          class="menu-thumb"
+          alt="{{ item.name }} image"
+        />
+        {% else %}
+        <div class="menu-thumb vendor-placeholder">{{ item.name[0] }}</div>
+        {% endif %}
+
+        <div class="p-3 d-flex flex-column">
+          <div
+            class="d-flex justify-content-between align-items-start gap-2 mb-1"
+          >
+            <h3 class="h6 mb-0">{{ item.name }}</h3>
+            {% if show_all_items %}
+            <span
+              class="badge {% if item.is_available %}text-bg-success{% else %}text-bg-secondary{% endif %}"
+            >
+              {% if item.is_available %}Available{% else %}Unavailable{% endif
+              %}
+            </span>
+            {% endif %}
+          </div>
+          {% set item_rating = item_rating_map.get(item.id) if item_rating_map
+          else None %}
+          <div class="rating-inline mb-2">
+            <span class="rating-stars-display">
+              {% set item_avg = item_rating['avg_rating'] if item_rating else 0
+              %} {% for star in range(1, 6) %}
+              <i
+                class="bi {% if item_avg >= star - 0.25 %}bi-star-fill{% elif item_avg >= star - 0.75 %}bi-star-half{% else %}bi-star{% endif %}"
+              ></i>
+              {% endfor %}
+            </span>
+            <span class="rating-inline-score"
+              >{{ '%.1f'|format(item_avg) }}</span
+            >
+            <span class="rating-inline-count"
+              >({{ item_rating['review_count'] if item_rating else 0 }})</span
+            >
+          </div>
+          <p class="text-muted small mb-2">
+            {{ item.description or 'No description available.' }}
+          </p>
+          <p class="fw-semibold mb-2">
+            Price: ${{ '%.2f'|format(item.price|float) }}
+          </p>
+
+          <div class="nutrition-list mb-3">
+            <span
+              >Calories: {{ item.calories if item.calories is not none else
+              'N/A' }}</span
+            >
+            <span
+              >Protein: {{ item.protein if item.protein is not none else 'N/A'
+              }} g</span
+            >
+            <span
+              >Carbs: {{ item.carbohydrates if item.carbohydrates is not none
+              else 'N/A' }} g</span
+            >
+            <span
+              >Fats: {{ item.fats if item.fats is not none else 'N/A' }} g</span
+            >
+          </div>
+
+          {% if current_user.role == 'user' %}
+          <form
+            method="post"
+            action="{{ url_for('meal.add_vendor_item_to_my_meals', item_id=item.id) }}"
+            class="mt-auto mb-2"
+          >
+            <input type="hidden" name="next" value="{{ request.path }}" />
+            <div class="row g-2">
+              <div class="col-6">
+                <select
+                  name="meal_type"
+                  class="form-select form-select-sm form-control-industrial"
+                  required
+                >
+                  {% for type in meal_types %}
+                  <option
+                    value="{{ type }}"
+                    {%
+                    if
+                    type=="lunch"
+                    %}selected{%
+                    endif
+                    %}
+                  >
+                    {{ type|capitalize }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-6">
+                <input
+                  type="date"
+                  name="meal_date"
+                  class="form-control form-control-sm form-control-industrial"
+                  value="{{ default_meal_date }}"
+                  required
+                />
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn btn-industrial btn-sm w-100">
+                  Add to My Meals
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <form
+            method="post"
+            action="{{ url_for('favorites.toggle_menu_item_favorite', item_id=item.id) }}"
+            class="d-inline mb-2"
+          >
+            <input type="hidden" name="next" value="{{ request.path }}" />
+            <button
+              type="submit"
+              class="btn btn-sm {% if item.id in favorite_menu_item_ids %}btn-outline-danger{% else %}btn-outline-industrial{% endif %}"
+            >
+              <i
+                class="bi {% if item.id in favorite_menu_item_ids %}bi-heart-fill{% else %}bi-heart{% endif %} me-1"
+              ></i>
+              {% if item.id in favorite_menu_item_ids %}Saved{% else %}Save
+              Item{% endif %}
+            </button>
+          </form>
+          {% endif %}
+
+          <a
+            href="{{ url_for('vendor.menu_item_detail', item_id=item.id) }}"
+            class="btn btn-outline-industrial btn-sm"
+            >View Item</a
+          >
+        </div>
+      </article>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-panel">
+    <p class="mb-0">No available menu items for this vendor right now.</p>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,152 @@
+﻿{% extends "base.html" %}
+
+{% block title %}Nutrition Analytics | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card reveal-on-scroll mb-4 nutrition-analytics-hero page-header-card" data-delay="0">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <p class="eyebrow mb-1">Nutrition Analytics</p>
+            <h1 class="section-title mb-1">{% if is_system_view %}System Nutrition Analytics{% else %}My Nutrition Analytics{% endif %}</h1>
+            <p class="page-subtitle mb-0">
+                {% if is_system_view %}
+                    Analyze system-wide calories, macros, and trends across all meals.
+                {% else %}
+                    Analyze calories, macros, and nutrition trends from your own saved meals.
+                {% endif %}
+            </p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ url_for('nutrition.nutrition_search') }}" class="btn btn-outline-industrial">
+                <i class="bi bi-search me-1"></i> Nutrition Search
+            </a>
+            <a href="{{ url_for('nutrition.weekly_tracking') }}" class="btn btn-outline-industrial">
+                <i class="bi bi-calendar2-week me-1"></i> Weekly Tracking
+            </a>
+            {% if is_system_view %}
+                <a href="{{ url_for('admin.admin_meal_logs') }}" class="btn btn-industrial">
+                    <i class="bi bi-journal-text me-1"></i> Admin Meal Logs
+                </a>
+            {% else %}
+                <a href="{{ url_for('meal.my_meal_logs') }}" class="btn btn-industrial">
+                    <i class="bi bi-journal-check me-1"></i> My Meal Logs
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="1">
+        <article class="stat-card stat-calories h-100">
+            <div class="stat-icon"><i class="bi bi-fire"></i></div>
+            <p>Total Calories</p>
+            <h2>{{ total_calories }}</h2>
+        </article>
+    </div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="2">
+        <article class="stat-card stat-protein h-100">
+            <div class="stat-icon"><i class="bi bi-lightning-charge"></i></div>
+            <p>Total Protein</p>
+            <h2>{{ total_protein }} g</h2>
+        </article>
+    </div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="3">
+        <article class="stat-card stat-carbs h-100">
+            <div class="stat-icon"><i class="bi bi-bar-chart"></i></div>
+            <p>Total Carbs</p>
+            <h2>{{ total_carbohydrates }} g</h2>
+        </article>
+    </div>
+    <div class="col-sm-6 col-xl-3 reveal-on-scroll" data-delay="4">
+        <article class="stat-card stat-fats h-100">
+            <div class="stat-icon"><i class="bi bi-droplet-half"></i></div>
+            <p>Total Fats</p>
+            <h2>{{ total_fats }} g</h2>
+        </article>
+    </div>
+</section>
+
+<section class="surface-card reveal-on-scroll mb-4" data-delay="5">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <h2 class="h5 mb-0">Average Calories per Meal</h2>
+        <span class="avg-calorie-chip">{{ average_calories }}</span>
+    </div>
+
+    <hr>
+
+    <h3 class="h6 mb-3">Nutrition Insights</h3>
+    <div class="d-flex flex-wrap gap-2">
+        {% for insight in insight_tags %}
+            <span class="badge rounded-pill text-bg-info insight-pill">{{ insight }}</span>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="row g-4 mb-4" id="nutrition-analytics-charts" data-endpoint="{{ url_for('nutrition.nutrition_analytics_data_api') }}">
+    <div class="col-lg-6 reveal-on-scroll" data-delay="6">
+        <div class="surface-card h-100">
+            <h3 class="h6 mb-3">Calories per Meal</h3>
+            <canvas id="caloriesBarChart" height="220"></canvas>
+            <p class="small text-muted mt-2 mb-0" id="barChartEmptyMessage"></p>
+        </div>
+    </div>
+    <div class="col-lg-6 reveal-on-scroll" data-delay="7">
+        <div class="surface-card h-100">
+            <h3 class="h6 mb-3">Macronutrient Distribution</h3>
+            <canvas id="macroPieChart" height="220"></canvas>
+            <p class="small text-muted mt-2 mb-0" id="pieChartEmptyMessage"></p>
+        </div>
+    </div>
+    <div class="col-12 reveal-on-scroll" data-delay="8">
+        <div class="surface-card h-100">
+            <h3 class="h6 mb-3">Meals Over Time (Calories)</h3>
+            <canvas id="timelineLineChart" height="110"></canvas>
+            <p class="small text-muted mt-2 mb-0" id="lineChartEmptyMessage"></p>
+        </div>
+    </div>
+</section>
+
+<section class="surface-card reveal-on-scroll" data-delay="9">
+    <h3 class="h5 mb-3">Recent Analyzed Meals</h3>
+
+    {% if recent_meals %}
+        <div class="table-responsive">
+            <table class="table align-middle app-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Meal</th>
+                        <th scope="col">Image</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Calories</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for meal in recent_meals %}
+                        <tr>
+                            <td>{{ meal.title or meal.meal_type|capitalize ~ ' Meal' }}</td>
+                            <td><img src="{{ meal.image_url }}" alt="Meal image" class="table-thumb"></td>
+                            <td>{{ meal.meal_date.strftime('%d %b %Y') }}</td>
+                            <td>{{ meal.calories if meal.calories is not none else 'N/A' }}</td>
+                            <td>
+                                <a href="{{ url_for('meal.meal_detail', meal_id=meal.id) }}" class="btn btn-sm btn-outline-industrial">View</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-panel">
+            <p class="mb-2">No analyzed meal data yet.</p>
+            <a href="{{ url_for('nutrition.nutrition_search') }}" class="btn btn-outline-industrial btn-sm">Analyze meals now</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/nutrition_analytics.js') }}"></script>
+{% endblock %}

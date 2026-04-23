@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Meal Detail | NutriSnap{% endblock %}
+
+{% block content %}
+<section class="surface-card page-header-card reveal-on-scroll" data-delay="0">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2">
+        <div>
+            <p class="eyebrow mb-1">Admin Moderation</p>
+            <h1 class="section-title mb-1">Admin Meal Detail</h1>
+            <p class="page-subtitle mb-0">Detailed meal view with uploader context and moderation action.</p>
+        </div>
+        <a href="{{ url_for('admin.admin_meal_logs') }}" class="btn btn-outline-industrial">Back to Admin Meal Logs</a>
+    </div>
+</section>
+
+<section class="row g-4 mt-1">
+    <div class="col-lg-7 reveal-on-scroll" data-delay="1">
+        <div class="media-frame h-100">
+            <img src="{{ meal.image_url }}" class="img-fluid rounded-3" alt="Meal image">
+        </div>
+    </div>
+
+    <div class="col-lg-5 reveal-on-scroll" data-delay="2">
+        <div class="surface-card h-100 detail-panel">
+            <h2 class="h5 mb-3">Meal Metadata</h2>
+            <div class="kv-list">
+                <div><span>Uploader</span><strong>{{ meal.user.name if meal.user else 'Legacy / Unknown' }}</strong></div>
+                <div><span>Uploader Email</span><strong>{{ meal.user.email if meal.user else 'N/A' }}</strong></div>
+                <div><span>Meal Type</span><strong>{{ meal.meal_type|capitalize }}</strong></div>
+                <div><span>Meal Date</span><strong>{{ meal.meal_date.strftime('%d %b %Y') }}</strong></div>
+                <div><span>Title</span><strong>{{ meal.title if meal.title else '-' }}</strong></div>
+                <div><span>Note</span><strong>{{ meal.note if meal.note else '-' }}</strong></div>
+            </div>
+
+            <hr>
+
+            <h2 class="h6 mb-2">Nutrition</h2>
+            <div class="nutrition-mini-grid mb-2">
+                <span>Calories: {{ meal.calories if meal.calories is not none else 'N/A' }}</span>
+                <span>Protein: {{ meal.protein if meal.protein is not none else 'N/A' }} g</span>
+                <span>Carbs: {{ meal.carbohydrates if meal.carbohydrates is not none else 'N/A' }} g</span>
+                <span>Fats: {{ meal.fats if meal.fats is not none else 'N/A' }} g</span>
+            </div>
+
+            <p class="meta-time mb-1">Created: {{ meal.created_at.strftime('%d %b %Y, %I:%M %p') }}</p>
+            <p class="meta-time">Updated: {{ meal.updated_at.strftime('%d %b %Y, %I:%M %p') }}</p>
+
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <a href="{{ url_for('meal.meal_detail', meal_id=meal.id) }}" class="btn btn-outline-industrial">Open Public Detail</a>
+                <form action="{{ url_for('admin.admin_delete_meal', meal_id=meal.id) }}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger" data-confirm-delete="Delete this meal from system?">Delete Meal</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
