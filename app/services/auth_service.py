@@ -15,7 +15,7 @@ def redirect_for_role(user) -> str:
         if user.vendor_status == "approved":
             return url_for("vendor.vendor_dashboard")
         return url_for("auth.vendor_pending")
-#vendor pending page for pending and rejected vendor accounts
+
     if user.role == "nutrition_expert":
         if user.expert_status == "approved":
             return url_for("advice.expert_advice_dashboard")
