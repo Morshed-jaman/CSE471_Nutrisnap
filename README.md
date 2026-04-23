@@ -114,9 +114,13 @@ CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 NUTRITION_API_KEY=
+
+# Direct OpenAI
 OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4o-mini
 OPENAI_BASE_URL=https://api.openai.com/v1/chat/completions
+
+# OpenRouter (optional)
 OPENROUTER_API_KEY=
 OPENROUTER_SITE_URL=
 OPENROUTER_SITE_NAME=
@@ -130,6 +134,13 @@ MAIL_USERNAME=yourgmail@gmail.com
 MAIL_PASSWORD=your-google-app-password
 MAIL_USE_TLS=true
 MAIL_DEFAULT_SENDER=yourgmail@gmail.com
+```
+
+If you use OpenRouter, change `OPENAI_BASE_URL` to:
+
+```env
+OPENAI_BASE_URL=https://openrouter.ai/api/v1/chat/completions
+OPENAI_MODEL=openai/gpt-4o-mini
 ```
 
 ## Setup

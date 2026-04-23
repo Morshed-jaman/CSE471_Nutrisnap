@@ -90,24 +90,39 @@ def _ensure_default_admin(app: Flask) -> None:
     db.session.commit()
 
 
+def _clean_optional_env(key: str, default: str | None = None) -> str | None:
+    value = os.getenv(key, default)
+    if value is None:
+        return None
+
+    cleaned = str(value).strip()
+    if not cleaned:
+        return None
+
+    if len(cleaned) >= 2 and cleaned[0] == cleaned[-1] and cleaned[0] in {'"', "'"}:
+        cleaned = cleaned[1:-1].strip()
+
+    return cleaned or None
+
+
 def create_app(config_class: type[Config] = Config) -> Flask:
     load_dotenv(override=True)
 
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(config_class)
 
-    app.config["CLOUDINARY_CLOUD_NAME"] = os.getenv("CLOUDINARY_CLOUD_NAME")
-    app.config["CLOUDINARY_API_KEY"] = os.getenv("CLOUDINARY_API_KEY")
-    app.config["CLOUDINARY_API_SECRET"] = os.getenv("CLOUDINARY_API_SECRET")
-    app.config["NUTRITION_API_KEY"] = os.getenv("NUTRITION_API_KEY")
-    app.config["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
-    app.config["OPENAI_MODEL"] = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-    app.config["OPENAI_BASE_URL"] = os.getenv(
+    app.config["CLOUDINARY_CLOUD_NAME"] = _clean_optional_env("CLOUDINARY_CLOUD_NAME")
+    app.config["CLOUDINARY_API_KEY"] = _clean_optional_env("CLOUDINARY_API_KEY")
+    app.config["CLOUDINARY_API_SECRET"] = _clean_optional_env("CLOUDINARY_API_SECRET")
+    app.config["NUTRITION_API_KEY"] = _clean_optional_env("NUTRITION_API_KEY")
+    app.config["OPENAI_API_KEY"] = _clean_optional_env("OPENAI_API_KEY")
+    app.config["OPENAI_MODEL"] = _clean_optional_env("OPENAI_MODEL", "gpt-4o-mini") or "gpt-4o-mini"
+    app.config["OPENAI_BASE_URL"] = _clean_optional_env(
         "OPENAI_BASE_URL", "https://api.openai.com/v1/chat/completions"
     )
-    app.config["OPENROUTER_API_KEY"] = os.getenv("OPENROUTER_API_KEY")
-    app.config["OPENROUTER_SITE_URL"] = os.getenv("OPENROUTER_SITE_URL")
-    app.config["OPENROUTER_SITE_NAME"] = os.getenv("OPENROUTER_SITE_NAME")
+    app.config["OPENROUTER_API_KEY"] = _clean_optional_env("OPENROUTER_API_KEY")
+    app.config["OPENROUTER_SITE_URL"] = _clean_optional_env("OPENROUTER_SITE_URL")
+    app.config["OPENROUTER_SITE_NAME"] = _clean_optional_env("OPENROUTER_SITE_NAME")
 
     db.init_app(app)
     login_manager.init_app(app)

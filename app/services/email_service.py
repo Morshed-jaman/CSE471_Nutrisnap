@@ -60,6 +60,17 @@ def _subscription_email_text(vendor, user) -> str:
     )
 
 
+def _looks_like_placeholder_mail_value(value: str | None) -> bool:
+    text = (value or "").strip().lower()
+    return text in {
+        "",
+        "yourgmail@gmail.com",
+        "your-google-app-password",
+        "example@example.com",
+        "changeme",
+    }
+
+
 def _smtp_candidates(server: str, port: int, use_tls: bool) -> list[dict[str, object]]:
     candidates = [{"server": server, "port": port, "use_tls": use_tls, "use_ssl": False}]
 
@@ -113,6 +124,18 @@ def send_vendor_subscription_email(vendor, user) -> EmailSendResult:
             warning_message="the vendor notification email could not be sent because the vendor email is invalid or missing.",
         )
 
+    if _looks_like_placeholder_mail_value(smtp_username) or _looks_like_placeholder_mail_value(
+        smtp_password
+    ) or _looks_like_placeholder_mail_value(sender):
+        current_app.logger.info(
+            "Vendor subscription email skipped for vendor %s because placeholder SMTP settings are still in use.",
+            vendor.id,
+        )
+        return EmailSendResult(
+            sent=False,
+            warning_message="vendor notification email is not configured yet.",
+        )
+
     if not smtp_server or not smtp_port or not smtp_username or not smtp_password or not sender:
         current_app.logger.warning(
             "Vendor subscription email skipped for vendor %s because SMTP configuration is incomplete.",
@@ -120,7 +143,7 @@ def send_vendor_subscription_email(vendor, user) -> EmailSendResult:
         )
         return EmailSendResult(
             sent=False,
-            warning_message="the vendor notification email could not be sent because email is not configured.",
+            warning_message="vendor notification email is not configured yet.",
         )
 
     message = EmailMessage()

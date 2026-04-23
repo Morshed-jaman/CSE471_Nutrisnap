@@ -341,8 +341,6 @@ def nutrition_search():
 
 
 
-@nutrition_bp.route("/water-intake", methods=["GET"])
-@nutrition_bp.route("/water-tracker", methods=["GET"])
 @nutrition_bp.route("/nutrition-explanation", methods=["GET", "POST"])
 @login_required
 @role_required("user", "admin")
@@ -401,7 +399,8 @@ def nutrition_explanation():
     )
 
 
-@nutrition_bp.route("/water-intake", methods=["GET", "POST"])
+@nutrition_bp.route("/water-intake", methods=["GET"])
+@nutrition_bp.route("/water-tracker", methods=["GET"])
 @login_required
 @role_required("user")
 def water_tracker():

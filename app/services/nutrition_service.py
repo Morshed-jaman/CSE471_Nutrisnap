@@ -16,20 +16,34 @@ class NutritionServiceError(RuntimeError):
     """Raised when nutrition data cannot be retrieved or parsed."""
 
 
+def _clean_env_value(value: str | None) -> str | None:
+    if value is None:
+        return None
+
+    cleaned = str(value).strip()
+    if not cleaned:
+        return None
+
+    if len(cleaned) >= 2 and cleaned[0] == cleaned[-1] and cleaned[0] in {'"', "'"}:
+        cleaned = cleaned[1:-1].strip()
+
+    return cleaned or None
+
+
 def _config_or_env(key: str, default: str | None = None) -> str | None:
     if has_app_context():
-        config_value = current_app.config.get(key)
-        if config_value not in (None, ""):
-            return str(config_value)
+        config_value = _clean_env_value(current_app.config.get(key))
+        if config_value is not None:
+            return config_value
 
-    env_value = os.getenv(key)
-    if env_value not in (None, ""):
+    env_value = _clean_env_value(os.getenv(key))
+    if env_value is not None:
         return env_value
 
     # Recover from stale process env after runtime .env changes.
     load_dotenv(override=True)
-    env_value = os.getenv(key)
-    if env_value not in (None, ""):
+    env_value = _clean_env_value(os.getenv(key))
+    if env_value is not None:
         return env_value
 
     return default
@@ -41,6 +55,53 @@ def _uses_openrouter(endpoint: str) -> bool:
 
 def _ai_provider_name(endpoint: str) -> str:
     return "OpenRouter" if _uses_openrouter(endpoint) else "OpenAI"
+
+
+def _looks_like_openrouter_key(api_key: str | None) -> bool:
+    return bool(api_key and api_key.startswith("sk-or-"))
+
+
+def _looks_like_openai_key(api_key: str | None) -> bool:
+    return bool(api_key and api_key.startswith("sk-") and not _looks_like_openrouter_key(api_key))
+
+
+def _resolve_ai_credentials(endpoint: str) -> tuple[str, str]:
+    provider_name = _ai_provider_name(endpoint)
+    openai_api_key = _config_or_env("OPENAI_API_KEY")
+    openrouter_api_key = _config_or_env("OPENROUTER_API_KEY")
+
+    if _uses_openrouter(endpoint):
+        api_key = openrouter_api_key or openai_api_key
+        if not api_key:
+            raise NutritionServiceError(
+                "OpenRouter is selected, but OPENROUTER_API_KEY is missing. "
+                "Set OPENROUTER_API_KEY in your .env file and reload the app."
+            )
+        if _looks_like_openai_key(api_key):
+            raise NutritionServiceError(
+                "OpenRouter endpoint is configured, but the API key looks like an OpenAI key. "
+                "Use OPENROUTER_API_KEY for the OpenRouter endpoint."
+            )
+        return provider_name, api_key
+
+    api_key = openai_api_key
+    if not api_key:
+        if _looks_like_openrouter_key(openrouter_api_key):
+            raise NutritionServiceError(
+                "OpenAI endpoint is configured, but only an OpenRouter key is set. "
+                "Either add OPENAI_API_KEY or switch OPENAI_BASE_URL to the OpenRouter endpoint."
+            )
+        raise NutritionServiceError(
+            "OpenAI is selected, but OPENAI_API_KEY is missing. "
+            "Set OPENAI_API_KEY in your .env file and reload the app."
+        )
+    if _looks_like_openrouter_key(api_key):
+        raise NutritionServiceError(
+            "OpenAI endpoint is configured, but OPENAI_API_KEY currently contains an OpenRouter key. "
+            "Add a real OpenAI key or switch OPENAI_BASE_URL to the OpenRouter endpoint."
+        )
+
+    return provider_name, api_key
 
 
 def _build_ai_headers(api_key: str, endpoint: str) -> dict:
@@ -227,18 +288,12 @@ def get_nutrition_insights(calories, protein, carbohydrates, fats):
 
 
 def get_ai_nutrition_explanation(food_name: str, nutrition_data: dict) -> str:
-    openai_api_key = _config_or_env("OPENAI_API_KEY") or _config_or_env("OPENROUTER_API_KEY")
-    if not openai_api_key:
-        raise NutritionServiceError(
-            "OPENAI_API_KEY (or OPENROUTER_API_KEY) is missing. Please set it in your .env file and reload the app."
-        )
-
     model_name = _config_or_env("OPENAI_MODEL", DEFAULT_OPENAI_MODEL) or DEFAULT_OPENAI_MODEL
     endpoint = (
         _config_or_env("OPENAI_BASE_URL", DEFAULT_AI_CHAT_COMPLETIONS_ENDPOINT)
         or DEFAULT_AI_CHAT_COMPLETIONS_ENDPOINT
     )
-    provider_name = _ai_provider_name(endpoint)
+    provider_name, api_key = _resolve_ai_credentials(endpoint)
     query = (food_name or "").strip()
     if not query:
         raise NutritionServiceError("Please provide a food name for AI explanation.")
@@ -296,7 +351,7 @@ def get_ai_nutrition_explanation(food_name: str, nutrition_data: dict) -> str:
     try:
         response = requests.post(
             endpoint,
-            headers=_build_ai_headers(openai_api_key, endpoint),
+            headers=_build_ai_headers(api_key, endpoint),
             json=payload,
             timeout=25,
         )
@@ -304,7 +359,10 @@ def get_ai_nutrition_explanation(food_name: str, nutrition_data: dict) -> str:
         raise NutritionServiceError("Could not connect to the AI explanation service.") from exc
 
     if response.status_code in (401, 403):
-        raise NutritionServiceError(f"{provider_name} API key is invalid or not authorized.")
+        raise NutritionServiceError(
+            f"{provider_name} rejected the API key or model access. "
+            f"Check the selected endpoint and confirm the account can use model '{model_name}'."
+        )
 
     if response.status_code == 429:
         raise NutritionServiceError(

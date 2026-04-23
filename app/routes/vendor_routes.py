@@ -300,12 +300,11 @@ def subscribe_vendor(vendor_id: int):
         return _safe_redirect_url("vendor.vendor_detail", vendor_id=vendor.id)
 
     email_result = send_vendor_subscription_email(vendor, current_user)
-    if email_result.sent:
-        flash(f"You are now subscribed to {vendor.name}.", "success")
-    else:
+    flash(f"You are now subscribed to {vendor.name}.", "success")
+    if not email_result.sent:
         flash(
-            f"You are now subscribed to {vendor.name}, but {email_result.warning_message or 'the vendor notification email could not be sent.'}",
-            "warning",
+            email_result.warning_message or "Vendor notification email could not be sent.",
+            "info",
         )
 
     return _safe_redirect_url("vendor.vendor_detail", vendor_id=vendor.id)
