@@ -19,6 +19,7 @@ class NutritionServiceError(RuntimeError):
 def _clean_env_value(value: str | None) -> str | None:
     if value is None:
         return None
+#env values mainly
 
     cleaned = str(value).strip()
     if not cleaned:

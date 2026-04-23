@@ -161,7 +161,7 @@ def build_weekly_tracking_context(week_start: date, user_id: int | None = None) 
         total_meals,
         analyzed_meals,
     )
-
+#33333333333333333333
     chart_payload = {
         "labels": [f"{day['short_label']} {day['display_date']}" for day in daily_breakdown],
         "calories_by_day": [day["calories"] for day in daily_breakdown],
@@ -190,6 +190,7 @@ def build_weekly_tracking_context(week_start: date, user_id: int | None = None) 
         "weekly_insights": weekly_insights,
         "chart_payload": chart_payload,
     }
+#manuakkuyhihbj
 # total_calories = 0.0
  #   total_protein = 0.0
     #manually fix
