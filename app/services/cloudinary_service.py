@@ -18,8 +18,10 @@ def _configure_cloudinary() -> None:
         api_key=api_key,
         api_secret=api_secret,
         secure=True,
-    )
+        #secure=True,
 
+    )
+# configure cloudinary then delete the image using its public id
 
 def upload_image(file_path: str, folder: str = "meal_logs") -> tuple[str, str | None]:
     _configure_cloudinary()

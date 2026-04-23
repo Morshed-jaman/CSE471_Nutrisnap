@@ -65,3 +65,11 @@ def get_hydration_recommendation() -> dict:
         }
      # weather API faled so using fallback gol frm config
         # stil returning a valid response so the app doesn't crsh
+                # successfully got temperature from weather API
+        # calculated water goal based on how hot or cold it is today
+        # returning temperature and recommended water intake to the caller
+        #   return {
+          #  "temperature_c": round(temperature_c, 1) if temperature_c is not None else None,
+          #  "recommended_ml": recommended_ml,
+          #  "reason_text": reason_text,
+      #  }

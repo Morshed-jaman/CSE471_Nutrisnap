@@ -8,14 +8,16 @@ def safe_float(value):
         return float(value) if value is not None else 0.0
     except (TypeError, ValueError):
         return 0.0
-
+## checks if a meal has at least one nutrition value (calories, protein, etc.)
 
 def has_nutrition_values(meal: MealLog) -> bool:
     return any(
         value is not None
         for value in [meal.calories, meal.protein, meal.carbohydrates, meal.fats]
     )
-
+#importing MealLog model to use meal data
+###############################################
+#3333
 
 def week_start_for(day_value: date) -> date:
     return day_value - timedelta(days=day_value.weekday())
@@ -188,3 +190,6 @@ def build_weekly_tracking_context(week_start: date, user_id: int | None = None) 
         "weekly_insights": weekly_insights,
         "chart_payload": chart_payload,
     }
+# total_calories = 0.0
+ #   total_protein = 0.0
+    #manually fix
