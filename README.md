@@ -10,14 +10,19 @@ NutriSnap is a Flask web application for meal logging, vendor discovery, nutriti
 - Module 2 Feature 2: Weekly Nutrition Tracking
 - Module 2 Feature 3: AI-Based Nutrition Explanation (OpenAI API)
 - Module 3 Feature 1: Vendor Menu Listing Management
-- Common Workflows: Registration, Login, Multi-Role Access, Vendor Approval, Admin Moderation
+- Module 3 Feature 2: Review & Rating System  
+- Module 3 Feature 3: Water Intake Tracker  
+- Module 3 Feature 4: Subscribecribe / Unsubscribe to Vendors with Email Notification  
+- Module 3 Feature 5: AI Based Nutrition Explanation (OpenAI API)
+- Module 3 Feature 6: Nutritionist Advisor (Subscriber Feature)  
+- Common Workflows: Registration & Login of Vendors, Advisor, Users a Multi-Role Access, Vendor Approval, Admin Moderation
 
 ## Tech Stack
 
 - Flask
 - Flask-SQLAlchemy
 - Flask-Login
-- SQLite (default)
+- SQLite 
 - Jinja2 templates
 - Bootstrap 5
 - Chart.js
