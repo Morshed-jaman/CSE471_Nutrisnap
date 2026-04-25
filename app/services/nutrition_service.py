@@ -326,7 +326,8 @@ def get_ai_nutrition_explanation(food_name: str, nutrition_data: dict) -> str:
         f"- Protein: {_display(normalized_nutrition.get('protein'), 'g')}\n"
         f"- Carbohydrates: {_display(normalized_nutrition.get('carbohydrates'), 'g')}\n"
         f"- Fats: {_display(normalized_nutrition.get('fats'), 'g')}\n"
-        "Give a short and easy-to-understand explanation of nutritional benefits."
+        "Give a short and easy-to-understand explanation of nutritional benefits. "
+        "Do not use markdown, bullet points, or asterisk symbols."
     )
 
     payload = {
@@ -335,8 +336,8 @@ def get_ai_nutrition_explanation(food_name: str, nutrition_data: dict) -> str:
             {
                 "role": "system",
                 "content": (
-                    "You are a nutrition assistant for general education. "
-                    "Write in simple language, keep it to 2-3 short sentences, and avoid medical claims."
+                    "You are a nutrition assistant for general health care service. "
+                    "Write in simple language, keep it to 7-10 short sentences, and with medical terms and use the statictic of the food and the nutritional data give me insights on the food and what the nutritional benefits with each nutrient will have. Keep all the data in the explanation always."
                 ),
             },
             {
@@ -400,7 +401,8 @@ def get_ai_nutrition_explanation(food_name: str, nutrition_data: dict) -> str:
             if isinstance(item, dict) and item.get("text")
         )
 
-    explanation = re.sub(r"\s+", " ", (content or "")).strip()
+    explanation = re.sub(r"\*+", "", (content or ""))
+    explanation = re.sub(r"\s+", " ", explanation).strip()
     if not explanation:
         raise NutritionServiceError("AI explanation service returned an empty response.")
 

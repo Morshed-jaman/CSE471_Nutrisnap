@@ -7,8 +7,9 @@ NutriSnap{% endblock %} {% block content %}
       <h1 class="section-title mb-1">Nutrition Explanation</h1>
       <p class="page-subtitle mb-0">
         {% if is_system_view %} Generate a short nutrition explanation as admin
-        from provided nutrition values. {% else %} Get a simple explanation of
-        nutritional benefits from provided nutrition values. {% endif %}
+        from nutrition values you provide below. {% else %} Generate an
+        AI-powered nutrition summary from the values below, or open this page
+        from Nutrition Search to prefill them first.  AI-generated info may vary in accuracy.{% endif %}
       </p>
     </div>
     <div class="d-flex flex-wrap gap-2">
@@ -47,7 +48,7 @@ NutriSnap{% endblock %} {% block content %}
         <i class="bi bi-stars me-1"></i> Generate AI Explanation
       </button>
       <small class="d-block text-muted mt-2"
-        >This page does not call Nutrition API.</small
+        >AI-generated explanations may vary in accuracy.</small
       >
     </div>
 
