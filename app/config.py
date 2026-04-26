@@ -50,12 +50,9 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 
     database_url = _normalize_database_url(os.getenv("DATABASE_URL"))
-    is_vercel = os.getenv("VERCEL") == "1"
 
     if database_url:
         SQLALCHEMY_DATABASE_URI = database_url
-    elif is_vercel:
-        SQLALCHEMY_DATABASE_URI = "sqlite:////tmp/meal_logs.db"
     else:
         SQLALCHEMY_DATABASE_URI = f"sqlite:///{(BASE_DIR / 'meal_logs.db').as_posix()}"
 
