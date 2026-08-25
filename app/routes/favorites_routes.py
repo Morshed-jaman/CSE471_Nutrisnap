@@ -1,7 +1,7 @@
 from urllib.parse import urlsplit
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
-from flask_login import login_required
+from flask_login import current_user, login_required
 
 from app.extensions import db
 from app.models import (
@@ -40,7 +40,7 @@ def _safe_next_url(default_endpoint: str, **default_values) -> str:
 def favorites_list():
     favorite_vendors = (
         FavoriteVendor.query.join(Vendor)
-        .filter(Vendor.is_active.is_(True))
+        .filter(FavoriteVendor.user_id == current_user.id, Vendor.is_active.is_(True))
         .order_by(FavoriteVendor.created_at.desc())
         .all()
     )
@@ -48,12 +48,21 @@ def favorites_list():
     favorite_menu_items = (
         FavoriteMenuItem.query.join(MenuItem)
         .join(Vendor)
-        .filter(MenuItem.is_available.is_(True), Vendor.is_active.is_(True))
+        .filter(
+            FavoriteMenuItem.user_id == current_user.id,
+            MenuItem.is_available.is_(True),
+            Vendor.is_active.is_(True),
+        )
         .order_by(FavoriteMenuItem.created_at.desc())
         .all()
     )
 
-    favorite_meals = FavoriteMeal.query.join(MealLog).order_by(FavoriteMeal.created_at.desc()).all()
+    favorite_meals = (
+        FavoriteMeal.query.join(MealLog)
+        .filter(FavoriteMeal.user_id == current_user.id)
+        .order_by(FavoriteMeal.created_at.desc())
+        .all()
+    )
 
     menu_item_indicator_map = {
         favorite.menu_item.id: get_nutrition_insights(
@@ -93,7 +102,7 @@ def toggle_vendor_favorite(vendor_id: int):
     if not vendor:
         abort(404)
 
-    favorite = FavoriteVendor.query.filter_by(vendor_id=vendor.id).first()
+    favorite = FavoriteVendor.query.filter_by(user_id=current_user.id, vendor_id=vendor.id).first()
     next_url = _safe_next_url("vendor.vendor_detail", vendor_id=vendor.id)
 
     try:
@@ -101,7 +110,7 @@ def toggle_vendor_favorite(vendor_id: int):
             db.session.delete(favorite)
             flash(f"Removed {vendor.name} from favorites.", "info")
         else:
-            db.session.add(FavoriteVendor(vendor_id=vendor.id))
+            db.session.add(FavoriteVendor(user_id=current_user.id, vendor_id=vendor.id))
             flash(f"Saved {vendor.name} to favorites.", "success")
 
         db.session.commit()
@@ -120,7 +129,9 @@ def toggle_menu_item_favorite(item_id: int):
     if not menu_item or not menu_item.is_available or not menu_item.vendor or not menu_item.vendor.is_active:
         abort(404)
 
-    favorite = FavoriteMenuItem.query.filter_by(menu_item_id=menu_item.id).first()
+    favorite = FavoriteMenuItem.query.filter_by(
+        user_id=current_user.id, menu_item_id=menu_item.id
+    ).first()
     next_url = _safe_next_url("vendor.menu_item_detail", item_id=menu_item.id)
 
     try:
@@ -128,7 +139,7 @@ def toggle_menu_item_favorite(item_id: int):
             db.session.delete(favorite)
             flash(f"Removed {menu_item.name} from favorites.", "info")
         else:
-            db.session.add(FavoriteMenuItem(menu_item_id=menu_item.id))
+            db.session.add(FavoriteMenuItem(user_id=current_user.id, menu_item_id=menu_item.id))
             flash(f"Saved {menu_item.name} to favorites.", "success")
 
         db.session.commit()
@@ -147,7 +158,7 @@ def toggle_meal_favorite(meal_id: int):
     if not meal:
         abort(404)
 
-    favorite = FavoriteMeal.query.filter_by(meal_log_id=meal.id).first()
+    favorite = FavoriteMeal.query.filter_by(user_id=current_user.id, meal_log_id=meal.id).first()
     next_url = _safe_next_url("meal.meal_detail", meal_id=meal.id)
 
     meal_name = meal.title or f"{meal.meal_type.capitalize()} meal"
@@ -157,7 +168,7 @@ def toggle_meal_favorite(meal_id: int):
             db.session.delete(favorite)
             flash(f"Removed {meal_name} from favorites.", "info")
         else:
-            db.session.add(FavoriteMeal(meal_log_id=meal.id))
+            db.session.add(FavoriteMeal(user_id=current_user.id, meal_log_id=meal.id))
             flash(f"Saved {meal_name} to favorites.", "success")
 
         db.session.commit()

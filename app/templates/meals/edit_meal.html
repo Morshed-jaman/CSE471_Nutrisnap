@@ -16,6 +16,7 @@
 
 <section class="surface-card reveal-on-scroll" data-delay="1">
     <form action="{{ url_for('meal.edit_meal', meal_id=meal.id) }}" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="row g-4">
             <div class="col-lg-7">
                 <div class="mb-3">

@@ -5,7 +5,7 @@ from flask_login import current_user, login_user
 from sqlalchemy import or_
 
 from app.extensions import db
-from app.models import MealLog, MenuItem, Review, User, Vendor
+from app.models import CartItem, MealLog, MenuItem, OrderItem, Review, User, Vendor
 from app.services.auth_service import admin_required, redirect_for_role
 from app.services.cloudinary_service import delete_image
 
@@ -381,6 +381,14 @@ def admin_delete_menu_item(item_id: int):
 
     public_id = item.cloudinary_public_id
     try:
+        if OrderItem.query.filter_by(menu_item_id=item.id).first():
+            item.is_available = False
+            CartItem.query.filter_by(menu_item_id=item.id).delete()
+            db.session.commit()
+            flash("Item archived because paid order history must be preserved.", "info")
+            return redirect(url_for("admin.admin_menu_items"))
+
+        CartItem.query.filter_by(menu_item_id=item.id).delete()
         db.session.delete(item)
         db.session.commit()
 

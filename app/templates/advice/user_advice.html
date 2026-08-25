@@ -21,6 +21,7 @@
     </div>
 
     <form method="post" action="{{ url_for('advice.user_advice') }}" class="row g-3">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="col-12">
             <label for="question_text" class="form-label">Your Nutrition Question</label>
             <textarea

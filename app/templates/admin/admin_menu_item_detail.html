@@ -22,7 +22,7 @@
             {% endif %}
             <h2 class="h5 mb-1">{{ item.name }}</h2>
             <p class="text-muted mb-2">{{ item.description or 'No description provided.' }}</p>
-            <p class="fw-semibold mb-0">Price: ${{ '%.2f'|format(item.price|float) }}</p>
+            <p class="fw-semibold mb-0">Price: ৳{{ '%.2f'|format(item.price|float) }}</p>
         </div>
     </div>
     <div class="col-lg-6 reveal-on-scroll" data-delay="2">
@@ -50,6 +50,7 @@
             <div class="d-flex flex-wrap gap-2 mt-3">
                 <a href="{{ url_for('vendor.menu_item_detail', item_id=item.id) }}" class="btn btn-outline-industrial">Open Public Item View</a>
                 <form action="{{ url_for('admin.admin_delete_menu_item', item_id=item.id) }}" method="post" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-outline-danger" data-confirm-delete="Delete this menu item?">Delete Item</button>
                 </form>
             </div>

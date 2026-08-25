@@ -37,7 +37,7 @@
                         </span>
                     </div>
                     <p class="text-muted small mb-2">{{ item.description or 'No description available.' }}</p>
-                    <p class="fw-semibold mb-2">Price: ${{ '%.2f'|format(item.price|float) }}</p>
+                    <p class="fw-semibold mb-2">Price: ৳{{ '%.2f'|format(item.price|float) }}</p>
                     <div class="nutrition-list mb-3">
                         <span>Calories: {{ item.calories if item.calories is not none else 'N/A' }}</span>
                         <span>Protein: {{ item.protein if item.protein is not none else 'N/A' }} g</span>
@@ -48,11 +48,13 @@
                     <div class="d-flex flex-wrap gap-2 mt-auto">
                         <a href="{{ url_for('vendor.edit_menu_item', item_id=item.id) }}" class="btn btn-sm btn-outline-industrial">Edit</a>
                         <form action="{{ url_for('vendor.toggle_menu_item_availability', item_id=item.id) }}" method="post" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-sm btn-outline-secondary">
                                 {% if item.is_available %}Set Unavailable{% else %}Set Available{% endif %}
                             </button>
                         </form>
                         <form action="{{ url_for('vendor.delete_menu_item', item_id=item.id) }}" method="post" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm-delete="Delete this menu item?">Delete</button>
                         </form>
                     </div>

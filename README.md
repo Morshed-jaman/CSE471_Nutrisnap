@@ -1,6 +1,6 @@
 ﻿# NutriSnap
 
-NutriSnap is a Flask web application for meal logging, vendor discovery, nutrition retrieval, and analytics workflows.
+NutriSnap is a multi-role Flask application for meal logging, nutrition analytics, vendor discovery, food ordering, and paid nutrition subscriptions.
 
 ## Implemented Modules
 
@@ -16,6 +16,9 @@ NutriSnap is a Flask web application for meal logging, vendor discovery, nutriti
 - Module 3 Feature 4: Subscribecribe / Unsubscribe to Vendors with Email Notification  
 - Module 3 Feature 5: AI Based Nutrition Explanation (OpenAI API)
 - Module 3 Feature 6: Nutritionist Advisor (Subscriber Feature)  
+- Commerce: persistent cart, single-vendor checkout, order history, fulfilment status, and BDT delivery fees
+- Payments: SSLCOMMERZ Sandbox checkout, IPN, server-side validation, risk checks, and idempotent fulfilment
+- Premium: monthly, quarterly, and annual paid nutrition subscriptions
 - Common Workflows: Registration & Login of Vendors, Advisor, Users a Multi-Role Access, Vendor Approval, Admin Moderation
 
 ## Tech Stack
@@ -23,6 +26,8 @@ NutriSnap is a Flask web application for meal logging, vendor discovery, nutriti
 - Flask
 - Flask-SQLAlchemy
 - Flask-Login
+- Flask-Migrate / Alembic
+- Flask-WTF CSRF protection
 - SQLite 
 - Jinja2 templates
 - Bootstrap 5
@@ -30,6 +35,7 @@ NutriSnap is a Flask web application for meal logging, vendor discovery, nutriti
 - Cloudinary
 - Spoonacular API
 - OpenAI API (or OpenRouter using OpenAI-compatible endpoint)
+- SSLCOMMERZ payment gateway
 
 ## Project Structure
 
@@ -44,6 +50,7 @@ nutrisnap/
       meal_log.py
       menu_item.py
       user.py
+      commerce.py
       vendor.py
       vendor_profile.py
     routes/
@@ -52,11 +59,13 @@ nutrisnap/
       meal_routes.py
       nutrition_routes.py
       vendor_routes.py
+      commerce_routes.py
     services/
       analytics_service.py
       auth_service.py
       cloudinary_service.py
       nutrition_service.py
+      sslcommerz_service.py
     templates/
       auth/
       admin/
@@ -65,10 +74,12 @@ nutrisnap/
       vendors/
       nutrition/
       errors/
+      commerce/
     static/
       css/style.css
       js/
-  run.py
+  main.py
+  migrations/
   requirements.txt
   .env.example
 ```
@@ -87,6 +98,9 @@ nutrisnap/
 - Use personal nutrition analytics (own meals only)
 - Use personal weekly tracking (own meals only)
 - Manage personal profile from `/user/profile`
+- Keep a persistent, account-owned cart
+- Place paid food orders and view order history
+- Purchase a verified NutriSnap Plus subscription
 
 ### Food Vendor
 
@@ -96,6 +110,7 @@ nutrisnap/
 - Approved vendor can access `/vendor/dashboard`
 - Manage only own menu items (create/edit/delete/toggle availability)
 - Manage vendor profile from `/vendor/profile`
+- View paid customer orders and move them through controlled fulfilment states
 
 ### Admin
 
@@ -108,14 +123,27 @@ nutrisnap/
 - Monitor all vendor menu items in admin pages
 - Delete any vendor menu item as moderation action
 - Manage admin profile from `/admin/profile`
+- Audit recent payment transactions, orders, and verified revenue from `/admin/commerce`
 
 ## Environment Variables
 
 Create `.env` from `.env.example`:
 
+Never commit real API keys or gateway credentials. If a credential has ever appeared in Git history, revoke and replace it; removing it from the latest file does not remove the historical exposure.
+
 ```env
-SECRET_KEY=change-me
-DATABASE_URL=sqlite:///meal_logs.db
+SECRET_KEY=
+DATABASE_URL=postgresql://user:password@host:5432/nutrisnap
+AUTO_CREATE_DB=false
+PUBLIC_BASE_URL=https://your-production-domain.example
+SESSION_COOKIE_SECURE=true
+
+# SSLCOMMERZ Sandbox
+SSLCOMMERZ_STORE_ID=
+SSLCOMMERZ_STORE_PASSWORD=
+SSLCOMMERZ_SANDBOX=true
+PAYMENT_HTTP_TIMEOUT_SECONDS=15
+ORDER_DELIVERY_FEE_BDT=60
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
@@ -131,7 +159,7 @@ OPENROUTER_API_KEY=
 OPENROUTER_SITE_URL=
 OPENROUTER_SITE_NAME=
 DEFAULT_ADMIN_EMAIL=admin@nutrisnap.local
-DEFAULT_ADMIN_PASSWORD=admin12345
+DEFAULT_ADMIN_PASSWORD=replace-with-a-strong-password
 DEFAULT_ADMIN_NAME=NutriSnap Admin
 DEFAULT_ADMIN_PHONE=01000000000
 MAIL_SERVER=smtp.gmail.com
@@ -161,7 +189,7 @@ pip install -r requirements.txt
 ## Run the App
 
 ```bash
-python run.py
+python main.py
 ```
 
 Open:
@@ -175,12 +203,28 @@ A default admin is auto-created at startup (if not already present) using:
 - `DEFAULT_ADMIN_EMAIL`
 - `DEFAULT_ADMIN_PASSWORD`
 
-Default values from `.env.example`:
+Always provide unique production credentials. Do not deploy the development defaults.
 
-- Email: `admin@nutrisnap.local`
-- Password: `admin12345`
+## Database migrations
 
-Change these in `.env` for real use.
+The repository includes an Alembic migration baseline. For a new database:
+
+```bash
+flask --app main:app db upgrade
+```
+
+For an older database created with `db.create_all()`, back it up first, reconcile its schema, and stamp the matching migration before switching `AUTO_CREATE_DB=false`. Use managed PostgreSQL for production; serverless local SQLite is not durable.
+
+## Payment setup and trust model
+
+1. Create an SSLCOMMERZ Sandbox store and set its store ID/password.
+2. Set `PUBLIC_BASE_URL` to the exact HTTPS deployment origin.
+3. Configure the IPN URL as `https://your-domain/payments/ipn` in the merchant panel.
+4. Keep `SSLCOMMERZ_SANDBOX=true` until the complete callback flow passes.
+
+NutriSnap never grants paid access from a redirect alone. It calls the SSLCOMMERZ validation API and matches the transaction ID, amount, currency, status, and risk level. Duplicate success/IPN calls are idempotent. Store credentials remain server-side.
+
+SSLCOMMERZ Sandbox is for testing only. A live merchant account, business verification, production credentials, refund policy, privacy policy, terms, and operational reconciliation are still required before accepting real money.
 
 ## Route Summary
 
@@ -226,6 +270,23 @@ Change these in `.env` for real use.
 - `POST /vendor/menu-item/<int:item_id>/delete`
 - `POST /vendor/menu-item/<int:item_id>/toggle-availability`
 
+### Commerce and payments
+
+- `GET /cart`
+- `POST /cart/items/<int:item_id>`
+- `GET/POST /checkout`
+- `GET /orders`
+- `GET /orders/<int:order_id>`
+- `GET /subscriptions`
+- `POST /subscriptions/<int:plan_id>/checkout`
+- `POST /payments/ipn`
+- `GET/POST /payments/success`
+- `GET/POST /payments/fail`
+- `GET/POST /payments/cancel`
+- `GET /vendor/orders`
+- `POST /vendor/orders/<int:order_id>/status`
+- `GET /admin/commerce`
+
 ### Admin
 
 - `GET/POST /admin/login`
@@ -251,3 +312,13 @@ Change these in `.env` for real use.
 ## Notes on Existing Data
 
 `MealLog.user_id` is now used for ownership. Older legacy rows with `NULL user_id` remain visible in central feed and admin views, but are not treated as personal user data.
+
+Favorites are account-owned through `user_id`; different users can save the same vendor, menu item, or meal independently.
+
+## Tests
+
+```bash
+pytest -q
+```
+
+The commerce suite covers pending-vs-paid subscription access, amount tampering, order price snapshots, cart persistence, verified fulfilment, and repeated callback idempotency. Gateway HTTP calls are mocked in tests.

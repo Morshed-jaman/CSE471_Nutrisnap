@@ -13,6 +13,7 @@
         <div class="d-flex flex-wrap gap-2">
             <a href="{{ url_for('vendor.vendors') }}" class="btn btn-outline-industrial">Browse Public Vendors</a>
             <a href="{{ url_for('vendor.vendor_menu_items') }}" class="btn btn-outline-industrial">View My Menu Items</a>
+            <a href="{{ url_for('commerce.vendor_orders') }}" class="btn btn-outline-industrial">Customer Orders</a>
             <a href="{{ url_for('auth.vendor_profile') }}" class="btn btn-outline-industrial">Vendor Profile</a>
             <a href="{{ url_for('vendor.create_menu_item') }}" class="btn btn-industrial">
                 <i class="bi bi-plus-circle me-1"></i> Add Menu Item
@@ -122,7 +123,7 @@
                                     </div>
                                 </div>
                             </td>
-                            <td>${{ '%.2f'|format(item.price|float) }}</td>
+                            <td>৳{{ '%.2f'|format(item.price|float) }}</td>
                             <td>
                                 <div class="small">
                                     K: {{ item.calories if item.calories is not none else 'N/A' }},
@@ -140,11 +141,13 @@
                                 <div class="d-flex flex-wrap gap-2">
                                     <a href="{{ url_for('vendor.edit_menu_item', item_id=item.id) }}" class="btn btn-sm btn-outline-industrial">Edit</a>
                                     <form action="{{ url_for('vendor.toggle_menu_item_availability', item_id=item.id) }}" method="post" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-outline-secondary">
                                             {% if item.is_available %}Set Unavailable{% else %}Set Available{% endif %}
                                         </button>
                                     </form>
                                     <form action="{{ url_for('vendor.delete_menu_item', item_id=item.id) }}" method="post" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm-delete="Delete this menu item?">Delete</button>
                                     </form>
                                 </div>

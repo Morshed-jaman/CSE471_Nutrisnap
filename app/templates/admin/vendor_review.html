@@ -37,6 +37,7 @@
     <div class="row g-3">
         <div class="col-lg-6">
             <form method="post" action="{{ url_for('admin.approve_vendor', user_id=vendor_user.id) }}" class="d-grid gap-2">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <label for="approve_note" class="form-label">Approval Note (Optional)</label>
                 <textarea class="form-control form-control-industrial" id="approve_note" name="review_note" rows="3"></textarea>
                 <button type="submit" class="btn btn-success">Approve Vendor</button>
@@ -44,6 +45,7 @@
         </div>
         <div class="col-lg-6">
             <form method="post" action="{{ url_for('admin.reject_vendor', user_id=vendor_user.id) }}" class="d-grid gap-2">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <label for="reject_note" class="form-label">Rejection Note (Optional)</label>
                 <textarea class="form-control form-control-industrial" id="reject_note" name="review_note" rows="3"></textarea>
                 <button type="submit" class="btn btn-danger">Reject Vendor</button>

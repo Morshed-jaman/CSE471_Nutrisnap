@@ -115,6 +115,7 @@ meal.carbohydrates is not none or meal.fats is not none %}
           method="post"
           class="d-inline"
         >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="btn btn-outline-primary">
             <i class="bi bi-copy me-1"></i>Save to My Meals
           </button>
@@ -125,6 +126,7 @@ meal.carbohydrates is not none or meal.fats is not none %}
           method="post"
           class="d-inline"
         >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="next" value="{{ request.path }}" />
           <button
             type="submit"
@@ -143,6 +145,7 @@ meal.carbohydrates is not none or meal.fats is not none %}
           method="post"
           class="d-inline"
         >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input
             type="hidden"
             name="next"
@@ -165,6 +168,7 @@ meal.carbohydrates is not none or meal.fats is not none %}
           action="{{ url_for('nutrition.nutrition_explanation') }}"
           class="d-inline"
         >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input
             type="hidden"
             name="food_name"
@@ -200,6 +204,7 @@ meal.carbohydrates is not none or meal.fats is not none %}
           method="post"
           class="d-inline"
         >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button
             type="submit"
             class="btn btn-outline-danger"

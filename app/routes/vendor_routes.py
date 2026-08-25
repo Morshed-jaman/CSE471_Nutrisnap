@@ -11,7 +11,16 @@ from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
-from app.models import FavoriteMenuItem, FavoriteVendor, MenuItem, Review, Vendor, VendorSubscription
+from app.models import (
+    CartItem,
+    FavoriteMenuItem,
+    FavoriteVendor,
+    MenuItem,
+    OrderItem,
+    Review,
+    Vendor,
+    VendorSubscription,
+)
 from app.services.auth_service import approved_vendor_required, role_required
 from app.services.cloudinary_service import delete_image, upload_image
 from app.services.email_service import send_vendor_subscription_email
@@ -220,11 +229,14 @@ def vendor_detail(vendor_id: int):
             VendorSubscription.query.filter_by(user_id=current_user.id, vendor_id=vendor.id).first()
             is not None
         )
-        is_vendor_favorited = FavoriteVendor.query.filter_by(vendor_id=vendor.id).first() is not None
+        is_vendor_favorited = FavoriteVendor.query.filter_by(
+            user_id=current_user.id, vendor_id=vendor.id
+        ).first() is not None
         if menu_item_ids:
             favorite_menu_item_ids = {
                 favorite.menu_item_id
                 for favorite in FavoriteMenuItem.query.filter(
+                    FavoriteMenuItem.user_id == current_user.id,
                     FavoriteMenuItem.menu_item_id.in_(menu_item_ids)
                 ).all()
             }
@@ -375,7 +387,9 @@ def menu_item_detail(item_id: int):
         my_item_review = Review.query.filter_by(
             user_id=current_user.id, menu_item_id=item.id, vendor_id=None
         ).first()
-        is_item_favorited = FavoriteMenuItem.query.filter_by(menu_item_id=item.id).first() is not None
+        is_item_favorited = FavoriteMenuItem.query.filter_by(
+            user_id=current_user.id, menu_item_id=item.id
+        ).first() is not None
 
     return render_template(
         "vendors/menu_item_detail.html",
@@ -746,6 +760,14 @@ def delete_menu_item(item_id: int):
     public_id = item.cloudinary_public_id
 
     try:
+        if OrderItem.query.filter_by(menu_item_id=item.id).first():
+            item.is_available = False
+            CartItem.query.filter_by(menu_item_id=item.id).delete()
+            db.session.commit()
+            flash("This item has order history, so it was archived instead of deleted.", "info")
+            return redirect(url_for("vendor.vendor_menu_items"))
+
+        CartItem.query.filter_by(menu_item_id=item.id).delete()
         db.session.delete(item)
         db.session.commit()
         if public_id:

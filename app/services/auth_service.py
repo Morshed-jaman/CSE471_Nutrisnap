@@ -1,4 +1,5 @@
 from functools import wraps
+from datetime import datetime
 
 from flask import flash, redirect, request, url_for
 from flask_login import current_user
@@ -98,9 +99,16 @@ def subscriber_required(view_func):
             flash("User access is required.", "danger")
             return redirect(redirect_for_role(current_user))
 
-        if not bool(current_user.is_subscribed):
+        from app.models import Subscription
+
+        active_subscription = (
+            Subscription.query.filter_by(user_id=current_user.id, status="active")
+            .filter(Subscription.ends_at > datetime.utcnow())
+            .first()
+        )
+        if not active_subscription:
             flash("This feature is available only for subscribed users.", "warning")
-            return redirect(url_for("auth.user_profile"))
+            return redirect(url_for("commerce.subscription_plans"))
 
         return view_func(*args, **kwargs)
 

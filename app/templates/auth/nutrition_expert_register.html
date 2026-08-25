@@ -11,6 +11,7 @@
         <p class="page-subtitle mb-4">Submit your credentials for admin verification before giving advice.</p>
 
         <form method="post" action="{{ url_for('auth.nutrition_expert_register') }}" class="row g-3">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="col-md-6">
                 <label for="name" class="form-label">Full Name</label>
                 <input type="text" class="form-control form-control-industrial" id="name" name="name" value="{{ form.get('name', '') if form else '' }}" required>

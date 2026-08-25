@@ -38,6 +38,7 @@
                     <p class="mb-3">{{ question.question_text }}</p>
 
                     <form method="post" action="{{ url_for('advice.submit_advice_reply', question_id=question.id) }}" class="d-grid gap-2">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <label for="response_text_{{ question.id }}" class="form-label mb-0">Advice Reply</label>
                         <textarea
                             id="response_text_{{ question.id }}"

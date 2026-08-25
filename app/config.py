@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -47,7 +48,7 @@ def _normalize_database_url(database_url: str | None) -> str | None:
 
 
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
+    SECRET_KEY = os.getenv("SECRET_KEY")
 
     database_url = _normalize_database_url(os.getenv("DATABASE_URL"))
 
@@ -57,12 +58,19 @@ class Config:
         SQLALCHEMY_DATABASE_URI = f"sqlite:///{(BASE_DIR / 'meal_logs.db').as_posix()}"
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    AUTO_CREATE_DB = _as_bool(os.getenv("AUTO_CREATE_DB"), default=False)
+
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SECURE = _as_bool(os.getenv("SESSION_COOKIE_SECURE"), default=bool(os.getenv("VERCEL")))
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=12)
+    PREFERRED_URL_SCHEME = "https"
 
     MAX_CONTENT_LENGTH = 8 * 1024 * 1024  # 8 MB
     ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif"}
 
-    DEFAULT_ADMIN_EMAIL = os.getenv("DEFAULT_ADMIN_EMAIL", "admin@nutrisnap.local")
-    DEFAULT_ADMIN_PASSWORD = os.getenv("DEFAULT_ADMIN_PASSWORD", "admin12345")
+    DEFAULT_ADMIN_EMAIL = os.getenv("DEFAULT_ADMIN_EMAIL")
+    DEFAULT_ADMIN_PASSWORD = os.getenv("DEFAULT_ADMIN_PASSWORD")
     DEFAULT_ADMIN_NAME = os.getenv("DEFAULT_ADMIN_NAME", "NutriSnap Admin")
     DEFAULT_ADMIN_PHONE = os.getenv("DEFAULT_ADMIN_PHONE", "01000000000")
 
@@ -76,3 +84,10 @@ class Config:
     WATER_TRACKER_LATITUDE = _as_float(os.getenv("WATER_TRACKER_LATITUDE"), 23.8103)
     WATER_TRACKER_LONGITUDE = _as_float(os.getenv("WATER_TRACKER_LONGITUDE"), 90.4125)
     WATER_TRACKER_FALLBACK_GOAL_ML = _as_int(os.getenv("WATER_TRACKER_FALLBACK_GOAL_ML"), 2500)
+
+    PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL")
+    SSLCOMMERZ_STORE_ID = os.getenv("SSLCOMMERZ_STORE_ID")
+    SSLCOMMERZ_STORE_PASSWORD = os.getenv("SSLCOMMERZ_STORE_PASSWORD")
+    SSLCOMMERZ_SANDBOX = _as_bool(os.getenv("SSLCOMMERZ_SANDBOX"), default=True)
+    PAYMENT_HTTP_TIMEOUT_SECONDS = _as_int(os.getenv("PAYMENT_HTTP_TIMEOUT_SECONDS"), 15)
+    ORDER_DELIVERY_FEE_BDT = _as_float(os.getenv("ORDER_DELIVERY_FEE_BDT"), 60.0)

@@ -27,13 +27,14 @@ class MenuItem(db.Model):
     reviews = db.relationship(
         "Review", back_populates="menu_item", lazy="select", cascade="all, delete-orphan"
     )
-    favorite_entry = db.relationship(
+    favorite_entries = db.relationship(
         "FavoriteMenuItem",
         back_populates="menu_item",
-        uselist=False,
         lazy="select",
         cascade="all, delete-orphan",
     )
+    cart_entries = db.relationship("CartItem", back_populates="menu_item", lazy="select")
+    order_items = db.relationship("OrderItem", back_populates="menu_item", lazy="select")
 
     def __repr__(self) -> str:
         return (

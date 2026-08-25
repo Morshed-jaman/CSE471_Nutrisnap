@@ -26,11 +26,20 @@ endblock %} {% block content %}
     </div>
     <div class="d-flex flex-wrap gap-2">
       {% if current_user.role == 'user' %}
+      <form method="post" action="{{ url_for('commerce.add_to_cart', item_id=item.id) }}" class="d-flex gap-2">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="next" value="{{ url_for('commerce.cart') }}">
+        <input type="hidden" name="quantity" value="1">
+        <button type="submit" class="btn btn-industrial" {% if not item.is_available %}disabled{% endif %}>
+          <i class="bi bi-bag-plus me-1"></i>Add to Cart
+        </button>
+      </form>
       <form
         method="post"
         action="{{ url_for('favorites.toggle_menu_item_favorite', item_id=item.id) }}"
         class="d-inline"
       >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="next" value="{{ request.path }}" />
         <button
           type="submit"
@@ -74,7 +83,7 @@ endblock %} {% block content %}
       <p class="mb-3">{{ item.description or 'No description available.' }}</p>
 
       <div class="price-box mb-3">
-        Price: ${{ '%.2f'|format(item.price|float) }}
+        Price: ৳{{ '%.2f'|format(item.price|float) }}
       </div>
       <p class="mb-3">
         <span
@@ -117,6 +126,7 @@ endblock %} {% block content %}
         action="{{ url_for('meal.add_vendor_item_to_my_meals', item_id=item.id) }}"
         class="surface-subtle p-3 rounded-3"
       >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="next" value="{{ request.path }}" />
         <div class="row g-2">
           <div class="col-md-4">
@@ -128,16 +138,7 @@ endblock %} {% block content %}
               required
             >
               {% for type in meal_types %}
-              <option
-                value="{{ type }}"
-                {%
-                if
-                type=""
-                ="lunch"
-                %}selected{%
-                endif
-                %}
-              >
+              <option value="{{ type }}" {% if type == 'lunch' %}selected{% endif %}>
                 {{ type|capitalize }}
               </option>
               {% endfor %}
@@ -184,6 +185,7 @@ endblock %} {% block content %}
     action="{{ url_for('vendor.submit_menu_item_review', item_id=item.id) }}"
     class="review-form-card mb-3"
   >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="row g-3">
       <div class="col-md-4">
         <label for="item_rating" class="form-label">Your Rating</label>
@@ -194,15 +196,7 @@ endblock %} {% block content %}
             id="item-star-{{ item.id }}-{{ star }}"
             name="rating"
             value="{{ star }}"
-            {%
-            if
-            my_item_review
-            and
-            my_item_review.rating=""
-            ="star"
-            %}checked{%
-            endif
-            %}
+            {% if my_item_review and my_item_review.rating == star %}checked{% endif %}
             required
           />
           <label
@@ -241,6 +235,7 @@ endblock %} {% block content %}
     method="post"
     class="d-inline"
   >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button
       type="submit"
       class="btn btn-outline-danger"
@@ -281,6 +276,7 @@ endblock %} {% block content %}
           action="{% if current_user.role == 'admin' %}{{ url_for('admin.admin_delete_review', review_id=review.id) }}{% else %}{{ url_for('vendor.delete_menu_item_review', review_id=review.id) }}{% endif %}"
           method="post"
         >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button
             type="submit"
             class="btn btn-sm btn-outline-danger"

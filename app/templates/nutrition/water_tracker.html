@@ -73,6 +73,7 @@
             <div class="d-flex flex-wrap gap-2 mb-4">
                 {% for quick_amount in [250, 500, 1000] %}
                     <form method="post" action="{{ url_for('nutrition.add_water_entry') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="amount_ml" value="{{ quick_amount }}">
                         <button type="submit" class="btn btn-outline-industrial">{{ quick_amount }} ml</button>
                     </form>
@@ -80,6 +81,7 @@
             </div>
 
             <form method="post" action="{{ url_for('nutrition.add_water_entry') }}" class="row g-3">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="col-12">
                     <label for="amount_ml" class="form-label">Custom Amount (ml)</label>
                     <input
@@ -132,6 +134,7 @@
                                     <td>{{ entry.created_at.strftime('%I:%M %p') }}</td>
                                     <td class="text-end">
                                         <form method="post" action="{{ url_for('nutrition.delete_water_entry', entry_id=entry.id) }}" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm-delete="Delete this water entry?">
                                                 Delete
                                             </button>

@@ -1,4 +1,12 @@
 from app.models.advice_question import AdviceQuestion
+from app.models.commerce import (
+    CartItem,
+    Order,
+    OrderItem,
+    PaymentTransaction,
+    Subscription,
+    SubscriptionPlan,
+)
 from app.models.favorite import FavoriteMeal, FavoriteMenuItem, FavoriteVendor
 from app.models.meal_log import MealLog
 from app.models.menu_item import MenuItem
@@ -11,6 +19,12 @@ from app.models.water_intake import WaterIntake
 
 __all__ = [
     "AdviceQuestion",
+    "CartItem",
+    "Order",
+    "OrderItem",
+    "PaymentTransaction",
+    "Subscription",
+    "SubscriptionPlan",
     "FavoriteVendor",
     "FavoriteMenuItem",
     "FavoriteMeal",

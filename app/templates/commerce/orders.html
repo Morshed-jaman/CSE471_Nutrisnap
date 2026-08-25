@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}My Orders | NutriSnap{% endblock %}
+{% block content %}
+<section class="surface-card page-header-card">
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-2">
+    <div><p class="eyebrow mb-1">Order History</p><h1 class="section-title mb-1">My Orders</h1></div>
+    <a href="{{ url_for('vendor.vendors') }}" class="btn btn-industrial">Order Food</a>
+  </div>
+</section>
+<section class="surface-card mt-4">
+  {% if orders %}
+  <div class="table-responsive"><table class="table align-middle app-table">
+    <thead><tr><th>Order</th><th>Vendor</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th></th></tr></thead>
+    <tbody>{% for order in orders %}<tr>
+      <td><strong>{{ order.order_number }}</strong></td><td>{{ order.vendor.name }}</td>
+      <td>৳{{ '%.2f'|format(order.total_amount|float) }}</td>
+      <td><span class="badge text-bg-{% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'pending' %}warning{% else %}secondary{% endif %}">{{ order.payment_status|title }}</span></td>
+      <td>{{ order.status|replace('_', ' ')|title }}</td><td>{{ order.created_at.strftime('%d %b %Y') }}</td>
+      <td><a class="btn btn-sm btn-outline-industrial" href="{{ url_for('commerce.order_detail', order_id=order.id) }}">Details</a></td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<div class="empty-panel">You have not placed an order yet.</div>{% endif %}
+</section>
+{% endblock %}

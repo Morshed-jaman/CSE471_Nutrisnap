@@ -1,12 +1,13 @@
 import os
 import tempfile
+from datetime import datetime
 
 from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
-from app.models import User, Vendor, VendorProfile
+from app.models import Subscription, User, Vendor, VendorProfile
 from app.services.auth_service import redirect_for_role, role_required
 from app.services.cloudinary_service import delete_image, upload_image
 
@@ -426,7 +427,15 @@ def profile():
 @role_required("user")
 def user_profile():
     if request.method == "GET":
-        return render_template("profile/profile.html", mode="user")
+        active_subscription = (
+            Subscription.query.filter_by(user_id=current_user.id, status="active")
+            .filter(Subscription.ends_at > datetime.utcnow())
+            .order_by(Subscription.ends_at.desc())
+            .first()
+        )
+        return render_template(
+            "profile/profile.html", mode="user", active_subscription=active_subscription
+        )
 
     name = (request.form.get("name") or "").strip()
     phone = (request.form.get("phone") or "").strip()
@@ -633,37 +642,29 @@ def nutrition_expert_profile():
 @login_required
 @role_required("user")
 def activate_subscription():
-    if current_user.is_subscribed:
-        flash("You already have an active subscription.", "info")
-        return redirect(url_for("auth.user_profile"))
-
-    try:
-        current_user.is_subscribed = True
-        db.session.commit()
-        flash("Subscription activated. Nutritionist Advice is now available.", "success")
-    except Exception:
-        db.session.rollback()
-        flash("Could not activate subscription right now. Please try again.", "danger")
-
-    return redirect(url_for("auth.user_profile"))
+    flash("Choose a plan and complete payment to activate premium access.", "info")
+    return redirect(url_for("commerce.subscription_plans"))
 
 
 @auth_bp.route("/user/subscription/cancel", methods=["POST"])
 @login_required
 @role_required("user")
 def cancel_subscription():
-    if not current_user.is_subscribed:
+    active_subscriptions = (
+        Subscription.query.filter_by(user_id=current_user.id, status="active")
+        .filter(Subscription.ends_at > datetime.utcnow())
+        .all()
+    )
+    if not active_subscriptions:
         flash("No active subscription found.", "info")
         return redirect(url_for("auth.user_profile"))
 
-    try:
-        current_user.is_subscribed = False
-        db.session.commit()
-        flash("Subscription cancelled successfully.", "success")
-    except Exception:
-        db.session.rollback()
-        flash("Could not cancel subscription right now. Please try again.", "danger")
-
+    latest = max(active_subscriptions, key=lambda subscription: subscription.ends_at)
+    flash(
+        f"This prepaid plan does not auto-renew. Your access remains active until "
+        f"{latest.ends_at.strftime('%d %b %Y')}.",
+        "info",
+    )
     return redirect(url_for("auth.user_profile"))
 
 

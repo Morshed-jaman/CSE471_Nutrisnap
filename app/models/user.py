@@ -76,6 +76,25 @@ class User(UserMixin, db.Model):
         lazy="select",
         cascade="all, delete-orphan",
     )
+    cart_items = db.relationship(
+        "CartItem", back_populates="user", lazy="select", cascade="all, delete-orphan"
+    )
+    orders = db.relationship("Order", back_populates="user", lazy="select")
+    paid_subscriptions = db.relationship(
+        "Subscription", back_populates="user", lazy="select", cascade="all, delete-orphan"
+    )
+    payment_transactions = db.relationship(
+        "PaymentTransaction", back_populates="user", lazy="select"
+    )
+    favorite_vendors = db.relationship(
+        "FavoriteVendor", back_populates="user", lazy="select", cascade="all, delete-orphan"
+    )
+    favorite_menu_items = db.relationship(
+        "FavoriteMenuItem", back_populates="user", lazy="select", cascade="all, delete-orphan"
+    )
+    favorite_meals = db.relationship(
+        "FavoriteMeal", back_populates="user", lazy="select", cascade="all, delete-orphan"
+    )
 
     def set_password(self, raw_password: str) -> None:
         self.password_hash = generate_password_hash(raw_password)

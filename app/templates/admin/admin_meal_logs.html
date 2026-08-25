@@ -55,6 +55,7 @@
                                 <div class="d-flex flex-wrap gap-2">
                                     <a href="{{ url_for('admin.admin_meal_detail', meal_id=meal.id) }}" class="btn btn-sm btn-outline-industrial">View</a>
                                     <form action="{{ url_for('admin.admin_delete_meal', meal_id=meal.id) }}" method="post" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm-delete="Delete this meal from system?">Delete</button>
                                     </form>
                                 </div>

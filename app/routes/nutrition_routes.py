@@ -629,7 +629,10 @@ def healthy_indicator():
     can_manage_favorites = current_user.role == "user"
     favorite_meal_ids = set()
     if can_manage_favorites:
-        favorite_meal_ids = {favorite.meal_log_id for favorite in FavoriteMeal.query.all()}
+        favorite_meal_ids = {
+            favorite.meal_log_id
+            for favorite in FavoriteMeal.query.filter_by(user_id=current_user.id).all()
+        }
 
     tag_counts = defaultdict(int)
     meal_cards = []

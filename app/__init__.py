@@ -4,10 +4,11 @@ import click
 from dotenv import load_dotenv
 from flask import Flask, render_template
 from sqlalchemy import inspect, text
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.config import Config
-from app.extensions import db, login_manager
-from app.models import User
+from app.extensions import csrf, db, login_manager, migrate
+from app.models import SubscriptionPlan, User
 from app.routes import register_blueprints
 from app.seed import seed_vendor_demo_data
 
@@ -90,6 +91,50 @@ def _ensure_default_admin(app: Flask) -> None:
     db.session.commit()
 
 
+def _ensure_subscription_plans() -> None:
+    defaults = (
+        (
+            "monthly",
+            "NutriSnap Plus Monthly",
+            "Nutrition-expert advice, premium insights, and subscriber features for 30 days.",
+            299,
+            30,
+        ),
+        (
+            "quarterly",
+            "NutriSnap Plus Quarterly",
+            "Three months of premium nutrition guidance at a lower monthly cost.",
+            799,
+            90,
+        ),
+        (
+            "annual",
+            "NutriSnap Plus Annual",
+            "One year of premium nutrition guidance and expert advice.",
+            2499,
+            365,
+        ),
+    )
+    changed = False
+    for code, name, description, price, duration_days in defaults:
+        plan = SubscriptionPlan.query.filter_by(code=code).first()
+        if plan:
+            continue
+        db.session.add(
+            SubscriptionPlan(
+                code=code,
+                name=name,
+                description=description,
+                price=price,
+                duration_days=duration_days,
+                is_active=True,
+            )
+        )
+        changed = True
+    if changed:
+        db.session.commit()
+
+
 def _clean_optional_env(key: str, default: str | None = None) -> str | None:
     value = os.getenv(key, default)
     if value is None:
@@ -110,6 +155,9 @@ def create_app(config_class: type[Config] = Config) -> Flask:
 
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(config_class)
+    if not app.config.get("SECRET_KEY"):
+        raise RuntimeError("SECRET_KEY must be configured before NutriSnap can start.")
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     app.config["CLOUDINARY_CLOUD_NAME"] = _clean_optional_env("CLOUDINARY_CLOUD_NAME")
     app.config["CLOUDINARY_API_KEY"] = _clean_optional_env("CLOUDINARY_API_KEY")
@@ -125,6 +173,8 @@ def create_app(config_class: type[Config] = Config) -> Flask:
     app.config["OPENROUTER_SITE_NAME"] = _clean_optional_env("OPENROUTER_SITE_NAME")
 
     db.init_app(app)
+    migrate.init_app(app, db)
+    csrf.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
     login_manager.login_message = "Please log in to continue."
@@ -145,8 +195,10 @@ def create_app(config_class: type[Config] = Config) -> Flask:
         return render_template("errors/404.html"), 404
 
     with app.app_context():
-        db.create_all()
-        _ensure_schema_compatibility()
-        _ensure_default_admin(app)
+        if app.config.get("AUTO_CREATE_DB", False):
+            db.create_all()
+            _ensure_schema_compatibility()
+            _ensure_default_admin(app)
+            _ensure_subscription_plans()
 
     return app

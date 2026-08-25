@@ -16,6 +16,7 @@
 
 <section class="surface-card mt-4 reveal-on-scroll" data-delay="1">
     <form method="post" enctype="multipart/form-data" class="row g-3">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="col-md-6">
             <label for="name" class="form-label">Item Name</label>
             <input

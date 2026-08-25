@@ -209,6 +209,7 @@ content %}
             method="post"
             class="d-inline"
           >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="next" value="{{ request.path }}" />
             <button
               type="submit"
@@ -229,6 +230,7 @@ content %}
             action="{{ url_for('nutrition.nutrition_explanation') }}"
             class="d-inline"
           >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input
               type="hidden"
               name="food_name"

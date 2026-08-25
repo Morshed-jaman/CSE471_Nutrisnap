@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Payment Result | NutriSnap{% endblock %}
+{% block content %}
+<section class="surface-card text-center py-5 mx-auto" style="max-width: 720px">
+  <div class="display-3 mb-3 text-{% if success %}success{% else %}danger{% endif %}">
+    <i class="bi {% if success %}bi-check-circle-fill{% else %}bi-x-circle-fill{% endif %}"></i>
+  </div>
+  <p class="eyebrow">Payment Status</p>
+  <h1 class="section-title">{% if success %}Payment verified{% else %}Payment not completed{% endif %}</h1>
+  <p class="page-subtitle">{{ message }}</p>
+  {% if payment %}
+  <div class="meta-box my-4 text-start">
+    <div><strong>Reference:</strong> {{ payment.transaction_id }}</div>
+    <div><strong>Amount:</strong> ৳{{ '%.2f'|format(payment.amount|float) }}</div>
+    <div><strong>Status:</strong> {{ payment.status|replace('_', ' ')|title }}</div>
+  </div>
+  <div class="d-flex flex-wrap justify-content-center gap-2">
+    {% if payment.order_id %}<a href="{{ url_for('commerce.order_detail', order_id=payment.order_id) }}" class="btn btn-industrial">View Order</a>{% endif %}
+    {% if payment.subscription_id %}<a href="{{ url_for('commerce.subscription_plans') }}" class="btn btn-industrial">View Subscription</a>{% endif %}
+    <a href="{{ url_for('meal.home') }}" class="btn btn-outline-industrial">Go Home</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

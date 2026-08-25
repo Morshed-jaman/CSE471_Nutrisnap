@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Vendor Orders | NutriSnap{% endblock %}
+{% block content %}
+<section class="surface-card page-header-card"><div class="d-flex justify-content-between align-items-end"><div><p class="eyebrow mb-1">Fulfilment</p><h1 class="section-title mb-1">Customer Orders</h1><p class="page-subtitle mb-0">Paid orders for {{ vendor.name }}</p></div><a href="{{ url_for('vendor.vendor_dashboard') }}" class="btn btn-outline-industrial">Dashboard</a></div></section>
+<section class="surface-card mt-4">
+{% if orders %}<div class="table-responsive"><table class="table app-table align-middle"><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>
+{% for order in orders %}<tr><td><strong>{{ order.order_number }}</strong></td><td>{{ order.delivery_name }}</td><td>৳{{ '%.2f'|format(order.total_amount|float) }}</td><td>{{ order.payment_status|title }}</td><td>{{ order.status|replace('_',' ')|title }}</td><td>{{ order.created_at.strftime('%d %b %Y') }}</td><td><a href="{{ url_for('commerce.order_detail', order_id=order.id) }}" class="btn btn-sm btn-outline-industrial">Open</a></td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="empty-panel">No orders yet.</div>{% endif %}
+</section>
+{% endblock %}

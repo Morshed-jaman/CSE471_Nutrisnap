@@ -35,13 +35,13 @@ class Vendor(db.Model):
         lazy="select",
         cascade="all, delete-orphan",
     )
-    favorite_entry = db.relationship(
+    favorite_entries = db.relationship(
         "FavoriteVendor",
         back_populates="vendor",
-        uselist=False,
         lazy="select",
         cascade="all, delete-orphan",
     )
+    orders = db.relationship("Order", back_populates="vendor", lazy="select")
 
     def __repr__(self) -> str:
         return (

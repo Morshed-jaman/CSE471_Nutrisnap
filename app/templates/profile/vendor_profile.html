@@ -21,6 +21,7 @@
 
 <section class="surface-card mt-4 reveal-on-scroll" data-delay="1">
     <form method="post" class="row g-3" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="col-md-6">
             <label for="name" class="form-label">Contact Name</label>
             <input type="text" class="form-control form-control-industrial" id="name" name="name" value="{{ current_user.name }}" required>

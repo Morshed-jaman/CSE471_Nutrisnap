@@ -299,7 +299,10 @@ def my_meal_logs():
         .order_by(MealLog.created_at.desc())
         .all()
     )
-    favorite_meal_ids = {favorite.meal_log_id for favorite in FavoriteMeal.query.all()}
+    favorite_meal_ids = {
+        favorite.meal_log_id
+        for favorite in FavoriteMeal.query.filter_by(user_id=current_user.id).all()
+    }
     return render_template(
         "meals/my_meal_logs.html",
         logs=logs,
@@ -313,7 +316,10 @@ def my_meal_logs():
 def meal_logs():
     logs = MealLog.query.order_by(MealLog.created_at.desc()).all()
     favorite_meal_ids = (
-        {favorite.meal_log_id for favorite in FavoriteMeal.query.all()}
+        {
+            favorite.meal_log_id
+            for favorite in FavoriteMeal.query.filter_by(user_id=current_user.id).all()
+        }
         if current_user.role == "user"
         else set()
     )
@@ -343,7 +349,9 @@ def meal_detail(meal_id):
     can_analyze = current_user.role == "admin" or _is_owner(meal)
     is_meal_favorited = (
         current_user.role == "user"
-        and FavoriteMeal.query.filter_by(meal_log_id=meal.id).first() is not None
+        and FavoriteMeal.query.filter_by(
+            user_id=current_user.id, meal_log_id=meal.id
+        ).first() is not None
     )
 
     return render_template(

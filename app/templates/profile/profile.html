@@ -16,6 +16,7 @@
 
 <section class="surface-card mt-4 reveal-on-scroll" data-delay="1">
     <form method="post" class="row g-3">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="col-md-6">
             <label for="name" class="form-label">Name</label>
             <input type="text" class="form-control form-control-industrial" id="name" name="name" value="{{ current_user.name }}" required>
@@ -52,23 +53,20 @@
 <section class="surface-card mt-4 reveal-on-scroll" data-delay="2">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <h2 class="h5 mb-0">Subscription Access</h2>
-        <span class="badge text-bg-{% if current_user.is_subscribed %}success{% else %}secondary{% endif %}">
-            {% if current_user.is_subscribed %}Subscribed{% else %}Not Subscribed{% endif %}
+        <span class="badge text-bg-{% if active_subscription %}success{% else %}secondary{% endif %}">
+            {% if active_subscription %}Subscribed{% else %}Not Subscribed{% endif %}
         </span>
     </div>
 
     <p class="mb-3">Nutritionist Advice is available only for subscribed users.</p>
 
     <div class="d-flex flex-wrap gap-2">
-        {% if current_user.is_subscribed %}
+        {% if active_subscription %}
             <a href="{{ url_for('advice.user_advice') }}" class="btn btn-industrial">Open Nutritionist Advice</a>
-            <form method="post" action="{{ url_for('auth.cancel_subscription') }}" class="d-inline">
-                <button type="submit" class="btn btn-outline-danger">Cancel Subscription</button>
-            </form>
+            <a href="{{ url_for('commerce.subscription_plans') }}" class="btn btn-outline-industrial">Extend Access</a>
+            <span class="chip align-self-center">No automatic renewal</span>
         {% else %}
-            <form method="post" action="{{ url_for('auth.activate_subscription') }}" class="d-inline">
-                <button type="submit" class="btn btn-industrial">Activate Subscription</button>
-            </form>
+            <a href="{{ url_for('commerce.subscription_plans') }}" class="btn btn-industrial">View Paid Plans</a>
             <span class="chip align-self-center">Subscription required for expert advice requests</span>
         {% endif %}
     </div>

@@ -109,6 +109,7 @@ endblock %} {% block body_class %}meal-logs-page{% endblock %} {% block content
             action="{{ url_for('nutrition.nutrition_explanation') }}"
             class="d-inline"
           >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input
               type="hidden"
               name="food_name"
@@ -147,6 +148,7 @@ endblock %} {% block body_class %}meal-logs-page{% endblock %} {% block content
             method="post"
             class="d-inline"
           >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="next" value="{{ request.path }}" />
             <button
               type="submit"
@@ -168,6 +170,7 @@ endblock %} {% block body_class %}meal-logs-page{% endblock %} {% block content
             method="post"
             class="d-inline"
           >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button
               type="submit"
               class="btn btn-sm meal-action-btn meal-action-analyze"
@@ -193,6 +196,7 @@ endblock %} {% block body_class %}meal-logs-page{% endblock %} {% block content
             method="post"
             class="d-inline"
           >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button
               type="submit"
               class="btn btn-sm meal-action-btn meal-action-delete"

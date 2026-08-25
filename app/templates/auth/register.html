@@ -11,6 +11,7 @@
         <p class="page-subtitle mb-4">Start meal logging and nutrition tracking.</p>
 
         <form method="post" action="{{ url_for('auth.register') }}" class="row g-3">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="col-md-6">
                 <label for="name" class="form-label">Name</label>
                 <input type="text" class="form-control form-control-industrial" id="name" name="name" value="{{ form.get('name', '') if form else '' }}" required>

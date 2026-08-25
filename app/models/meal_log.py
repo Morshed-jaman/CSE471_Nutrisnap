@@ -24,10 +24,9 @@ class MealLog(db.Model):
     )
 
     user = db.relationship("User", back_populates="meal_logs")
-    favorite_entry = db.relationship(
+    favorite_entries = db.relationship(
         "FavoriteMeal",
         back_populates="meal_log",
-        uselist=False,
         lazy="select",
         cascade="all, delete-orphan",
     )

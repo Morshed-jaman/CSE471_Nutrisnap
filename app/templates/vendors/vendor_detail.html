@@ -28,6 +28,7 @@ endblock %} {% block content %}
         action="{{ url_for('vendor.unsubscribe_vendor', vendor_id=vendor.id) }}"
         class="d-inline"
       >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="next" value="{{ request.path }}" />
         <button type="submit" class="btn btn-outline-danger">
           Unsubscribe
@@ -39,6 +40,7 @@ endblock %} {% block content %}
         action="{{ url_for('vendor.subscribe_vendor', vendor_id=vendor.id) }}"
         class="d-inline"
       >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="next" value="{{ request.path }}" />
         <button type="submit" class="btn btn-industrial">Subscribe</button>
       </form>
@@ -48,6 +50,7 @@ endblock %} {% block content %}
         action="{{ url_for('favorites.toggle_vendor_favorite', vendor_id=vendor.id) }}"
         class="d-inline"
       >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="next" value="{{ request.path }}" />
         <button
           type="submit"
@@ -147,6 +150,7 @@ endblock %} {% block content %}
     action="{{ url_for('vendor.submit_vendor_review', vendor_id=vendor.id) }}"
     class="review-form-card mb-3"
   >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="row g-3">
       <div class="col-md-4">
         <label for="rating" class="form-label">Your Rating</label>
@@ -197,6 +201,7 @@ endblock %} {% block content %}
     method="post"
     class="d-inline"
   >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <button
       type="submit"
       class="btn btn-outline-danger"
@@ -237,6 +242,7 @@ endblock %} {% block content %}
           action="{% if current_user.role == 'admin' %}{{ url_for('admin.admin_delete_review', review_id=review.id) }}{% else %}{{ url_for('vendor.delete_vendor_review', review_id=review.id) }}{% endif %}"
           method="post"
         >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button
             type="submit"
             class="btn btn-sm btn-outline-danger"
@@ -323,7 +329,7 @@ endblock %} {% block content %}
             {{ item.description or 'No description available.' }}
           </p>
           <p class="fw-semibold mb-2">
-            Price: ${{ '%.2f'|format(item.price|float) }}
+            Price: ৳{{ '%.2f'|format(item.price|float) }}
           </p>
 
           <div class="nutrition-list mb-3">
@@ -350,6 +356,7 @@ endblock %} {% block content %}
             action="{{ url_for('meal.add_vendor_item_to_my_meals', item_id=item.id) }}"
             class="mt-auto mb-2"
           >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="next" value="{{ request.path }}" />
             <div class="row g-2">
               <div class="col-6">
@@ -395,6 +402,7 @@ endblock %} {% block content %}
             action="{{ url_for('favorites.toggle_menu_item_favorite', item_id=item.id) }}"
             class="d-inline mb-2"
           >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="next" value="{{ request.path }}" />
             <button
               type="submit"
@@ -406,6 +414,12 @@ endblock %} {% block content %}
               {% if item.id in favorite_menu_item_ids %}Saved{% else %}Save
               Item{% endif %}
             </button>
+          </form>
+          <form method="post" action="{{ url_for('commerce.add_to_cart', item_id=item.id) }}" class="d-inline mb-2">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <input type="hidden" name="quantity" value="1">
+            <button type="submit" class="btn btn-sm btn-industrial"><i class="bi bi-bag-plus me-1"></i>Add to Cart</button>
           </form>
           {% endif %}
 

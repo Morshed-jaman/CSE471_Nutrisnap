@@ -44,10 +44,12 @@
                             <td>
                                 <div class="d-flex flex-column gap-2">
                                     <form method="post" action="{{ url_for('admin.approve_nutrition_expert', user_id=expert.id) }}" class="d-grid gap-1">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <textarea class="form-control form-control-industrial form-control-sm" name="review_note" rows="2" placeholder="Optional approval note"></textarea>
                                         <button type="submit" class="btn btn-success btn-sm">Approve</button>
                                     </form>
                                     <form method="post" action="{{ url_for('admin.reject_nutrition_expert', user_id=expert.id) }}" class="d-grid gap-1">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <textarea class="form-control form-control-industrial form-control-sm" name="review_note" rows="2" placeholder="Optional rejection note"></textarea>
                                         <button type="submit" class="btn btn-danger btn-sm">Reject</button>
                                     </form>
