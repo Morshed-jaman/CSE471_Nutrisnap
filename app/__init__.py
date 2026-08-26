@@ -5,11 +5,12 @@ import hashlib
 import click
 from dotenv import load_dotenv
 from flask import Flask, render_template, request
+from flask_login import AnonymousUserMixin
 from sqlalchemy import inspect, text
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from app.config import Config
+from app.config import Config, _validate_production_database
 from app.extensions import csrf, db, login_manager, migrate
 from app.models import SubscriptionPlan, User
 from app.routes import register_blueprints
@@ -128,6 +129,10 @@ def create_app(config_class: type[Config] = Config) -> Flask:
 
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(config_class)
+    _validate_production_database(
+        app.config.get("SQLALCHEMY_DATABASE_URI"),
+        is_vercel=bool(os.getenv("VERCEL")),
+    )
     if not app.config.get("SECRET_KEY"):
         raise RuntimeError("SECRET_KEY must be configured before NutriSnap can start.")
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
@@ -227,6 +232,24 @@ def create_app(config_class: type[Config] = Config) -> Flask:
     @app.errorhandler(404)
     def not_found(_error):
         return render_template("errors/404.html"), 404
+
+    @app.errorhandler(OperationalError)
+    def database_unavailable(error):
+        db.session.rollback()
+        original = getattr(error, "orig", None)
+        error_code = getattr(original, "pgcode", None) or getattr(original, "sqlstate", None)
+        if not isinstance(error_code, str) or not re.fullmatch(r"[A-Z0-9]{5}", error_code):
+            error_code = "unavailable"
+        app.logger.error(
+            "Database request failure route=%s category=OperationalError pgcode=%s",
+            request.path,
+            error_code,
+        )
+        response = app.make_response(
+            (render_template("errors/500.html", current_user=AnonymousUserMixin()), 503)
+        )
+        response.headers["Retry-After"] = "30"
+        return response
 
     @app.errorhandler(500)
     def internal_error(error):

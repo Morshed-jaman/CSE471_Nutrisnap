@@ -3,6 +3,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
+from sqlalchemy.engine import make_url
 from sqlalchemy.pool import NullPool
 
 
@@ -48,6 +49,36 @@ def _normalize_database_url(database_url: str | None) -> str | None:
     return database_url
 
 
+def _validate_production_database(database_url: str | None, *, is_vercel: bool) -> None:
+    """Validate only deployment-safe URL properties without exposing URL contents."""
+    if not is_vercel:
+        return
+    if not database_url:
+        raise RuntimeError("DATABASE_URL must be configured for Vercel.")
+
+    try:
+        url = make_url(database_url)
+        backend = url.get_backend_name()
+        port = url.port
+    except (TypeError, ValueError):
+        raise RuntimeError("DATABASE_URL is not a valid database URL for Vercel.") from None
+
+    if backend != "postgresql":
+        raise RuntimeError("DATABASE_URL must use PostgreSQL on Vercel; SQLite is not allowed.")
+    if port != 6543:
+        raise RuntimeError("DATABASE_URL must use the Supabase transaction pooler on port 6543.")
+
+
+def _database_engine_options(database_url: str | None) -> dict:
+    options: dict = {"pool_pre_ping": True}
+    if database_url and database_url.startswith(("postgresql://", "postgresql+")):
+        options.update(
+            poolclass=NullPool,
+            connect_args={"sslmode": "require", "connect_timeout": 10},
+        )
+    return options
+
+
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY")
 
@@ -59,9 +90,7 @@ class Config:
         SQLALCHEMY_DATABASE_URI = f"sqlite:///{(BASE_DIR / 'meal_logs.db').as_posix()}"
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}
-    if database_url and database_url.startswith(("postgresql://", "postgresql+")):
-        SQLALCHEMY_ENGINE_OPTIONS["poolclass"] = NullPool
+    SQLALCHEMY_ENGINE_OPTIONS = _database_engine_options(database_url)
     AUTO_CREATE_DB = _as_bool(os.getenv("AUTO_CREATE_DB"), default=False)
 
     SESSION_COOKIE_HTTPONLY = True
