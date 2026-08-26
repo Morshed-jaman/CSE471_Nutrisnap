@@ -11,6 +11,7 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.config import Config, _validate_production_database
+from app.database_resilience import install_postgresql_connection_retry
 from app.extensions import csrf, db, login_manager, migrate
 from app.models import SubscriptionPlan, User
 from app.routes import register_blueprints
@@ -253,12 +254,16 @@ def create_app(config_class: type[Config] = Config) -> Flask:
 
     @app.errorhandler(500)
     def internal_error(error):
+        original_error = getattr(error, "original_exception", None)
+        if isinstance(original_error, OperationalError):
+            return database_unavailable(original_error)
         db.session.rollback()
-        category = type(getattr(error, "original_exception", None) or error).__name__
+        category = type(original_error or error).__name__
         app.logger.error("Unexpected request failure route=%s category=%s", request.path, category)
         return render_template("errors/500.html"), 500
 
     with app.app_context():
+        install_postgresql_connection_retry(db.engine, app.logger)
         if app.config.get("AUTO_CREATE_DB", False):
             db.create_all()
             _ensure_schema_compatibility()

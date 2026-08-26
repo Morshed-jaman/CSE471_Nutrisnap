@@ -74,7 +74,7 @@ def _database_engine_options(database_url: str | None) -> dict:
     if database_url and database_url.startswith(("postgresql://", "postgresql+")):
         options.update(
             poolclass=NullPool,
-            connect_args={"sslmode": "require", "connect_timeout": 10},
+            connect_args={"sslmode": "require", "connect_timeout": 4},
         )
     return options
 
