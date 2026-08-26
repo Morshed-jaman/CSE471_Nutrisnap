@@ -1,7 +1,7 @@
 """Add commerce and per-user favorites without recreating existing application tables.
 
 Revision ID: 13c04f232d70
-Revises:
+Revises: 000000000001
 """
 
 from datetime import datetime
@@ -11,7 +11,7 @@ from alembic import op
 
 
 revision = "13c04f232d70"
-down_revision = None
+down_revision = "000000000001"
 branch_labels = None
 depends_on = None
 
@@ -148,16 +148,7 @@ def upgrade():
 
 
 def downgrade():
-    # Favorite ownership is retained because removing it would merge distinct users'
-    # data and make the downgrade destructive. Commerce tables are safe to remove on
-    # an isolated/test database after the caller has explicitly backed it up.
-    for table_name in (
-        "payment_transactions",
-        "order_items",
-        "cart_items",
-        "orders",
-        "subscriptions",
-        "subscription_plans",
-    ):
-        if table_name in sa.inspect(op.get_bind()).get_table_names():
-            op.drop_table(table_name)
+    raise RuntimeError(
+        "Refusing to downgrade commerce because that would destroy order, subscription, "
+        "payment, cart, or favorite history. Restore a verified backup for recovery."
+    )

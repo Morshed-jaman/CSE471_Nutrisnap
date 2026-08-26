@@ -3,6 +3,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
+from sqlalchemy.pool import NullPool
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -58,6 +59,9 @@ class Config:
         SQLALCHEMY_DATABASE_URI = f"sqlite:///{(BASE_DIR / 'meal_logs.db').as_posix()}"
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}
+    if database_url and database_url.startswith(("postgresql://", "postgresql+")):
+        SQLALCHEMY_ENGINE_OPTIONS["poolclass"] = NullPool
     AUTO_CREATE_DB = _as_bool(os.getenv("AUTO_CREATE_DB"), default=False)
 
     SESSION_COOKIE_HTTPONLY = True
@@ -68,11 +72,6 @@ class Config:
 
     MAX_CONTENT_LENGTH = 8 * 1024 * 1024  # 8 MB
     ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif"}
-
-    DEFAULT_ADMIN_EMAIL = os.getenv("DEFAULT_ADMIN_EMAIL")
-    DEFAULT_ADMIN_PASSWORD = os.getenv("DEFAULT_ADMIN_PASSWORD")
-    DEFAULT_ADMIN_NAME = os.getenv("DEFAULT_ADMIN_NAME", "NutriSnap Admin")
-    DEFAULT_ADMIN_PHONE = os.getenv("DEFAULT_ADMIN_PHONE", "01000000000")
 
     MAIL_SERVER = os.getenv("MAIL_SERVER", "smtp.gmail.com")
     MAIL_PORT = int(os.getenv("MAIL_PORT", "587"))

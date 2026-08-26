@@ -188,6 +188,10 @@ def subscription_checkout(plan_id: int):
     try:
         return _start_gateway_session(payment, customer_address="Digital subscription", item_count=1)
     except SSLCommerzError as exc:
+        current_app.logger.warning(
+            "Payment initiation failed route=%s transaction=%s category=gateway",
+            request.path, payment.transaction_id,
+        )
         payment.status = "failed"
         payment.failure_reason = str(exc)
         subscription.status = "cancelled"
@@ -362,6 +366,10 @@ def order_checkout():
         db.session.commit()
         return response
     except SSLCommerzError as exc:
+        current_app.logger.warning(
+            "Payment initiation failed route=%s transaction=%s category=gateway",
+            request.path, payment.transaction_id,
+        )
         payment.status = "failed"
         payment.failure_reason = str(exc)
         order.status = "payment_failed"
@@ -414,6 +422,7 @@ def _verify_and_fulfil(payment: PaymentTransaction, validation_id: str) -> tuple
         and secrets.compare_digest(gateway_transaction_id, payment.transaction_id)
         and gateway_currency == payment.currency
         and gateway_amount == _money(payment.amount)
+        and str(payload.get("value_a") or "") == payment.purpose
     )
     if not valid:
         payment.gateway_response = _safe_gateway_audit(payload)

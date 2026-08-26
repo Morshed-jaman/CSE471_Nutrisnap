@@ -133,7 +133,7 @@ Never commit real API keys or gateway credentials. If a credential has ever appe
 
 ```env
 SECRET_KEY=
-DATABASE_URL=postgresql://user:password@host:5432/nutrisnap
+DATABASE_URL=
 AUTO_CREATE_DB=false
 PUBLIC_BASE_URL=https://your-production-domain.example
 SESSION_COOKIE_SECURE=true
@@ -158,10 +158,6 @@ OPENAI_BASE_URL=https://api.openai.com/v1/chat/completions
 OPENROUTER_API_KEY=
 OPENROUTER_SITE_URL=
 OPENROUTER_SITE_NAME=
-DEFAULT_ADMIN_EMAIL=admin@nutrisnap.local
-DEFAULT_ADMIN_PASSWORD=replace-with-a-strong-password
-DEFAULT_ADMIN_NAME=NutriSnap Admin
-DEFAULT_ADMIN_PHONE=01000000000
 MAIL_SERVER=smtp.gmail.com
 MAIL_PORT=587
 MAIL_USERNAME=yourgmail@gmail.com
@@ -196,24 +192,55 @@ Open:
 
 - `http://127.0.0.1:5000`
 
-## Default Admin Account
+## Local SQLite development
 
-A default admin is auto-created at startup (if not already present) using:
+Leave `DATABASE_URL` empty (or point it at a local SQLite file), set `AUTO_CREATE_DB=false`, and use Alembic:
 
-- `DEFAULT_ADMIN_EMAIL`
-- `DEFAULT_ADMIN_PASSWORD`
-
-Always provide unique production credentials. Do not deploy the development defaults.
-
-## Database migrations
-
-The repository includes an Alembic migration baseline. For a new database:
-
-```bash
-flask --app main:app db upgrade
+```powershell
+.\.venv\Scripts\python.exe -m flask --app main:app db upgrade
+.\.venv\Scripts\python.exe -m flask --app main:app db-preflight
+.\.venv\Scripts\python.exe main.py
 ```
 
-For an older database created with `db.create_all()`, back it up first, reconcile its schema, and stamp the matching migration before switching `AUTO_CREATE_DB=false`. Use managed PostgreSQL for production; serverless local SQLite is not durable.
+Never use the repository's local SQLite database on Vercel.
+
+## Existing Supabase production upgrade
+
+The graph is `000000000001` (non-destructive legacy baseline) → `13c04f232d70` (favorites and commerce). Existing databases already stamped `13c04f232d70` remain at head because that revision ID did not change. An unstamped legacy database runs the baseline with `checkfirst=True`, preserving existing tables and rows, then creates only missing commerce tables and plans.
+
+Before the real upgrade, create or verify a recoverable Supabase backup. Use a session-pooler URL on port `5432` only as a temporary process variable. Do not replace local `.env`, do not run a downgrade, and do not use the dashboard HTTPS URL.
+
+```powershell
+$env:DATABASE_URL = '<Supabase session pooler PostgreSQL URL on port 5432>'
+.\.venv\Scripts\python.exe -m flask --app main:app db-preflight
+.\.venv\Scripts\python.exe -m flask --app main:app db upgrade
+.\.venv\Scripts\python.exe -m flask --app main:app db-preflight
+Remove-Item Env:DATABASE_URL
+```
+
+The first preflight is expected to report missing tables or no revision on an unupgraded legacy database. Review both migration files before execution: permitted operations create missing tables/indexes/constraints, migrate legacy favorite ownership where determinable, seed missing plan codes, and update `alembic_version`. The upgrade path contains no destructive operation against application data. Record row counts for legacy tables before and after in Supabase. Stop if the dialect is not `postgresql` or the safe host fingerprint is not the expected project.
+
+## Fresh Supabase setup
+
+Against an empty disposable project, set the session-pooler URL temporarily and run `db upgrade`, then `db-preflight`. The baseline creates the complete core schema and the incremental revision adds commerce. Configure the runtime `DATABASE_URL` separately with the transaction pooler on port `6543`.
+
+## Vercel environment variables
+
+Configure `SECRET_KEY`, `DATABASE_URL`, `AUTO_CREATE_DB=false`, `PUBLIC_BASE_URL`, `SESSION_COOKIE_SECURE=true`, `SSLCOMMERZ_STORE_ID`, `SSLCOMMERZ_STORE_PASSWORD`, `SSLCOMMERZ_SANDBOX=true`, `PAYMENT_HTTP_TIMEOUT_SECONDS`, `ORDER_DELIVERY_FEE_BDT`, the Cloudinary variables, `NUTRITION_API_KEY`, OpenAI/OpenRouter variables, and mail variables. Vercel runtime `DATABASE_URL` must be Supabase's transaction pooler URL on port `6543`. Never enable startup schema creation in production.
+
+## Administrator creation
+
+Administrator bootstrap is deliberately independent of application startup and has no fallback credentials:
+
+```powershell
+.\.venv\Scripts\python.exe -m flask --app main:app create-admin
+```
+
+The command securely prompts for the password, enforces complexity, refuses to promote an existing non-admin account, and makes no change when the admin already exists.
+
+## Credential rotation
+
+Before redeployment, revoke and replace every previously exposed Flask secret, OpenRouter key, Gmail App Password, Cloudinary secret, nutrition API key, administrator password, and SSLCOMMERZ Store Password. Never recover values from old `.env` files or Git history. Confirm `.env`, database files, backups, virtual environments, and caches remain ignored.
 
 ## Payment setup and trust model
 
@@ -225,6 +252,27 @@ For an older database created with `db.create_all()`, back it up first, reconcil
 NutriSnap never grants paid access from a redirect alone. It calls the SSLCOMMERZ validation API and matches the transaction ID, amount, currency, status, and risk level. Duplicate success/IPN calls are idempotent. Store credentials remain server-side.
 
 SSLCOMMERZ Sandbox is for testing only. A live merchant account, business verification, production credentials, refund policy, privacy policy, terms, and operational reconciliation are still required before accepting real money.
+
+For this deployment, configure the merchant-panel IPN URL exactly as:
+
+```text
+https://cse-471-nutrisnap.vercel.app/payments/ipn
+```
+
+### Manual Sandbox smoke testing
+
+1. Confirm `PUBLIC_BASE_URL=https://cse-471-nutrisnap.vercel.app`, Sandbox mode, and rotated store credentials.
+2. Log in as a normal user and start one subscription payment; cancel it and verify no access is granted.
+3. Complete a subscription payment and confirm it becomes active only after server validation.
+4. Add one vendor's items, verify the price snapshot and delivery fee, then complete checkout.
+5. Confirm the order becomes paid/confirmed and the cart clears only after session initiation succeeds.
+6. Replay success and IPN callbacks and confirm there is only one fulfilment.
+7. Exercise failed/cancelled payments and confirm friendly pages, rollback, and sanitized logs.
+8. Verify user, vendor, and administrator commerce views with authorization boundaries.
+
+### Rollback and recovery
+
+Commerce and baseline downgrades intentionally refuse to run because deleting commerce or legacy tables would destroy history. If an upgrade fails, stop traffic-changing work, preserve logs, and restore the verified Supabase backup or perform a reviewed forward-only corrective migration. Never run a production downgrade, truncate tables, or recreate the database.
 
 ## Route Summary
 

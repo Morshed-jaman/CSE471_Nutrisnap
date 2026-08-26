@@ -16,6 +16,7 @@ from app.models import (
 )
 from app.routes import commerce_routes
 from app.services.sslcommerz_service import GatewaySession
+from app.services.sslcommerz_service import SSLCommerzError
 from tests.conftest import login
 
 
@@ -69,6 +70,7 @@ def test_subscription_is_not_activated_until_gateway_validation(
             "tran_id": transaction_id,
             "currency": "BDT",
             "amount": "299.00",
+            "value_a": "subscription",
             "risk_level": "0",
             "bank_tran_id": "BANK-1",
             "card_type": "VISA",
@@ -107,6 +109,7 @@ def test_gateway_amount_mismatch_never_fulfils_subscription(
             "tran_id": transaction_id,
             "currency": "BDT",
             "amount": "1.00",
+            "value_a": "subscription",
             "risk_level": "0",
         },
     )
@@ -119,6 +122,26 @@ def test_gateway_amount_mismatch_never_fulfils_subscription(
         assert payment.status == "validation_failed"
         assert payment.user.is_subscribed is False
         assert payment.subscription.status != "active"
+
+
+def test_payment_initiation_failure_is_safe_and_sanitized(
+    app, client, commerce_data, monkeypatch, caplog
+):
+    login(client)
+    monkeypatch.setattr(
+        commerce_routes,
+        "initiate_payment",
+        lambda **_kwargs: (_ for _ in ()).throw(SSLCommerzError("Gateway unavailable.")),
+    )
+    with app.app_context():
+        plan_id = SubscriptionPlan.query.filter_by(code="monthly").one().id
+    response = client.post(f"/subscriptions/{plan_id}/checkout")
+    assert response.status_code == 302
+    with app.app_context():
+        assert PaymentTransaction.query.one().status == "failed"
+        assert Subscription.query.one().status == "cancelled"
+    assert "category=gateway" in caplog.text
+    assert app.config["SSLCOMMERZ_STORE_PASSWORD"] not in caplog.text
 
 
 def test_verified_order_uses_price_snapshot_and_becomes_confirmed(
@@ -159,6 +182,7 @@ def test_verified_order_uses_price_snapshot_and_becomes_confirmed(
             "tran_id": transaction_id,
             "currency": "BDT",
             "amount": "560.00",
+            "value_a": "order",
             "risk_level": "0",
         },
     )
@@ -187,6 +211,7 @@ def test_payment_callback_is_idempotent(app, client, commerce_data, monkeypatch)
             "tran_id": transaction_id,
             "currency": "BDT",
             "amount": "299.00",
+            "value_a": "subscription",
             "risk_level": "0",
         },
     )
@@ -282,6 +307,7 @@ def test_gateway_validation_rejects_mismatches(
         "tran_id": transaction_id,
         "currency": "BDT",
         "amount": "299.00",
+        "value_a": "subscription",
         "risk_level": "0",
     }
     payload.update(overrides)

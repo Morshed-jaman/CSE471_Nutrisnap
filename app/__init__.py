@@ -1,9 +1,12 @@
 import os
+import re
+import hashlib
 
 import click
 from dotenv import load_dotenv
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from sqlalchemy import inspect, text
+from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from app.config import Config
@@ -58,37 +61,6 @@ def _ensure_schema_compatibility() -> None:
     _add_column_if_missing("water_intakes", "user_id", "INTEGER")
     _add_column_if_missing("water_intakes", "amount_ml", "INTEGER")
     _add_column_if_missing("water_intakes", "intake_date", "DATE")
-
-
-def _ensure_default_admin(app: Flask) -> None:
-    admin_email = (app.config.get("DEFAULT_ADMIN_EMAIL") or "").strip().lower()
-    admin_password = (app.config.get("DEFAULT_ADMIN_PASSWORD") or "").strip()
-    admin_name = (app.config.get("DEFAULT_ADMIN_NAME") or "System Admin").strip()
-    admin_phone = (app.config.get("DEFAULT_ADMIN_PHONE") or "0000000000").strip()
-
-    if not admin_email or not admin_password:
-        return
-
-    existing_admin = User.query.filter_by(email=admin_email).first()
-    if existing_admin:
-        if existing_admin.role != "admin":
-            existing_admin.role = "admin"
-        if not existing_admin.password_hash:
-            existing_admin.set_password(admin_password)
-        db.session.commit()
-        return
-
-    admin = User(
-        name=admin_name,
-        email=admin_email,
-        phone=admin_phone,
-        role="admin",
-        vendor_status=None,
-        is_active=True,
-    )
-    admin.set_password(admin_password)
-    db.session.add(admin)
-    db.session.commit()
 
 
 def _ensure_subscription_plans() -> None:
@@ -151,7 +123,8 @@ def _clean_optional_env(key: str, default: str | None = None) -> str | None:
 
 
 def create_app(config_class: type[Config] = Config) -> Flask:
-    load_dotenv(override=True)
+    # Process-level values (including a temporary migration DATABASE_URL) must win.
+    load_dotenv(override=False)
 
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(config_class)
@@ -182,6 +155,67 @@ def create_app(config_class: type[Config] = Config) -> Flask:
 
     register_blueprints(app)
 
+    @app.cli.command("db-preflight")
+    def database_preflight_command():
+        """Read-only migration and required-table check; never prints the URL."""
+        from alembic.runtime.migration import MigrationContext
+        from alembic.script import ScriptDirectory
+
+        required = {
+            "users", "vendors", "vendor_profiles", "menu_items", "meal_logs", "reviews",
+            "favorite_vendors", "favorite_menu_items", "favorite_meals",
+            "subscription_plans", "subscriptions", "cart_items", "orders", "order_items",
+            "payment_transactions", "alembic_version",
+        }
+        inspector = inspect(db.engine)
+        with db.engine.connect() as connection:
+            current_revision = MigrationContext.configure(connection).get_current_revision()
+        expected = ScriptDirectory.from_config(migrate.get_config()).get_current_head()
+        missing = sorted(required - set(inspector.get_table_names()))
+        click.echo(f"Database dialect: {db.engine.dialect.name}")
+        hostname = db.engine.url.host
+        fingerprint = hashlib.sha256(hostname.encode()).hexdigest()[:12] if hostname else "local"
+        click.echo(f"Database host fingerprint: {fingerprint}")
+        click.echo(f"Current migration revision: {current_revision or 'none'}")
+        click.echo(f"Expected migration head: {expected}")
+        click.echo(f"Missing required tables: {', '.join(missing) if missing else 'none'}")
+        if current_revision != expected or missing:
+            raise click.ClickException("Database schema is not ready.")
+
+    @app.cli.command("create-admin")
+    @click.option("--email", prompt=True)
+    @click.option("--name", prompt=True)
+    @click.option("--phone", prompt=True)
+    def create_admin_command(email: str, name: str, phone: str):
+        """Create one administrator without environment credential fallbacks."""
+        email, name, phone = email.strip().lower(), name.strip(), phone.strip()
+        if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email):
+            raise click.ClickException("A valid email address is required.")
+        if len(name) < 2 or not re.fullmatch(r"[0-9+() -]{7,40}", phone):
+            raise click.ClickException("A valid name and phone number are required.")
+        existing = User.query.filter_by(email=email).first()
+        if existing:
+            if existing.role == "admin":
+                click.echo("An administrator with that email already exists; no changes made.")
+                return
+            raise click.ClickException("That email belongs to a non-administrator; no changes made.")
+        password = click.prompt("Password", hide_input=True, confirmation_prompt=True)
+        if (len(password) < 12 or not re.search(r"[A-Z]", password)
+                or not re.search(r"[a-z]", password) or not re.search(r"\d", password)
+                or not re.search(r"[^A-Za-z0-9]", password)):
+            raise click.ClickException(
+                "Password must be at least 12 characters and include upper, lower, number, and symbol."
+            )
+        admin = User(name=name, email=email, phone=phone, role="admin", is_active=True)
+        admin.set_password(password)
+        db.session.add(admin)
+        try:
+            db.session.commit()
+        except SQLAlchemyError:
+            db.session.rollback()
+            raise click.ClickException("Administrator creation failed; no changes were saved.")
+        click.echo("Administrator created successfully.")
+
     @app.cli.command("seed-vendors")
     def seed_vendors_command():
         """Seed demo vendors and menu items."""
@@ -194,11 +228,17 @@ def create_app(config_class: type[Config] = Config) -> Flask:
     def not_found(_error):
         return render_template("errors/404.html"), 404
 
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        category = type(getattr(error, "original_exception", None) or error).__name__
+        app.logger.error("Unexpected request failure route=%s category=%s", request.path, category)
+        return render_template("errors/500.html"), 500
+
     with app.app_context():
         if app.config.get("AUTO_CREATE_DB", False):
             db.create_all()
             _ensure_schema_compatibility()
-            _ensure_default_admin(app)
             _ensure_subscription_plans()
 
     return app

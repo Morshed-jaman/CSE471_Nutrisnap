@@ -43,6 +43,7 @@ def _post(url: str, *, data: dict[str, Any]) -> dict[str, Any]:
         response.raise_for_status()
         payload = response.json()
     except (requests.RequestException, ValueError) as exc:
+        current_app.logger.warning("Payment gateway request failed category=%s", type(exc).__name__)
         raise SSLCommerzError("The payment gateway is temporarily unavailable.") from exc
 
     if not isinstance(payload, dict):
@@ -90,14 +91,15 @@ def initiate_payment(
         "product_name": product_name[:255],
         "product_category": product_category[:100],
         "product_profile": product_profile,
+        "value_a": product_category.lower().startswith("nutrition") and "subscription" or "order",
     }
     payload = _post(f"{_base_url()}/gwprocess/v4/api.php", data=request_data)
     gateway_url = str(payload.get("GatewayPageURL") or "").strip()
     gateway_host = (urlparse(gateway_url).hostname or "").lower()
     trusted_hosts = {"sandbox.sslcommerz.com", "securepay.sslcommerz.com"}
     if payload.get("status") != "SUCCESS" or gateway_host not in trusted_hosts:
-        message = str(payload.get("failedreason") or "Payment session creation failed.")
-        raise SSLCommerzError(message[:300])
+        current_app.logger.warning("Payment session rejected status=%s", str(payload.get("status"))[:30])
+        raise SSLCommerzError("Payment could not be started. Please try again shortly.")
 
     return GatewaySession(
         gateway_url=gateway_url,
