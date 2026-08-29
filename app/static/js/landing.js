@@ -4,6 +4,13 @@
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const menuButton = document.querySelector(".premium-menu-toggle");
     const menu = document.querySelector(".premium-nav-links");
+    const navWrap = document.querySelector(".premium-nav-wrap");
+
+    if (navWrap) {
+        const updateNavigation = () => navWrap.classList.toggle("is-scrolled", window.scrollY > 24);
+        updateNavigation();
+        window.addEventListener("scroll", updateNavigation, { passive: true });
+    }
 
     if (menuButton && menu) {
         menuButton.addEventListener("click", () => {
