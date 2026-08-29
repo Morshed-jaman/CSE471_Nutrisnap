@@ -9,7 +9,7 @@ from sqlalchemy import func, or_
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
-from app.models import FavoriteMeal, MealLog, MenuItem, Vendor
+from app.models import FavoriteMeal, MealLog, MenuItem, SubscriptionPlan, Vendor
 from app.services.auth_service import redirect_for_role, role_required
 from app.services.cloudinary_service import delete_image, upload_image
 from app.services.nutrition_service import get_nutrition_insights
@@ -212,7 +212,23 @@ def _home_page_context(user_id: int):
 def landing():
     if current_user.is_authenticated:
         return redirect(redirect_for_role(current_user))
-    return render_template("landing.html")
+    featured_menu_items = (
+        MenuItem.query.join(Vendor)
+        .filter(MenuItem.is_available.is_(True), Vendor.is_active.is_(True))
+        .order_by(MenuItem.updated_at.desc())
+        .limit(3)
+        .all()
+    )
+    subscription_plans = (
+        SubscriptionPlan.query.filter_by(is_active=True)
+        .order_by(SubscriptionPlan.price.asc())
+        .all()
+    )
+    return render_template(
+        "landing.html",
+        featured_menu_items=featured_menu_items,
+        subscription_plans=subscription_plans,
+    )
 
 
 @meal_bp.route("/home")

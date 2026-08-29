@@ -1,200 +1,49 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>NutriSnap | Smart Meal & Nutrition Platform</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="NutriSnap helps you log meals, understand nutrition, discover healthy food, and build better everyday habits.">
+  <title>NutriSnap | Eat Smarter. Live Healthier.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="landing-page">
-<div class="landing-bg-grid"></div>
-
-<nav class="navbar navbar-expand-lg landing-nav sticky-top">
-    <div class="container">
-        <a class="navbar-brand landing-brand" href="{{ url_for('meal.landing') }}">
-            <span class="mark"><i class="bi bi-hexagon-fill"></i></span>
-            NutriSnap
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#landingNav" aria-controls="landingNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="landingNav">
-            <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-                <li class="nav-item"><a class="nav-link" href="{{ url_for('meal.landing') }}">Landing</a></li>
-                <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
-                <li class="nav-item"><a class="nav-link" href="#how-it-works">How It Works</a></li>
-                <li class="nav-item"><a class="nav-link" href="#explore">Explore</a></li>
-                <li class="nav-item mt-2 mt-lg-0"><a class="btn btn-outline-industrial btn-sm" href="{{ url_for('auth.login') }}">Login</a></li>
-                <li class="nav-item mt-2 mt-lg-0"><a class="btn btn-industrial btn-sm" href="{{ url_for('auth.register') }}">Register</a></li>
-                <li class="nav-item mt-2 mt-lg-0"><a class="btn btn-outline-secondary btn-sm" href="{{ url_for('auth.vendor_register') }}">Vendor Register</a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-<main>
-    <section class="landing-hero container">
-        <div class="row g-4 align-items-center">
-            <div class="col-lg-6 landing-reveal" data-delay="0">
-                <p class="eyebrow mb-2">Nutrition Intelligence Platform</p>
-                <h1>Smarter meal tracking for daily food decisions</h1>
-                <p>Manage meal logs, discover healthier vendors, and retrieve nutrition data in one streamlined workspace.</p>
-                <div class="d-flex flex-wrap gap-2 mt-4">
-                    <a href="{{ url_for('auth.login') }}" class="btn btn-industrial">Open App</a>
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-industrial">Register as User</a>
-                    <a href="{{ url_for('auth.vendor_register') }}" class="btn btn-outline-secondary">Register as Vendor</a>
-                </div>
-            </div>
-            <div class="col-lg-6 landing-reveal" data-delay="1">
-                <div class="landing-hero-mock">
-                    <div class="mini-top">
-                        <span>Live Platform Preview</span>
-                        <strong>NutriSnap</strong>
-                    </div>
-                    <div class="mock-grid">
-                        <article>
-                            <i class="bi bi-journal-richtext"></i>
-                            <h3>Meal Logs</h3>
-                            <p>Track photos and notes</p>
-                        </article>
-                        <article>
-                            <i class="bi bi-search-heart"></i>
-                            <h3>Nutrition Data</h3>
-                            <p>API-powered macro lookup</p>
-                        </article>
-                        <article>
-                            <i class="bi bi-shop-window"></i>
-                            <h3>Vendor Search</h3>
-                            <p>Explore healthy options</p>
-                        </article>
-                        <article>
-                            <i class="bi bi-shield-check"></i>
-                            <h3>Admin Review</h3>
-                            <p>Vendor approval workflow</p>
-                        </article>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="landing-section container" id="features">
-        <div class="landing-section-head landing-reveal" data-delay="2">
-            <p class="eyebrow mb-1">Core Features</p>
-            <h2>Everything you need for smarter nutrition tracking</h2>
-        </div>
-        <div class="row g-3 mt-1">
-            <div class="col-md-3 landing-reveal" data-delay="3">
-                <article class="landing-feature-card">
-                    <i class="bi bi-camera2"></i>
-                    <h3>Meal Logging</h3>
-                    <p>Upload meal photos and manage food logs with full CRUD.</p>
-                </article>
-            </div>
-            <div class="col-md-3 landing-reveal" data-delay="4">
-                <article class="landing-feature-card">
-                    <i class="bi bi-compass"></i>
-                    <h3>Vendor Discovery</h3>
-                    <p>Search and browse food vendors and menu options.</p>
-                </article>
-            </div>
-            <div class="col-md-3 landing-reveal" data-delay="5">
-                <article class="landing-feature-card">
-                    <i class="bi bi-cpu"></i>
-                    <h3>Nutrition Intelligence</h3>
-                    <p>Retrieve nutrition values and analyze meal macros.</p>
-                </article>
-            </div>
-            <div class="col-md-3 landing-reveal" data-delay="6">
-                <article class="landing-feature-card">
-                    <i class="bi bi-shield-lock"></i>
-                    <h3>Role Management</h3>
-                    <p>User, vendor, and admin workflows with approval checks.</p>
-                </article>
-            </div>
-        </div>
-    </section>
-
-    <section class="landing-section container" id="how-it-works">
-        <div class="landing-section-head landing-reveal" data-delay="7">
-            <p class="eyebrow mb-1">How It Works</p>
-            <h2>Four simple steps</h2>
-        </div>
-        <div class="row g-3 mt-1">
-            <div class="col-sm-6 col-lg-3 landing-reveal" data-delay="8"><div class="how-step"><span>1</span><p>Register account</p></div></div>
-            <div class="col-sm-6 col-lg-3 landing-reveal" data-delay="9"><div class="how-step"><span>2</span><p>Upload and manage meals</p></div></div>
-            <div class="col-sm-6 col-lg-3 landing-reveal" data-delay="10"><div class="how-step"><span>3</span><p>Search nutrition and vendors</p></div></div>
-            <div class="col-sm-6 col-lg-3 landing-reveal" data-delay="11"><div class="how-step"><span>4</span><p>Track smarter decisions</p></div></div>
-        </div>
-    </section>
-
-    <section class="landing-section container" id="explore">
-        <div class="landing-section-head landing-reveal" data-delay="12">
-            <p class="eyebrow mb-1">Quick Access</p>
-            <h2>Start your workflow</h2>
-        </div>
-        <div class="row g-3 mt-1">
-            <div class="col-lg-3 landing-reveal" data-delay="13">
-                <article class="preview-box">
-                    <h3>User Login</h3>
-                    <p>Continue with your existing account.</p>
-                    <a href="{{ url_for('auth.login') }}">Go to Login</a>
-                </article>
-            </div>
-            <div class="col-lg-3 landing-reveal" data-delay="14">
-                <article class="preview-box">
-                    <h3>User Registration</h3>
-                    <p>Create a standard user account.</p>
-                    <a href="{{ url_for('auth.register') }}">Register User</a>
-                </article>
-            </div>
-            <div class="col-lg-3 landing-reveal" data-delay="15">
-                <article class="preview-box">
-                    <h3>Vendor Registration</h3>
-                    <p>Submit business details for approval.</p>
-                    <a href="{{ url_for('auth.vendor_register') }}">Register Vendor</a>
-                </article>
-            </div>
-            <div class="col-lg-3 landing-reveal" data-delay="16">
-                <article class="preview-box">
-                    <h3>Admin Login</h3>
-                    <p>Review and approve vendor requests.</p>
-                    <a href="{{ url_for('admin.admin_login') }}">Admin Access</a>
-                </article>
-            </div>
-        </div>
-    </section>
-
-    <section class="landing-cta container landing-reveal" data-delay="17">
-        <h2>Start tracking smarter meals today</h2>
-        <p>Sign in to manage meals, nutrition, vendor browsing, and role-specific workflows.</p>
-        <div class="d-flex flex-wrap justify-content-center gap-2 mt-3">
-            <a href="{{ url_for('auth.login') }}" class="btn btn-industrial">Login</a>
-            <a href="{{ url_for('auth.register') }}" class="btn btn-outline-industrial">Register</a>
-            <a href="{{ url_for('auth.vendor_register') }}" class="btn btn-outline-secondary">Vendor Register</a>
-        </div>
-    </section>
+<a class="skip-link" href="#main-content">Skip to content</a><div class="landing-orb landing-orb-one" aria-hidden="true"></div><div class="landing-orb landing-orb-two" aria-hidden="true"></div>
+<header class="premium-nav-wrap"><nav class="premium-nav" aria-label="Primary navigation">
+  <a class="premium-brand" href="{{ url_for('meal.landing') }}" aria-label="NutriSnap home"><span class="premium-brand-mark" aria-hidden="true"><i class="bi bi-leaf-fill"></i></span><span>NutriSnap</span></a>
+  <button class="premium-menu-toggle" type="button" aria-expanded="false" aria-controls="premium-nav-links"><span class="visually-hidden">Toggle navigation</span><i class="bi bi-list" aria-hidden="true"></i></button>
+  <div class="premium-nav-links" id="premium-nav-links"><a href="#how-it-works">How it works</a><a href="#preview">Your progress</a><a href="#meals">Meals</a><a href="#plans">Plans</a><a class="premium-login" href="{{ url_for('auth.login') }}">Log in</a><a class="premium-button premium-button-small" href="{{ url_for('auth.register') }}">Get started <i class="bi bi-arrow-up-right"></i></a></div>
+</nav></header>
+<main id="main-content">
+<section class="premium-hero" aria-labelledby="hero-heading">
+  <div class="hero-copy landing-reveal is-visible"><div class="hero-kicker"><span></span>Your everyday nutrition companion</div><h1 id="hero-heading">Eat smarter.<br><em>Live healthier.</em></h1><p class="hero-lead">Turn everyday meals into clear, useful nutrition insights—then discover food that fits the way you want to live.</p><div class="hero-actions"><a class="premium-button" href="{{ url_for('auth.register') }}">Start tracking <i class="bi bi-arrow-right"></i></a><a class="premium-text-link" href="{{ url_for('vendor.vendors') }}">Explore meals <i class="bi bi-arrow-up-right"></i></a></div><div class="hero-trust"><i class="bi bi-shield-check" aria-hidden="true"></i><span><strong>Built around you.</strong> Personalized tracking and secure checkout.</span></div></div>
+  <div class="hero-visual landing-reveal is-visible" data-parallax-root aria-label="Illustrated nutrition dashboard with a healthy grain bowl">
+    <div class="ingredient ingredient-leaf" data-depth="0.8" aria-hidden="true"><i class="bi bi-leaf-fill"></i></div><div class="ingredient ingredient-dot" data-depth="1.1" aria-hidden="true"></div><div class="hero-halo" aria-hidden="true"></div>
+    <div class="meal-stage" data-depth="0.25"><div class="meal-bowl" role="img" aria-label="Healthy bowl with greens, grains, tomato, avocado, and egg"><div class="bowl-food"><span class="food-leaves"></span><span class="food-grains"></span><span class="food-tomato"></span><span class="food-avocado"></span><span class="food-egg"></span><span class="food-seeds"></span></div></div><p>Balanced bowl <span>•</span> lunch</p></div>
+    <article class="float-card calorie-card" data-depth="0.65"><span class="float-icon coral"><i class="bi bi-fire"></i></span><div><small>Calories</small><strong><span data-count="486">486</span> kcal</strong></div></article>
+    <article class="float-card protein-card" data-depth="0.9"><span class="float-icon lime"><i class="bi bi-lightning-charge-fill"></i></span><div><small>Protein</small><strong><span data-count="32">32</span> g</strong></div></article>
+    <article class="float-card water-card" data-depth="0.55"><div class="ring-meter"><span>6/8</span></div><div><small>Water</small><strong>On track</strong></div></article>
+    <article class="float-card weekly-card" data-depth="0.75"><div><small>Weekly goal</small><strong><span data-count="84">84</span>%</strong></div><div class="mini-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+  </div><a class="hero-scroll" href="#how-it-works"><span>Scroll to discover</span><i class="bi bi-arrow-down"></i></a>
+</section>
+<section class="premium-section how-section" id="how-it-works" aria-labelledby="how-heading"><div class="section-intro landing-reveal"><p class="section-label">Simple by design</p><h2 id="how-heading">From a quick snap to<br><em>better choices.</em></h2></div><div class="step-grid">
+  <article class="step-card landing-reveal"><span>01</span><div class="step-icon"><i class="bi bi-camera"></i></div><h3>Log your meals</h3><p>Capture what you eat and keep your meal history organized in one place.</p></article>
+  <article class="step-card landing-reveal"><span>02</span><div class="step-icon"><i class="bi bi-pie-chart"></i></div><h3>Understand nutrition</h3><p>Review calories, macros, weekly trends, water, and clear healthy-meal indicators.</p></article>
+  <article class="step-card landing-reveal"><span>03</span><div class="step-icon"><i class="bi bi-graph-up-arrow"></i></div><h3>Reach your goals</h3><p>Use personalized insights and expert advice to build habits that last.</p></article>
+</div></section>
+<section class="premium-section preview-section" id="preview" aria-labelledby="preview-heading"><div class="preview-copy landing-reveal"><p class="section-label">Personalized clarity</p><h2 id="preview-heading">Your day,<br><em>at a glance.</em></h2><p>See the signals that matter without turning every meal into homework.</p><div class="sample-pill"><i class="bi bi-info-circle"></i>Illustrative sample data</div></div><div class="dashboard-preview landing-reveal"><div class="dashboard-head"><div><small>Today’s nutrition</small><h3>Good afternoon, Alex</h3></div><span>Aug 30</span></div><div class="macro-grid"><div class="calorie-dial"><div><strong><span data-count="1480">1,480</span></strong><small>of 2,000 kcal</small></div></div><div class="macro-list"><div><span>Protein <b>92 / 120g</b></span><i style="--progress:77%"></i></div><div><span>Carbs <b>168 / 240g</b></span><i style="--progress:70%"></i></div><div><span>Fats <b>48 / 65g</b></span><i style="--progress:74%"></i></div></div></div><div class="trend-card"><div><small>7-day balance</small><strong>Consistent week</strong></div><div class="trend-line" aria-label="Weekly trend increasing steadily"><span></span></div></div></div></section>
+<section class="premium-section feature-section" id="features" aria-labelledby="features-heading"><div class="section-intro landing-reveal"><p class="section-label">One healthy ecosystem</p><h2 id="features-heading">Smart tools.<br><em>Real-life useful.</em></h2></div><div class="feature-grid">
+{% for icon, title, copy in [('bi-activity','Nutrition tracking','See calories and macros across meals and time.'),('bi-stars','Personalized suggestions','Get nutrition explanations shaped around your logs.'),('bi-search-heart','Meal discovery','Browse healthy dishes from active local vendors.'),('bi-heart','Favorites','Save meals, menu items, and vendors for later.'),('bi-bag-check','Ordering','Build a cart and check out securely from one vendor.'),('bi-gem','Subscription plans','Unlock premium insights and nutrition-expert advice.')] %}<article class="feature-tile landing-reveal"><i class="bi {{ icon }}"></i><h3>{{ title }}</h3><p>{{ copy }}</p></article>{% endfor %}
+</div></section>
+<section class="premium-section meal-section" id="meals" aria-labelledby="meals-heading"><div class="section-row landing-reveal"><div><p class="section-label">Fresh inspiration</p><h2 id="meals-heading">Meals worth<br><em>looking forward to.</em></h2></div><a class="premium-text-link" href="{{ url_for('vendor.vendors') }}">Browse all vendors <i class="bi bi-arrow-up-right"></i></a></div><div class="meal-grid">
+{% if featured_menu_items %}{% for item in featured_menu_items %}<article class="meal-card landing-reveal"><a href="{{ url_for('vendor.menu_item_detail', item_id=item.id) }}" aria-label="View {{ item.name }}">{% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.name }} from {{ item.vendor.name }}" width="640" height="440" loading="lazy">{% else %}<div class="meal-placeholder" aria-hidden="true"><i class="bi bi-bowl-hot"></i></div>{% endif %}<div class="meal-card-body"><div><small>{{ item.vendor.name }}</small><h3>{{ item.name }}</h3></div><span>৳{{ item.price }}</span></div><div class="meal-meta"><span>{% if item.calories is not none %}{{ item.calories|round|int }} kcal{% else %}Nutrition on request{% endif %}</span>{% if item.protein is not none %}<span>{{ item.protein|round|int }}g protein</span>{% endif %}</div></a></article>{% endfor %}
+{% else %}{% for title, detail, icon in [('Garden grain bowl','Balanced lunch inspiration','bi-flower1'),('Bright breakfast plate','A colorful start','bi-sun'),('Green protein bowl','Plant-forward fuel','bi-leaf')] %}<article class="meal-card landing-reveal"><a href="{{ url_for('vendor.vendors') }}"><div class="meal-placeholder fallback-{{ loop.index }}" aria-hidden="true"><i class="bi {{ icon }}"></i></div><div class="meal-card-body"><div><small>NutriSnap inspiration</small><h3>{{ title }}</h3></div><i class="bi bi-arrow-up-right"></i></div><div class="meal-meta"><span>{{ detail }}</span></div></a></article>{% endfor %}{% endif %}
+</div></section>
+<section class="premium-section plans-section" id="plans" aria-labelledby="plans-heading"><div class="section-intro centered landing-reveal"><p class="section-label">Go further with Plus</p><h2 id="plans-heading">A plan for every<br><em>healthy rhythm.</em></h2></div><div class="plan-grid">{% if subscription_plans %}{% for plan in subscription_plans %}<article class="plan-card landing-reveal {% if plan.code == 'quarterly' %}featured{% endif %}">{% if plan.code == 'quarterly' %}<span class="popular">Most popular</span>{% endif %}<p>{{ plan.code|title }}</p><h3>৳{{ plan.price }}</h3><small>{{ plan.duration_days }} days</small><div class="plan-rule"></div><p class="plan-description">{{ plan.description }}</p><a href="{{ url_for('auth.register') }}" class="premium-button">Choose {{ plan.code }}</a></article>{% endfor %}{% else %}<div class="plans-empty landing-reveal"><i class="bi bi-clock-history"></i><h3>Plans are being refreshed</h3><p>Create an account and check back soon for current subscription options.</p></div>{% endif %}</div></section>
+<section class="final-cta landing-reveal" aria-labelledby="cta-heading"><div><p class="section-label">A healthier next step</p><h2 id="cta-heading">Your meals already tell a story.<br><em>Make it a good one.</em></h2><p>Join NutriSnap and turn daily food choices into progress you can see.</p><div class="hero-actions"><a class="premium-button light" href="{{ url_for('auth.register') }}">Create your account <i class="bi bi-arrow-right"></i></a><a class="premium-text-link light-link" href="{{ url_for('auth.login') }}">Open your dashboard</a></div></div><div class="cta-mark" aria-hidden="true"><i class="bi bi-leaf-fill"></i></div></section>
 </main>
-
-<footer class="landing-footer">
-    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <p class="mb-0"><strong>NutriSnap</strong> &middot; Smarter meals. Better choices.</p>
-        <div class="d-flex gap-3 small">
-            <a href="{{ url_for('auth.login') }}">Login</a>
-            <a href="{{ url_for('auth.register') }}">Register</a>
-            <a href="{{ url_for('admin.admin_login') }}">Admin Login</a>
-        </div>
-    </div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<footer class="premium-footer"><div class="footer-brand"><a class="premium-brand" href="{{ url_for('meal.landing') }}"><span class="premium-brand-mark"><i class="bi bi-leaf-fill"></i></span><span>NutriSnap</span></a><p>Smarter meals. Healthier days.</p></div><div class="footer-links"><div><strong>Product</strong><a href="#how-it-works">How it works</a><a href="#features">Features</a><a href="#plans">Plans</a></div><div><strong>Explore</strong><a href="{{ url_for('vendor.vendors') }}">Healthy meals</a><a href="{{ url_for('auth.login') }}">Log in</a><a href="{{ url_for('auth.register') }}">Create account</a></div></div><p class="footer-note">© 2026 NutriSnap. Thoughtful nutrition, one meal at a time.</p></footer>
 <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
-</body>
-</html>
+</body></html>
