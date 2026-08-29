@@ -25,6 +25,8 @@ def test_landing_renders_public_content_and_valid_routes(client):
     assert b"Illustrative sample data" in response.data
     assert b"Nutrition intelligence" in response.data
     assert b"Weekly insights" in response.data
+    assert b"Pause motion" in response.data
+    assert b"Live nutrition story" in response.data
     assert b'href="/register"' in response.data
     assert b'href="/vendors"' in response.data
     assert b'href="/login"' in response.data
