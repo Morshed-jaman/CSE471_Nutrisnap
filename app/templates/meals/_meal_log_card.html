@@ -1,0 +1,39 @@
+<article class="meal-log-card">
+  <div class="meal-log-card__media">
+    <img src="{{ meal.image_url }}" alt="{{ meal.title or meal.meal_type|capitalize ~ ' meal' }}" width="640" height="400" loading="lazy">
+    <span class="meal-log-card__type">{{ meal.meal_type|capitalize }}</span>
+  </div>
+  <div class="meal-log-card__content">
+    <div class="meal-log-card__info">
+      <h2>{{ meal.title or meal.meal_type|capitalize ~ ' Meal' }}</h2>
+      <div class="meal-log-card__metadata">
+        <span><i class="bi bi-calendar3" aria-hidden="true"></i><span>{{ meal.meal_date.strftime('%d %b %Y') }}</span></span>
+        {% if card_context == 'central' %}<span><i class="bi bi-person-circle" aria-hidden="true"></i><span>Uploaded by {{ meal.user.name if meal.user else 'Legacy / Unknown' }}</span></span>{% endif %}
+      </div>
+    </div>
+    {% set has_meal_nutrition = meal.calories is not none or meal.protein is not none or meal.carbohydrates is not none or meal.fats is not none %}
+    <div class="meal-log-card__nutrition" aria-label="Nutrition summary">
+      {% if has_meal_nutrition %}
+      <span><small>Calories</small><strong>{{ meal.calories if meal.calories is not none else '—' }} kcal</strong></span>
+      <span><small>Protein</small><strong>{{ meal.protein if meal.protein is not none else '—' }}g</strong></span>
+      <span><small>Carbs</small><strong>{{ meal.carbohydrates if meal.carbohydrates is not none else '—' }}g</strong></span>
+      <span><small>Fat</small><strong>{{ meal.fats if meal.fats is not none else '—' }}g</strong></span>
+      {% else %}<p><i class="bi bi-info-circle" aria-hidden="true"></i> Nutrition not analyzed</p>{% endif %}
+    </div>
+    <footer class="meal-log-card__footer">
+      <div class="meal-log-card__primary-actions">
+        <a href="{{ url_for('meal.meal_detail', meal_id=meal.id) }}" class="meal-card-action meal-card-action--primary"><i class="bi bi-eye" aria-hidden="true"></i><span>View Details</span></a>
+        {% if card_context == 'personal' %}
+        <form action="{{ url_for('nutrition.analyze_meal', id=meal.id) }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="next" value="{{ url_for('meal.my_meal_logs') }}"><button type="submit" class="meal-card-action meal-card-action--secondary"><i class="bi bi-activity" aria-hidden="true"></i><span>Analyze</span></button></form>
+        {% endif %}
+        {% if has_meal_nutrition and (card_context == 'personal' or current_user.role in ['user','admin']) %}
+        <form method="post" action="{{ url_for('nutrition.nutrition_explanation') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="food_name" value="{{ meal.title or meal.meal_type|capitalize ~ ' Meal' }}"><input type="hidden" name="calories" value="{{ meal.calories if meal.calories is not none else '' }}"><input type="hidden" name="protein" value="{{ meal.protein if meal.protein is not none else '' }}"><input type="hidden" name="carbohydrates" value="{{ meal.carbohydrates if meal.carbohydrates is not none else '' }}"><input type="hidden" name="fats" value="{{ meal.fats if meal.fats is not none else '' }}"><button type="submit" class="meal-card-action meal-card-action--secondary"><i class="bi bi-stars" aria-hidden="true"></i><span>AI Explain</span></button></form>
+        {% elif card_context == 'personal' %}<button type="button" class="meal-card-action meal-card-action--secondary" disabled><i class="bi bi-stars" aria-hidden="true"></i><span>AI Explain</span></button>{% endif %}
+        {% if current_user.role == 'user' %}<form action="{{ url_for('favorites.toggle_meal_favorite', meal_id=meal.id) }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="next" value="{{ request.path }}"><button type="submit" class="meal-card-action meal-card-action--quiet"><i class="bi {% if meal.id in favorite_meal_ids %}bi-heart-fill{% else %}bi-heart{% endif %}" aria-hidden="true"></i><span>{% if meal.id in favorite_meal_ids %}Saved{% else %}Save{% endif %}</span></button></form>{% endif %}
+        {% if card_context == 'central' and current_user.role == 'user' and meal.user_id != current_user.id %}<form action="{{ url_for('meal.save_to_my_meals', meal_id=meal.id) }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="meal-card-action meal-card-action--secondary"><i class="bi bi-copy" aria-hidden="true"></i><span>Copy to My Meals</span></button></form>{% endif %}
+      </div>
+      {% if card_context == 'central' and current_user.role == 'user' and meal.user_id == current_user.id %}<p class="meal-card-status"><i class="bi bi-check2-circle" aria-hidden="true"></i> In My Meals</p>{% endif %}
+      {% if card_context == 'personal' or current_user.role == 'admin' or (current_user.role == 'user' and meal.user_id == current_user.id) %}<div class="meal-log-card__owner-actions" aria-label="Owner actions"><a href="{{ url_for('meal.edit_meal', meal_id=meal.id) }}" class="meal-card-action meal-card-action--edit"><i class="bi bi-pencil-square" aria-hidden="true"></i><span>Edit</span></a><form action="{{ url_for('meal.delete_meal', meal_id=meal.id) }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button type="submit" class="meal-card-action meal-card-action--delete" data-confirm-delete="Delete this meal log?"><i class="bi bi-trash3" aria-hidden="true"></i><span>Delete</span></button></form></div>{% endif %}
+    </footer>
+  </div>
+</article>
