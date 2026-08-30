@@ -19,6 +19,8 @@ NutriSnap is a multi-role Flask application for meal logging, nutrition analytic
 - Commerce: persistent cart, single-vendor checkout, order history, fulfilment status, and BDT delivery fees
 - Payments: SSLCOMMERZ Sandbox checkout, IPN, server-side validation, risk checks, and idempotent fulfilment
 - Premium: monthly, quarterly, and annual paid nutrition subscriptions
+- Adaptive weekly meal planning with deterministic nutrition, preference, favorite, variety, and pantry-aware suggestions
+- Private pantry inventory, expiry/low-stock signals, and active-plan grocery generation
 - Common Workflows: Registration & Login of Vendors, Advisor, Users a Multi-Role Access, Vendor Approval, Admin Moderation
 
 ## Tech Stack
@@ -101,6 +103,8 @@ nutrisnap/
 - Keep a persistent, account-owned cart
 - Place paid food orders and view order history
 - Purchase a verified NutriSnap Plus subscription
+- Build, generate, swap, activate, and track seven-day meal plans at `/meal-planner`
+- Manage pantry stock and plan-aware grocery lists at `/pantry`
 
 ### Food Vendor
 
@@ -304,6 +308,21 @@ Commerce and baseline downgrades intentionally refuse to run because deleting co
 - `GET /weekly-tracking`
 - `GET /api/nutrition-analytics-data`
 - `GET /api/weekly-tracking-data`
+
+### Planning and pantry
+
+- `GET /meal-planner`
+- `POST /meal-planner/create`
+- `POST /meal-planner/<plan_id>/generate`
+- `POST /meal-planner/<plan_id>/activate`
+- `POST /meal-planner/<plan_id>/entries`
+- `POST /meal-planner/entries/<entry_id>/swap`
+- `POST /meal-planner/entries/<entry_id>/consume`
+- `GET /pantry`
+- `POST /pantry/items`
+- `POST /grocery/generate`
+- `POST /grocery/items`
+- `POST /grocery/items/<item_id>/transfer`
 
 ### Vendors
 

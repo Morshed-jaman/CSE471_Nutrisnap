@@ -14,6 +14,8 @@ REQUIRED = {
     "favorite_vendors", "favorite_menu_items", "favorite_meals", "subscription_plans",
     "subscriptions", "cart_items", "orders", "order_items", "payment_transactions",
     "alembic_version",
+    "nutrition_preferences", "weekly_meal_plans", "meal_plan_entries",
+    "recipe_ingredients", "pantry_items", "grocery_items",
 }
 
 
@@ -77,4 +79,18 @@ def test_already_current_local_sqlite_copy_stays_at_head(tmp_path):
         upgrade(directory="migrations")
         with engine.connect() as connection:
             after = MigrationContext.configure(connection).get_current_revision()
-        assert before == after == "13c04f232d70"
+        assert before == "13c04f232d70"
+        assert after == "8f2c1a7d4b90"
+
+
+def test_planner_revision_upgrade_downgrade_upgrade(tmp_path):
+    from flask_migrate import downgrade
+    path = tmp_path / "roundtrip.db"
+    app = _migration_app(path)
+    with app.app_context():
+        upgrade(directory="migrations")
+        assert "pantry_items" in inspect(app.extensions["sqlalchemy"].engine).get_table_names()
+        downgrade(revision="13c04f232d70", directory="migrations")
+        assert "pantry_items" not in inspect(app.extensions["sqlalchemy"].engine).get_table_names()
+        upgrade(directory="migrations")
+        assert REQUIRED <= set(inspect(app.extensions["sqlalchemy"].engine).get_table_names())

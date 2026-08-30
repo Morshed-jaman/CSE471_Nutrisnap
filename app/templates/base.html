@@ -241,6 +241,8 @@
                   <i class="bi bi-journal-check"></i><span>My Meal Logs</span>
                 </a>
               </li>
+              <li class="nav-item"><a class="nav-link {% if endpoint == 'planning.planner' %}active{% endif %}" href="{{ url_for('planning.planner') }}"><i class="bi bi-calendar2-week"></i><span>Meal Planner</span></a></li>
+              <li class="nav-item"><a class="nav-link {% if endpoint == 'planning.pantry' %}active{% endif %}" href="{{ url_for('planning.pantry') }}"><i class="bi bi-basket2"></i><span>Pantry & Grocery</span></a></li>
               <li class="nav-item">
                 <a
                   class="nav-link {% if endpoint in ['meal.meal_logs', 'meal.meal_detail'] %}active{% endif %}"

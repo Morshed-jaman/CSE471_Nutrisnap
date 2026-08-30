@@ -172,6 +172,8 @@ def create_app(config_class: type[Config] = Config) -> Flask:
             "favorite_vendors", "favorite_menu_items", "favorite_meals",
             "subscription_plans", "subscriptions", "cart_items", "orders", "order_items",
             "payment_transactions", "alembic_version",
+            "nutrition_preferences", "weekly_meal_plans", "meal_plan_entries",
+            "recipe_ingredients", "pantry_items", "grocery_items",
         }
         inspector = inspect(db.engine)
         with db.engine.connect() as connection:

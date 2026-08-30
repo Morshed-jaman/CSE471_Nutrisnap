@@ -10,6 +10,8 @@ from app.models.commerce import (
 from app.models.favorite import FavoriteMeal, FavoriteMenuItem, FavoriteVendor
 from app.models.meal_log import MealLog
 from app.models.menu_item import MenuItem
+from app.models.pantry import GroceryItem, PantryItem
+from app.models.planning import MealPlanEntry, NutritionPreference, RecipeIngredient, WeeklyMealPlan
 from app.models.review import Review
 from app.models.user import User
 from app.models.vendor import Vendor
@@ -31,6 +33,12 @@ __all__ = [
     "MealLog",
     "Vendor",
     "MenuItem",
+    "GroceryItem",
+    "PantryItem",
+    "MealPlanEntry",
+    "NutritionPreference",
+    "RecipeIngredient",
+    "WeeklyMealPlan",
     "Review",
     "User",
     "VendorProfile",
