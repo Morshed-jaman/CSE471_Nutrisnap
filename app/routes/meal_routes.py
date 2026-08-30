@@ -6,6 +6,7 @@ from urllib.parse import quote
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import func, or_
+from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
@@ -210,24 +211,33 @@ def _home_page_context(user_id: int):
 
 @meal_bp.route("/")
 def landing():
-    if current_user.is_authenticated:
-        return redirect(redirect_for_role(current_user))
-    featured_menu_items = (
-        MenuItem.query.join(Vendor)
-        .filter(MenuItem.is_available.is_(True), Vendor.is_active.is_(True))
-        .order_by(MenuItem.updated_at.desc())
-        .limit(3)
-        .all()
-    )
-    subscription_plans = (
-        SubscriptionPlan.query.filter_by(is_active=True)
-        .order_by(SubscriptionPlan.price.asc())
-        .all()
-    )
+    try:
+        featured_menu_items = (
+            MenuItem.query.join(Vendor)
+            .filter(MenuItem.is_available.is_(True), Vendor.is_active.is_(True))
+            .order_by(MenuItem.updated_at.desc())
+            .limit(3)
+            .all()
+        )
+        subscription_plans = (
+            SubscriptionPlan.query.filter_by(is_active=True)
+            .order_by(SubscriptionPlan.price.asc())
+            .all()
+        )
+    except SQLAlchemyError:
+        db.session.rollback()
+        current_app.logger.warning("Landing catalog data unavailable; rendering safe fallbacks.")
+        featured_menu_items = []
+        subscription_plans = []
+
+    dashboard_url = redirect_for_role(current_user) if current_user.is_authenticated else None
+    public_base = (current_app.config.get("PUBLIC_BASE_URL") or request.url_root).rstrip("/")
     return render_template(
         "landing.html",
         featured_menu_items=featured_menu_items,
         subscription_plans=subscription_plans,
+        dashboard_url=dashboard_url,
+        canonical_url=f"{public_base}{url_for('meal.landing')}",
     )
 
 

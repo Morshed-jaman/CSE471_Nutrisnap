@@ -1,52 +1,131 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="NutriSnap helps you log meals, understand nutrition, discover healthy food, and build better everyday habits.">
-  <title>NutriSnap | Eat Smarter. Live Healthier.</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NutriSnap | Track Meals and Understand Nutrition</title>
+  <meta name="description" content="Log meals, understand calories and macros, discover healthy food, and build better habits with NutriSnap.">
+  <link rel="canonical" href="{{ canonical_url }}">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="NutriSnap | Eat smarter. Live healthier.">
+  <meta property="og:description" content="Track meals. Understand nutrition. Make healthier choices.">
+  <meta property="og:url" content="{{ canonical_url }}">
+  <meta property="og:image" content="{{ url_for('static', filename='images/landing/hero-meal-bowl.webp', _external=True) }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="NutriSnap | Eat smarter. Live healthier.">
+  <meta name="twitter:description" content="Track meals. Understand nutrition. Make healthier choices.">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/landing/favicon.png') }}">
+  <link rel="preload" as="image" type="image/webp" href="{{ url_for('static', filename='images/landing/hero-meal-bowl.webp') }}" fetchpriority="high">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="landing-page">
-<a class="skip-link" href="#main-content">Skip to content</a><div class="landing-orb landing-orb-one" aria-hidden="true"></div><div class="landing-orb landing-orb-two" aria-hidden="true"></div>
-<header class="premium-nav-wrap"><nav class="premium-nav" aria-label="Primary navigation">
-  <a class="premium-brand" href="{{ url_for('meal.landing') }}" aria-label="NutriSnap home"><span class="premium-brand-mark" aria-hidden="true"><i class="bi bi-leaf-fill"></i></span><span>NutriSnap</span></a>
-  <button class="premium-menu-toggle" type="button" aria-expanded="false" aria-controls="premium-nav-links"><span class="visually-hidden">Toggle navigation</span><i class="bi bi-list" aria-hidden="true"></i></button>
-  <div class="premium-nav-links" id="premium-nav-links"><a href="#how-it-works">How it works</a><a href="#preview">Your progress</a><a href="#meals">Meals</a><a href="#plans">Plans</a><a class="premium-login" href="{{ url_for('auth.login') }}">Log in</a><a class="premium-button premium-button-small" href="{{ url_for('auth.register') }}">Get started <i class="bi bi-arrow-up-right"></i></a></div>
-</nav></header>
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+<header class="premium-nav-wrap">
+  <nav class="premium-nav" aria-label="Primary navigation">
+    <a class="premium-brand" href="{{ url_for('meal.landing') }}" aria-label="NutriSnap home">
+      <span class="premium-brand-mark" aria-hidden="true">N</span><span>NutriSnap</span>
+    </a>
+    <button class="premium-menu-toggle" type="button" aria-expanded="false" aria-controls="premium-nav-links">
+      <span class="visually-hidden">Open navigation</span><span class="menu-lines" aria-hidden="true"></span>
+    </button>
+    <div class="premium-nav-links" id="premium-nav-links">
+      <a href="#features">Features</a><a href="#how-it-works">How It Works</a><a href="#meals">Meals</a><a href="#plans">Pricing</a>
+      {% if current_user.is_authenticated %}
+        <a class="premium-login" href="{{ url_for('auth.logout') }}">Log out</a><a class="premium-button premium-button-small" href="{{ dashboard_url }}">Open Dashboard <span aria-hidden="true">→</span></a>
+      {% else %}
+        <a class="premium-login" href="{{ url_for('auth.login') }}">Login</a><a class="premium-button premium-button-small" href="{{ url_for('auth.register') }}">Start tracking <span aria-hidden="true">→</span></a>
+      {% endif %}
+    </div>
+  </nav>
+</header>
+
 <main id="main-content">
-<section class="premium-hero" aria-labelledby="hero-heading">
-  <div class="hero-copy landing-reveal is-visible"><div class="hero-kicker"><span></span>Your everyday nutrition companion</div><h1 id="hero-heading">Eat smarter.<br><em>Live healthier.</em></h1><p class="hero-lead">Turn everyday meals into clear, useful nutrition insights—then discover food that fits the way you want to live.</p><div class="hero-actions"><a class="premium-button" href="{{ url_for('auth.register') }}">Start tracking <i class="bi bi-arrow-right"></i></a><a class="premium-text-link" href="{{ url_for('vendor.vendors') }}">Explore meals <i class="bi bi-arrow-up-right"></i></a></div><div class="hero-proof" aria-label="NutriSnap capabilities"><span><i class="bi bi-camera-fill"></i>Meal logging</span><span><i class="bi bi-graph-up"></i>Weekly insights</span><span><i class="bi bi-droplet-fill"></i>Water goals</span></div><div class="hero-trust"><i class="bi bi-shield-check" aria-hidden="true"></i><span><strong>Built around you.</strong> Personalized tracking and secure checkout.</span></div></div>
-  <div class="hero-visual landing-reveal is-visible" data-parallax-root aria-label="Illustrated nutrition dashboard with a healthy grain bowl">
-    <button class="motion-toggle" type="button" aria-pressed="false"><i class="bi bi-pause-fill" aria-hidden="true"></i><span>Pause motion</span></button>
-    <div class="cinematic-light" aria-hidden="true"></div><div class="orbit orbit-one" aria-hidden="true"><i class="bi bi-heart-pulse-fill"></i></div><div class="orbit orbit-two" aria-hidden="true"><i class="bi bi-droplet-fill"></i></div>
-    <div class="ingredient ingredient-leaf" data-depth="0.8" aria-hidden="true"><i class="bi bi-leaf-fill"></i></div><div class="ingredient ingredient-dot" data-depth="1.1" aria-hidden="true"></div><div class="ingredient ingredient-seed" data-depth=".65" aria-hidden="true"></div><div class="ingredient ingredient-herb" data-depth=".9" aria-hidden="true"><i class="bi bi-flower1"></i></div><div class="hero-halo" aria-hidden="true"></div>
-    <div class="meal-stage" data-depth="0.25"><div class="meal-bowl" role="img" aria-label="Healthy bowl with greens, grains, tomato, avocado, and egg"><div class="bowl-food"><span class="food-leaves"></span><span class="food-grains"></span><span class="food-tomato"></span><span class="food-avocado"></span><span class="food-egg"></span><span class="food-seeds"></span></div></div><p>Balanced bowl <span>•</span> lunch</p></div>
-    <article class="float-card calorie-card" data-depth="0.65"><span class="float-icon coral"><i class="bi bi-fire"></i></span><div><small>Calories</small><strong><span data-count="486">486</span> kcal</strong></div></article>
-    <article class="float-card protein-card" data-depth="0.9"><span class="float-icon lime"><i class="bi bi-lightning-charge-fill"></i></span><div><small>Protein</small><strong><span data-count="32">32</span> g</strong></div></article>
-    <article class="float-card water-card" data-depth="0.55"><div class="ring-meter"><span>6/8</span></div><div><small>Water</small><strong>On track</strong></div></article>
-    <article class="float-card weekly-card" data-depth="0.75"><div><small>Weekly goal</small><strong><span data-count="84">84</span>%</strong></div><div class="mini-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article><div class="scene-caption" aria-hidden="true"><span></span><p>Live nutrition story</p></div>
-  </div><a class="hero-scroll" href="#how-it-works"><span>Scroll to discover</span><i class="bi bi-arrow-down"></i></a>
-</section>
-<aside class="capability-ribbon" aria-label="NutriSnap highlights"><div><span><i class="bi bi-stars"></i>Nutrition intelligence</span><span><i class="bi bi-dot"></i>Healthy meal discovery</span><span><i class="bi bi-dot"></i>Progress that feels personal</span><span><i class="bi bi-dot"></i>Secure food ordering</span><span><i class="bi bi-stars"></i>Nutrition intelligence</span></div></aside>
-<section class="premium-section how-section" id="how-it-works" aria-labelledby="how-heading"><div class="section-intro landing-reveal"><p class="section-label">Simple by design</p><h2 id="how-heading">From a quick snap to<br><em>better choices.</em></h2></div><div class="step-grid">
-  <article class="step-card landing-reveal"><span>01</span><div class="step-icon"><i class="bi bi-camera"></i></div><h3>Log your meals</h3><p>Capture what you eat and keep your meal history organized in one place.</p></article>
-  <article class="step-card landing-reveal"><span>02</span><div class="step-icon"><i class="bi bi-pie-chart"></i></div><h3>Understand nutrition</h3><p>Review calories, macros, weekly trends, water, and clear healthy-meal indicators.</p></article>
-  <article class="step-card landing-reveal"><span>03</span><div class="step-icon"><i class="bi bi-graph-up-arrow"></i></div><h3>Reach your goals</h3><p>Use personalized insights and expert advice to build habits that last.</p></article>
-</div></section>
-<section class="premium-section preview-section" id="preview" aria-labelledby="preview-heading"><div class="preview-copy landing-reveal"><p class="section-label">Personalized clarity</p><h2 id="preview-heading">Your day,<br><em>at a glance.</em></h2><p>See the signals that matter without turning every meal into homework.</p><div class="sample-pill"><i class="bi bi-info-circle"></i>Illustrative sample data</div></div><div class="dashboard-preview landing-reveal"><div class="dashboard-head"><div><small>Today’s nutrition</small><h3>Good afternoon, Alex</h3></div><span>Aug 30</span></div><div class="macro-grid"><div class="calorie-dial"><div><strong><span data-count="1480">1,480</span></strong><small>of 2,000 kcal</small></div></div><div class="macro-list"><div><span>Protein <b>92 / 120g</b></span><i style="--progress:77%"></i></div><div><span>Carbs <b>168 / 240g</b></span><i style="--progress:70%"></i></div><div><span>Fats <b>48 / 65g</b></span><i style="--progress:74%"></i></div></div></div><div class="trend-card"><div><small>7-day balance</small><strong>Consistent week</strong></div><div class="trend-line" aria-label="Weekly trend increasing steadily"><span></span></div></div></div></section>
-<section class="premium-section feature-section" id="features" aria-labelledby="features-heading"><div class="section-intro landing-reveal"><p class="section-label">One healthy ecosystem</p><h2 id="features-heading">Smart tools.<br><em>Real-life useful.</em></h2></div><div class="feature-grid">
-{% for icon, title, copy in [('bi-activity','Nutrition tracking','See calories and macros across meals and time.'),('bi-stars','Personalized suggestions','Get nutrition explanations shaped around your logs.'),('bi-search-heart','Meal discovery','Browse healthy dishes from active local vendors.'),('bi-heart','Favorites','Save meals, menu items, and vendors for later.'),('bi-bag-check','Ordering','Build a cart and check out securely from one vendor.'),('bi-gem','Subscription plans','Unlock premium insights and nutrition-expert advice.')] %}<article class="feature-tile landing-reveal"><i class="bi {{ icon }}"></i><h3>{{ title }}</h3><p>{{ copy }}</p></article>{% endfor %}
-</div></section>
-<section class="premium-section meal-section" id="meals" aria-labelledby="meals-heading"><div class="section-row landing-reveal"><div><p class="section-label">Fresh inspiration</p><h2 id="meals-heading">Meals worth<br><em>looking forward to.</em></h2></div><a class="premium-text-link" href="{{ url_for('vendor.vendors') }}">Browse all vendors <i class="bi bi-arrow-up-right"></i></a></div><div class="meal-grid">
-{% if featured_menu_items %}{% for item in featured_menu_items %}<article class="meal-card landing-reveal"><a href="{{ url_for('vendor.menu_item_detail', item_id=item.id) }}" aria-label="View {{ item.name }}">{% if item.image_url %}<img src="{{ item.image_url }}" alt="{{ item.name }} from {{ item.vendor.name }}" width="640" height="440" loading="lazy">{% else %}<div class="meal-placeholder" aria-hidden="true"><i class="bi bi-bowl-hot"></i></div>{% endif %}<div class="meal-card-body"><div><small>{{ item.vendor.name }}</small><h3>{{ item.name }}</h3></div><span>৳{{ item.price }}</span></div><div class="meal-meta"><span>{% if item.calories is not none %}{{ item.calories|round|int }} kcal{% else %}Nutrition on request{% endif %}</span>{% if item.protein is not none %}<span>{{ item.protein|round|int }}g protein</span>{% endif %}</div></a></article>{% endfor %}
-{% else %}{% for title, detail, icon in [('Garden grain bowl','Balanced lunch inspiration','bi-flower1'),('Bright breakfast plate','A colorful start','bi-sun'),('Green protein bowl','Plant-forward fuel','bi-leaf')] %}<article class="meal-card landing-reveal"><a href="{{ url_for('vendor.vendors') }}"><div class="meal-placeholder fallback-{{ loop.index }}" aria-hidden="true"><i class="bi {{ icon }}"></i></div><div class="meal-card-body"><div><small>NutriSnap inspiration</small><h3>{{ title }}</h3></div><i class="bi bi-arrow-up-right"></i></div><div class="meal-meta"><span>{{ detail }}</span></div></a></article>{% endfor %}{% endif %}
-</div></section>
-<section class="premium-section plans-section" id="plans" aria-labelledby="plans-heading"><div class="section-intro centered landing-reveal"><p class="section-label">Go further with Plus</p><h2 id="plans-heading">A plan for every<br><em>healthy rhythm.</em></h2></div><div class="plan-grid">{% if subscription_plans %}{% for plan in subscription_plans %}<article class="plan-card landing-reveal {% if plan.code == 'quarterly' %}featured{% endif %}">{% if plan.code == 'quarterly' %}<span class="popular">Most popular</span>{% endif %}<p>{{ plan.code|title }}</p><h3>৳{{ plan.price }}</h3><small>{{ plan.duration_days }} days</small><div class="plan-rule"></div><p class="plan-description">{{ plan.description }}</p><a href="{{ url_for('auth.register') }}" class="premium-button">Choose {{ plan.code }}</a></article>{% endfor %}{% else %}<div class="plans-empty landing-reveal"><i class="bi bi-clock-history"></i><h3>Plans are being refreshed</h3><p>Create an account and check back soon for current subscription options.</p></div>{% endif %}</div></section>
-<section class="final-cta landing-reveal" aria-labelledby="cta-heading"><div><p class="section-label">A healthier next step</p><h2 id="cta-heading">Your meals already tell a story.<br><em>Make it a good one.</em></h2><p>Join NutriSnap and turn daily food choices into progress you can see.</p><div class="hero-actions"><a class="premium-button light" href="{{ url_for('auth.register') }}">Create your account <i class="bi bi-arrow-right"></i></a><a class="premium-text-link light-link" href="{{ url_for('auth.login') }}">Open your dashboard</a></div></div><div class="cta-mark" aria-hidden="true"><i class="bi bi-leaf-fill"></i></div></section>
+  <section class="premium-hero" aria-labelledby="hero-heading">
+    <div class="hero-copy landing-reveal is-visible">
+      <p class="hero-kicker"><span></span>Your everyday nutrition companion</p>
+      <h1 id="hero-heading">Eat smarter.<br><em>Live healthier.</em></h1>
+      <p class="hero-lead">Track meals. Understand nutrition. Make healthier choices—with one clear view of your everyday progress.</p>
+      <div class="hero-actions">
+        <a class="premium-button" href="{{ dashboard_url if current_user.is_authenticated else url_for('auth.register') }}">{{ 'Open Dashboard' if current_user.is_authenticated else 'Start tracking' }} <span aria-hidden="true">→</span></a>
+        <a class="premium-text-link" href="{{ url_for('vendor.vendors') }}">Explore meals <span aria-hidden="true">↗</span></a>
+      </div>
+      <div class="hero-proof" aria-label="NutriSnap capabilities"><span>Meal logging</span><span>Weekly insights</span><span>Water goals</span></div>
+      <div class="hero-trust"><span class="trust-mark" aria-hidden="true">✓</span><span><strong>Built around you.</strong> Personalized tracking and secure checkout.</span></div>
+    </div>
+
+    <div class="hero-visual landing-reveal is-visible" data-parallax-root aria-label="Nutrition overview surrounding a healthy meal bowl">
+      <button class="motion-toggle" type="button" aria-pressed="false"><span class="motion-symbol" aria-hidden="true">Ⅱ</span><span>Pause motion</span></button>
+      <div class="cinematic-light" aria-hidden="true"></div><div class="orbit orbit-one" aria-hidden="true"><i></i></div><div class="orbit orbit-two" aria-hidden="true"><i></i></div><div class="hero-halo" aria-hidden="true"></div>
+      <div class="real-ingredient real-avocado" data-depth=".75" aria-hidden="true"><img src="{{ url_for('static', filename='images/landing/ingredient-avocado.webp') }}" alt="" width="399" height="420"></div>
+      <div class="real-ingredient real-tomato" data-depth=".95" aria-hidden="true"><img src="{{ url_for('static', filename='images/landing/ingredient-tomato.webp') }}" alt="" width="340" height="360"></div>
+      <div class="real-ingredient real-spinach" data-depth=".55" aria-hidden="true"><img src="{{ url_for('static', filename='images/landing/ingredient-spinach.webp') }}" alt="" width="354" height="360"></div>
+      <div class="real-ingredient real-lemon" data-depth="1.05" aria-hidden="true"><img src="{{ url_for('static', filename='images/landing/ingredient-lemon.webp') }}" alt="" width="350" height="334"></div>
+      <div class="real-ingredient real-herbs" data-depth=".65" aria-hidden="true"><img src="{{ url_for('static', filename='images/landing/ingredient-herbs.webp') }}" alt="" width="333" height="360"></div>
+      <div class="meal-stage" data-depth=".25"><div class="meal-contact-shadow" aria-hidden="true"></div><img class="meal-bowl-photo" src="{{ url_for('static', filename='images/landing/hero-meal-bowl.webp') }}" alt="Top-down healthy bowl with grilled chicken, quinoa, avocado, egg, tomato, cucumber, spinach and roasted vegetables" width="976" height="1000" fetchpriority="high"><p>Balanced bowl <span>•</span> Lunch</p></div>
+      <article class="float-card calorie-card" data-depth=".65"><span class="float-icon coral">kcal</span><div><small>Calories</small><strong><span data-count="486">486</span> kcal</strong></div></article>
+      <article class="float-card protein-card" data-depth=".9"><span class="float-icon lime">P</span><div><small>Protein</small><strong><span data-count="32">32</span> g</strong></div></article>
+      <article class="float-card water-card" data-depth=".55"><div class="ring-meter"><span>6/8</span></div><div><small>Water</small><strong>On track</strong></div></article>
+      <article class="float-card weekly-card" data-depth=".75"><div><small>Weekly goal</small><strong><span data-count="84">84</span>%</strong></div><div class="mini-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+    </div>
+  </section>
+
+  <aside class="capability-ribbon" aria-label="NutriSnap highlights"><div><span>Nutrition intelligence</span><i>•</i><span>Healthy meal discovery</span><i>•</i><span>Progress that feels personal</span><i>•</i><span>Secure food ordering</span></div></aside>
+
+  <section class="premium-section how-section" id="how-it-works" aria-labelledby="how-heading">
+    <div class="section-intro landing-reveal"><p class="section-label">How NutriSnap works</p><h2 id="how-heading">A simple path from meal<br><em>to meaningful progress.</em></h2></div>
+    <ol class="journey landing-reveal">
+      <li><span class="journey-number">01</span><div><h3>Capture or log a meal</h3><p>Add a meal photo, date, type, and notes to keep your food history organized.</p></div></li>
+      <li><span class="journey-number">02</span><div><h3>Understand calories and macros</h3><p>Review nutrition values, search food data, and see a clear healthy-meal indicator.</p></div></li>
+      <li><span class="journey-number">03</span><div><h3>Improve with weekly insights</h3><p>Follow nutrition, hydration, and weekly trends to make more informed choices.</p></div></li>
+    </ol>
+  </section>
+
+  <section class="premium-section preview-section" id="nutrition-intelligence" aria-labelledby="preview-heading">
+    <div class="preview-copy landing-reveal"><p class="section-label">Nutrition intelligence</p><h2 id="preview-heading">Your day,<br><em>made clear.</em></h2><p>NutriSnap brings calories, macros, water, and weekly tracking into one readable view.</p><div class="sample-pill">Illustrative sample data</div></div>
+    <div class="dashboard-preview landing-reveal">
+      <div class="dashboard-head"><div><small>Today’s nutrition</small><h3>Daily overview</h3></div><span>Sample</span></div>
+      <div class="macro-grid"><div class="calorie-dial"><div><strong><span data-count="1480">1,480</span></strong><small>of 2,000 kcal</small></div></div><div class="macro-list"><div><span>Protein <b>92 / 120g</b></span><i style="--progress:77%"></i></div><div><span>Carbohydrates <b>168 / 240g</b></span><i style="--progress:70%"></i></div><div><span>Fat <b>48 / 65g</b></span><i style="--progress:74%"></i></div></div></div>
+      <div class="insight-footer"><div class="water-preview"><span class="mini-ring">75%</span><div><small>Water tracking</small><strong>1,850 ml today</strong></div></div><div class="trend-card"><div><small>7-day trend</small><strong>Steady progress</strong></div><div class="trend-line" aria-label="Weekly nutrition trend moving steadily upward"><span></span></div></div></div>
+    </div>
+  </section>
+
+  <section class="premium-section meal-section" id="meals" aria-labelledby="meals-heading">
+    <div class="section-row landing-reveal"><div><p class="section-label">Meal discovery</p><h2 id="meals-heading">Healthy choices,<br><em>ready to explore.</em></h2></div><a class="premium-text-link" href="{{ url_for('vendor.vendors') }}">Browse vendors <span aria-hidden="true">↗</span></a></div>
+    <div class="discovery-layout">
+      {% set fallback_meals = [('Garden grain bowl','Balanced meal inspiration'),('Fresh protein plate','Colorful everyday fuel'),('Greens and grains','Plant-forward choice')] %}
+      {% for index in range(3) %}
+        {% set item = featured_menu_items[index] if index < featured_menu_items|length else none %}
+        {% set fallback = fallback_meals[index] %}
+        <article class="discovery-card {% if index == 0 %}discovery-featured{% endif %} landing-reveal">
+          <a href="{{ url_for('vendor.menu_item_detail', item_id=item.id) if item else url_for('vendor.vendors') }}">
+            <div class="discovery-image"><img src="{{ url_for('static', filename='images/landing/hero-meal-bowl.webp') }}" alt="Healthy bowl with chicken, grains, avocado, egg and vegetables" width="976" height="1000" loading="lazy"><span>Explore <b aria-hidden="true">↗</b></span></div>
+            <div class="discovery-info"><div><small>{{ item.vendor.name if item else 'NutriSnap inspiration' }}</small><h3>{{ item.name if item else fallback[0] }}</h3></div>{% if item %}<strong>৳{{ item.price }}</strong>{% endif %}</div>
+            <div class="meal-meta"><span>{% if item and item.calories is not none %}{{ item.calories|round|int }} kcal{% else %}{{ fallback[1] }}{% endif %}</span>{% if item and item.protein is not none %}<span>{{ item.protein|round|int }}g protein</span>{% endif %}</div>
+          </a>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="premium-section experience-section" id="features" aria-labelledby="features-heading">
+    <div class="section-intro landing-reveal"><p class="section-label">The complete experience</p><h2 id="features-heading">Tools that work together,<br><em>not another feature grid.</em></h2></div>
+    <div class="experience-groups">
+      <article class="experience-group landing-reveal"><p>Understand</p><h3>Know what is in your meals</h3><ul><li>Meal logging</li><li>Nutrition search</li><li>Healthy indicator</li></ul></article>
+      <article class="experience-group landing-reveal"><p>Track</p><h3>See habits take shape</h3><ul><li>Weekly tracking</li><li>Nutrition analytics</li><li>Water tracking</li></ul></article>
+      <article class="experience-group landing-reveal"><p>Explore</p><h3>Make healthy choices easier</h3><ul><li>Favorites</li><li>Vendors and ordering</li><li>Plans and nutritionist advice</li></ul></article>
+    </div>
+  </section>
+
+  <section class="premium-section plans-section" id="plans" aria-labelledby="plans-heading">
+    <div class="section-intro centered landing-reveal"><p class="section-label">NutriSnap Plus</p><h2 id="plans-heading">Choose your<br><em>healthy rhythm.</em></h2><p class="section-summary">Current plans are loaded directly from NutriSnap. Checkout uses the configured payment environment.</p></div>
+    <div class="plan-grid">{% if subscription_plans %}{% for plan in subscription_plans %}<article class="plan-card landing-reveal {% if plan.code == 'quarterly' %}featured{% endif %}">{% if plan.code == 'quarterly' %}<span class="popular">Recommended</span>{% endif %}<p>{{ plan.code|title }}</p><h3>৳{{ plan.price }}</h3><small>{{ plan.duration_days }} days</small><div class="plan-rule"></div><p class="plan-description">{{ plan.description }}</p><a href="{{ url_for('commerce.subscription_plans') if current_user.is_authenticated and current_user.role == 'user' else (dashboard_url if current_user.is_authenticated else url_for('auth.register')) }}" class="premium-button">{{ 'View plan' if current_user.is_authenticated else 'Create account' }}</a></article>{% endfor %}{% else %}<div class="plans-empty landing-reveal"><h3>Plans are temporarily unavailable</h3><p>You can still create an account and use NutriSnap’s core meal and nutrition tools.</p><a class="premium-button" href="{{ dashboard_url if current_user.is_authenticated else url_for('auth.register') }}">{{ 'Open Dashboard' if current_user.is_authenticated else 'Create account' }}</a></div>{% endif %}</div>
+  </section>
+
+  <section class="final-cta landing-reveal" aria-labelledby="cta-heading"><div><p class="section-label">Start with today</p><h2 id="cta-heading">Your healthier routine<br><em>starts with one meal.</em></h2><p>Log what you eat, understand the details, and keep moving forward.</p><a class="premium-button light" href="{{ dashboard_url if current_user.is_authenticated else url_for('auth.register') }}">{{ 'Open Dashboard' if current_user.is_authenticated else 'Create your account' }} <span aria-hidden="true">→</span></a></div><div class="cta-orbit" aria-hidden="true"><span></span><i></i></div></section>
 </main>
-<footer class="premium-footer"><div class="footer-brand"><a class="premium-brand" href="{{ url_for('meal.landing') }}"><span class="premium-brand-mark"><i class="bi bi-leaf-fill"></i></span><span>NutriSnap</span></a><p>Smarter meals. Healthier days.</p></div><div class="footer-links"><div><strong>Product</strong><a href="#how-it-works">How it works</a><a href="#features">Features</a><a href="#plans">Plans</a></div><div><strong>Explore</strong><a href="{{ url_for('vendor.vendors') }}">Healthy meals</a><a href="{{ url_for('auth.login') }}">Log in</a><a href="{{ url_for('auth.register') }}">Create account</a></div></div><p class="footer-note">© 2026 NutriSnap. Thoughtful nutrition, one meal at a time.</p></footer>
+
+<footer class="premium-footer"><div class="footer-brand"><a class="premium-brand" href="{{ url_for('meal.landing') }}"><span class="premium-brand-mark" aria-hidden="true">N</span><span>NutriSnap</span></a><p>Smarter meals. Healthier days.</p></div><div class="footer-links"><div><strong>Product</strong><a href="#how-it-works">How It Works</a><a href="#features">Features</a><a href="#plans">Pricing</a></div><div><strong>Explore</strong><a href="{{ url_for('vendor.vendors') }}">Healthy meals</a><a href="{{ dashboard_url if current_user.is_authenticated else url_for('auth.login') }}">{{ 'Dashboard' if current_user.is_authenticated else 'Login' }}</a>{% if not current_user.is_authenticated %}<a href="{{ url_for('auth.register') }}">Create account</a>{% endif %}</div></div><p class="medical-note">NutriSnap provides general nutrition information and is not a substitute for professional medical advice.</p><p class="footer-note">© 2026 NutriSnap.</p></footer>
 <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
-</body></html>
+</body>
+</html>
